@@ -44,6 +44,13 @@ import {
   AtSign,
   Filter,
 } from "lucide-react";
+import { getUserFromStorage, clearUserFromStorage } from "./utils/storageUtils";
+
+// login page component lives in its own file now
+import LoginPage from "./components/LoginPage";
+import Dashboard from "./components/Dashboard";
+import CreatePage from "./components/CreatePage";
+import InternshipPage from "./components/InternshipPage";
 
 /* ═══════════════════════════════════════════════
    STYLES
@@ -233,48 +240,12 @@ const SC = {
   Completed: { c: "#635bff", bg: "rgba(99,91,255,.1)", dot: "#635bff" },
   Upcoming: { c: "#f5a623", bg: "rgba(245,166,35,.1)", dot: "#f5a623" },
 };
-const TUTORS = [
-  {
-    name: "Dr. James Carter",
-    i: "JC",
-    g: "linear-gradient(135deg,#635bff,#06c9a0)",
-    r: "Senior Mentor",
-  },
-  {
-    name: "Prof. Lena Müller",
-    i: "LM",
-    g: "linear-gradient(135deg,#06c9a0,#f5a623)",
-    r: "Lead Researcher",
-  },
-  {
-    name: "Alex Kim",
-    i: "AK",
-    g: "linear-gradient(135deg,#ff5fa0,#635bff)",
-    r: "Engineering Lead",
-  },
-  {
-    name: "Sara Osei",
-    i: "SO",
-    g: "linear-gradient(135deg,#f5a623,#ff5fa0)",
-    r: "Design Director",
-  },
-];
-const DAY_TEXTS = [
-  "Attended onboarding and configured the development environment. Met the full team across three departments, reviewed the engineering handbook, and explored the monorepo structure. Got access to Figma, Jira, and internal wikis.",
-  "First real task: building a reusable button component library. Pair-programmed with a senior dev for 90 minutes. Discussed atomic design principles and the team's naming conventions in depth.",
-  "Completed the button system with 8 variants and full accessibility support. Submitted first PR — three review rounds. Learned a lot about the team's high code-quality bar. PR merged at EOD.",
-  "Attended sprint planning. Picked up an API integration task for the analytics dashboard. Spent the afternoon studying the OpenAPI spec and existing data-fetching patterns across the codebase.",
-  "Implemented API calls using React Query. Handled loading, error, and empty states. Wrote unit tests for the custom hooks. Great 1:1 with mentor about caching strategies and query invalidation.",
-  "Design review session: presented the analytics module prototype to the product team. Incorporated feedback on data hierarchy. Decided on Recharts over D3 for faster delivery this sprint.",
-  "Week one retrospective. Filled out the self-assessment form. Strong feedback on communication clarity from mentor. One area to improve: asking questions earlier instead of staying stuck too long.",
-  "Started a complex task: refactoring the legacy auth flow. Studied JWT and refresh-token patterns. Mapped the full component dependency tree before writing a single line of code.",
-  "Deep in the auth refactor. Hit a tricky race condition during concurrent token refresh. Debugged with mentor for 2.5 hours. Root cause: missing request deduplication during the token renewal window.",
-  "Fixed the race condition with a queuing pattern. Senior engineers called the solution elegant. Wrote detailed inline documentation. Real confidence boost after solving that one.",
-  "Attended company all-hands — H2 roadmap reveal. Presented the auth improvements to the eng org afterward. Handled Q&A confidently. Director of Engineering gave a shout-out in Slack.",
-  "Started the internship feedback module (very meta!). Built form components, validation logic, and file upload. Used the internal design system throughout — it is genuinely well documented.",
-  "Integrated the feedback form with the backend. Implemented optimistic UI updates and graceful error recovery. PR merged same day — fastest yet. Mentor called the code quality the cleanest so far.",
-  "Final day. Completed the internship report, updated all documentation, ensured zero open PRs. Exit 1:1 with mentor and HR — overwhelmingly positive. Invited to return full-time next year.",
-];
+
+const TUTORS = [];
+const INTERNSHIPS0 = [];
+const FEEDBACKS0 = [];
+
+const DAY_TEXTS = [];
 const PALETTES = [
   ["#635bff", "#06c9a0"],
   ["#ff5fa0", "#635bff"],
@@ -310,132 +281,6 @@ function makeDays(startStr, tutorIdx) {
   });
 }
 
-const INTERNSHIPS0 = [
-  {
-    id: 1,
-    title: "Frontend Developer Intern",
-    company: "TechNova Labs",
-    start: "2024-02-01",
-    end: "2024-05-01",
-    status: "Active",
-    role: "Intern",
-    desc: "React & TypeScript development",
-    ti: 0,
-    students: [
-      {
-        name: "Alice Chen",
-        email: "alice@technova.example",
-        studentId: "S001",
-      },
-      { name: "Bob Tran", email: "bob@technova.example", studentId: "S002" },
-    ],
-  },
-  {
-    id: 2,
-    title: "UX Research Intern",
-    company: "Studio Pixel",
-    start: "2024-01-10",
-    end: "2024-04-10",
-    status: "Completed",
-    role: "Mentor",
-    desc: "Product design & user research",
-    ti: 1,
-    students: [
-      {
-        name: "Marco Rivera",
-        email: "marco@studiopixel.example",
-        studentId: "S010",
-      },
-    ],
-  },
-  {
-    id: 3,
-    title: "Data Science Intern",
-    company: "DeepMetrics AI",
-    start: "2024-03-15",
-    end: "2024-06-15",
-    status: "Upcoming",
-    role: "HR",
-    desc: "ML model development",
-    ti: 2,
-    students: [],
-  },
-  {
-    id: 4,
-    title: "Backend Engineer Intern",
-    company: "CloudStack Inc",
-    start: "2024-04-01",
-    end: "2024-07-01",
-    status: "Active",
-    role: "Intern",
-    desc: "Node.js & PostgreSQL",
-    ti: 3,
-    students: [
-      {
-        name: "Sofia Nakamura",
-        email: "sofia@cloudstack.example",
-        studentId: "S021",
-      },
-    ],
-  },
-];
-const FEEDBACKS0 = [
-  {
-    id: 1,
-    name: "Alice Chen",
-    role: "Intern",
-    company: "TechNova Labs",
-    rating: 5,
-    text: "Outstanding communication and rapid skill growth throughout the internship.",
-    time: "2h ago",
-    av: "AC",
-    avB: "linear-gradient(135deg,#635bff,#06c9a0)",
-  },
-  {
-    id: 2,
-    name: "Marco Rivera",
-    role: "Mentor",
-    company: "Studio Pixel",
-    rating: 4,
-    text: "Very proactive intern who took initiative on multiple projects consistently.",
-    time: "5h ago",
-    av: "MR",
-    avB: "linear-gradient(135deg,#ff5fa0,#635bff)",
-  },
-  {
-    id: 3,
-    name: "Priya Singh",
-    role: "HR",
-    company: "DeepMetrics AI",
-    rating: 5,
-    text: "Exceeded expectations. Strong technical and interpersonal skills on display.",
-    time: "1d ago",
-    av: "PS",
-    avB: "linear-gradient(135deg,#06c9a0,#635bff)",
-  },
-  {
-    id: 4,
-    name: "Liam Walsh",
-    role: "Intern",
-    company: "CloudStack Inc",
-    rating: 3,
-    text: "Good technical foundation, needs more confidence when presenting decisions.",
-    time: "2d ago",
-    av: "LW",
-    avB: "linear-gradient(135deg,#f5a623,#ff5fa0)",
-  },
-  {
-    id: 5,
-    name: "Sofia Nakamura",
-    role: "Mentor",
-    company: "TechNova Labs",
-    rating: 5,
-    text: "One of the best interns we have ever had. Highly recommend for full-time.",
-    time: "3d ago",
-    av: "SN",
-    avB: "linear-gradient(135deg,#06c9a0,#ff5fa0)",
-  },
-];
 const CHART = [
   { l: "Jan", v: 12 },
   { l: "Feb", v: 19 },
@@ -859,6 +704,15 @@ function DetailPage({ intern, onBack }) {
     setLb(newPhoto);
   };
 
+// simple named handlers for button clarity
+const openComments = () => setPanel(true);
+const closeComments = () => setPanel(false);
+const toggleApproval = () => setApproved((p) => !p);
+const clearApproval = () => setApproved(false);
+const printReport = () => window.print();
+const prevDay = () => goDay(day - 1);
+const nextDay = () => goDay(day + 1);
+
   return (
     <div className="dp">
       {/* ── HERO ── */}
@@ -1004,7 +858,7 @@ function DetailPage({ intern, onBack }) {
             {/* Write Comment */}
             <button
               className="da"
-              onClick={() => setPanel(true)}
+              onClick={openComments}
               style={{
                 background: "rgba(99,91,255,.2)",
                 color: "#b8b4ff",
@@ -1032,7 +886,7 @@ function DetailPage({ intern, onBack }) {
             {/* Approve Report */}
             <button
               className="da"
-              onClick={() => setApproved((p) => !p)}
+              onClick={toggleApproval}
               style={{
                 background: approved
                   ? "rgba(6,201,160,.22)"
@@ -1050,7 +904,7 @@ function DetailPage({ intern, onBack }) {
             {/* Export PDF */}
             <button
               className="da"
-              onClick={() => window.print()}
+              onClick={printReport}
               style={{
                 background: "rgba(255,255,255,.09)",
                 color: "rgba(255,255,255,.62)",
@@ -1064,7 +918,7 @@ function DetailPage({ intern, onBack }) {
             {/* Check Comments */}
             <button
               className="da"
-              onClick={() => setPanel(true)}
+              onClick={openComments}
               style={{
                 background: "rgba(245,166,35,.16)",
                 color: "#f5a623",
@@ -1111,7 +965,7 @@ function DetailPage({ intern, onBack }) {
             </div>
           </div>
           <button
-            onClick={() => setApproved(false)}
+            onClick={clearApproval}
             style={{
               marginLeft: "auto",
               background: "none",
@@ -1210,7 +1064,7 @@ function DetailPage({ intern, onBack }) {
               <button
                 className="bi"
                 disabled={day === 1}
-                onClick={() => goDay(day - 1)}
+                onClick={prevDay}
                 style={{ opacity: day === 1 ? 0.35 : 1 }}
               >
                 <ChevronLeft size={15} />
@@ -1218,7 +1072,7 @@ function DetailPage({ intern, onBack }) {
               <button
                 className="bi"
                 disabled={day === 14}
-                onClick={() => goDay(day + 1)}
+                onClick={nextDay}
                 style={{ opacity: day === 14 ? 0.35 : 1 }}
               >
                 <ChevronRight size={15} />
@@ -1698,7 +1552,7 @@ function DetailPage({ intern, onBack }) {
               backdropFilter: "blur(5px)",
               animation: "fadeIn .18s ease",
             }}
-            onClick={() => setPanel(false)}
+            onClick={closeComments}
           />
           <div className="cp">
             <div className="cph">
@@ -1717,7 +1571,7 @@ function DetailPage({ intern, onBack }) {
                   {comments.length} total · {intern.title}
                 </div>
               </div>
-              <button className="bi" onClick={() => setPanel(false)}>
+              <button className="bi" onClick={closeComments}>
                 <X size={15} />
               </button>
             </div>
@@ -1887,7 +1741,7 @@ function DetailPage({ intern, onBack }) {
 /* ═══════════════════════════════════════════════
    DASHBOARD VIEW
 ═══════════════════════════════════════════════ */
-function DashView({ internships, feedbacks, setNav, onOpen }) {
+function DashView({ internships, feedbacks, setNav, onOpen, user }) {
   const metrics = [
     {
       I: Users,
@@ -1976,7 +1830,7 @@ function DashView({ internships, feedbacks, setNav, onOpen }) {
                 marginBottom: 3,
               }}
             >
-              Good morning, Jane 👋
+              Good morning, {user ? user.name : 'User'} 👋
             </div>
             <div style={{ fontSize: 13, opacity: 0.82 }}>
               {internships.filter((i) => i.status === "Active").length} active
@@ -2192,7 +2046,8 @@ function DashView({ internships, feedbacks, setNav, onOpen }) {
             <div
               key={f.id}
               className="fr"
-              style={{ animationDelay: `${i * 65}ms` }}
+              style={{ animationDelay: `${i * 65}ms`, cursor: "pointer" }}
+              onClick={() => openInternshipFromFeedback(f)}
             >
               <div className="fa" style={{ background: f.avB, color: "#fff" }}>
                 {f.av}
@@ -2385,8 +2240,9 @@ function DashView({ internships, feedbacks, setNav, onOpen }) {
 /* ═══════════════════════════════════════════════
    FEEDBACK VIEW
 ═══════════════════════════════════════════════ */
-function FeedView({ feedbacks }) {
+function FeedView({ feedbacks, onOpenFeedback }) {
   const [filter, setFilter] = useState("All");
+  const handleFilterChange = (r) => setFilter(r);
   const list =
     filter === "All" ? feedbacks : feedbacks.filter((f) => f.role === filter);
   return (
@@ -2403,7 +2259,7 @@ function FeedView({ feedbacks }) {
           {["All", "Intern", "Mentor", "HR"].map((r) => (
             <button
               key={r}
-              onClick={() => setFilter(r)}
+              onClick={() => handleFilterChange(r)}
               className={filter === r ? "bp" : "bg"}
               style={{ fontSize: 12 }}
             >
@@ -2474,6 +2330,7 @@ function FeedView({ feedbacks }) {
                 <button
                   className="bg"
                   style={{ marginTop: 6, padding: "3px 9px", fontSize: 10.5 }}
+                  onClick={() => onOpenFeedback(f)}
                 >
                   <Eye size={11} /> View
                 </button>
@@ -2838,201 +2695,6 @@ function SetView() {
 /* ═══════════════════════════════════════════════
    LOGIN PAGE
 ═══════════════════════════════════════════════ */
-function LoginPage({ onLogin }) {
-  const [f, setF] = useState({ username: "", pw: "" });
-  const [err, setErr] = useState("");
-  const [loading, setLoading] = useState(false);
-  const go = () => {
-    if (!f.username || !f.pw) {
-      setErr("Please fill in all fields.");
-      return;
-    }
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      onLogin();
-    }, 750);
-  };
-  return (
-    <div className="lw">
-      {[
-        {
-          w: 460,
-          h: 460,
-          bg: "radial-gradient(circle,rgba(99,91,255,.38),transparent)",
-          top: "-95px",
-          left: "-95px",
-          anim: "pulse 7s ease infinite",
-        },
-        {
-          w: 360,
-          h: 360,
-          bg: "radial-gradient(circle,rgba(6,201,160,.30),transparent)",
-          bottom: "-75px",
-          right: "-75px",
-          anim: "pulse 9s ease infinite 2s",
-        },
-        {
-          w: 270,
-          h: 270,
-          bg: "radial-gradient(circle,rgba(255,95,160,.24),transparent)",
-          top: "42%",
-          right: "16%",
-          anim: "float 11s ease infinite",
-        },
-      ].map((b, i) => (
-        <div
-          key={i}
-          className="lblob"
-          style={{
-            width: b.w,
-            height: b.h,
-            background: b.bg,
-            top: b.top,
-            left: b.left,
-            bottom: b.bottom,
-            right: b.right,
-            animation: b.anim,
-          }}
-        />
-      ))}
-      <div className="lcard">
-        {/* Logo */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            marginBottom: 30,
-            animation: "logoF 3s ease-in-out infinite",
-          }}
-        >
-          <div
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 13,
-              background: "linear-gradient(135deg,#635bff,#06c9a0)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              boxShadow: "0 8px 22px rgba(99,91,255,.5)",
-            }}
-          >
-            <GraduationCap size={24} color="#fff" />
-          </div>
-          <div>
-            <div
-              style={{
-                fontFamily: "Syne",
-                fontSize: 18,
-                fontWeight: 800,
-                color: "#fff",
-                letterSpacing: "-.35px",
-              }}
-            >
-              InternTrack
-            </div>
-            <div
-              style={{
-                fontSize: 11,
-                color: "rgba(255,255,255,.34)",
-                fontWeight: 500,
-              }}
-            >
-              Institute of Technology · Portal
-            </div>
-          </div>
-        </div>
-        <div style={{ marginBottom: 24 }}>
-          <h1
-            style={{
-              fontFamily: "Syne",
-              fontSize: 23,
-              fontWeight: 800,
-              color: "#fff",
-              marginBottom: 6,
-              letterSpacing: "-.4px",
-            }}
-          >
-            Welcome back
-          </h1>
-          <p style={{ color: "rgba(255,255,255,.36)", fontSize: 13 }}>
-            Sign in to your internship management portal
-          </p>
-        </div>
-        <input
-          type="text"
-          placeholder="Username"
-          className="linput"
-          value={f.username}
-          onChange={(ev) => setF((p) => ({ ...p, username: ev.target.value }))}
-          onKeyDown={(ev) => ev.key === "Enter" && go()}
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          className="linput"
-          value={f.pw}
-          onChange={(ev) => setF((p) => ({ ...p, pw: ev.target.value }))}
-          onKeyDown={(ev) => ev.key === "Enter" && go()}
-        />
-        {err && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              marginBottom: 10,
-              color: "#f87171",
-              fontSize: 12,
-            }}
-          >
-            <AlertCircle size={12} />
-            {err}
-          </div>
-        )}
-        <div
-          style={{
-            display: "flex",
-            gap: 8,
-            justifyContent: "flex-end",
-            marginBottom: 16,
-          }}
-        >
-          <button
-            className="bg"
-            onClick={() =>
-              setF((p) => ({
-                ...p,
-                username: "Demo User",
-                pw: "password123",
-              }))
-            }
-            style={{ fontSize: 12 }}
-          >
-            Autofill
-          </button>
-        </div>
-        <button className="lbtn" onClick={go}>
-          {loading && (
-            <div
-              style={{
-                width: 17,
-                height: 17,
-                border: "2px solid rgba(255,255,255,.3)",
-                borderTopColor: "#fff",
-                borderRadius: "50%",
-                animation: "spin .7s linear infinite",
-              }}
-            ></div>
-          )}
-          {loading ? "Signing in…" : "Sign In to Dashboard"}
-        </button>
-      </div>
-    </div>
-  );
-}
 
 /* ═══════════════════════════════════════════════
    ROOT APP
@@ -3041,13 +2703,61 @@ export default function App() {
   const [page, setPage] = useState("login");
   const [nav, setNav] = useState("Dashboard");
   const [openIntern, setOpenIntern] = useState(null);
+  const [user, setUser] = useState(null);
   const [internships, setInternships] = useState(INTERNSHIPS0);
   const feedbacks = FEEDBACKS0;
   const [modal, setModal] = useState(false);
   const [dd, setDd] = useState(false);
   const [sbOpen, setSbOpen] = useState(false);
   const [newId, setNewId] = useState(null);
+  const [search, setSearch] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [showCreatePage, setShowCreatePage] = useState(false);
 
+  // Check localStorage on mount to restore user session
+  useEffect(() => {
+    const savedUser = getUserFromStorage();
+    if (savedUser) {
+      setUser(savedUser);
+      setPage('dashboard');
+    }
+  }, []);
+
+  // Fuzzy search algorithm for internships by name (marketplace style)
+  useEffect(() => {
+    if (!search.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    // Normalize and tokenize search
+    const query = search.trim().toLowerCase();
+    const tokens = query.split(/\s+/);
+    // Score internships by name relevance
+    const scored = internships.map((i) => {
+      const name = i.title.toLowerCase();
+      let score = 0;
+      // Exact match bonus
+      if (name === query) score += 100;
+      // Partial match bonus
+      if (name.includes(query)) score += 50;
+      // Token match bonus
+      score += tokens.reduce((acc, t) => (name.includes(t) ? acc + 20 : acc), 0);
+      // Fuzzy: count matching chars in order
+      let idx = 0, matchCount = 0;
+      for (let c of query) {
+        idx = name.indexOf(c, idx);
+        if (idx !== -1) {
+          matchCount++;
+          idx++;
+        }
+      }
+      score += matchCount * 2;
+      return { i, score };
+    });
+    // Sort by score descending, filter out zero scores
+    const results = scored.filter((r) => r.score > 0).sort((a, b) => b.score - a.score).map((r) => r.i);
+    setSearchResults(results);
+  }, [search, internships]);
   const addIntern = (i) => {
     setInternships((p) => [i, ...p]);
     setNewId(i.id);
@@ -3063,28 +2773,78 @@ export default function App() {
     setSbOpen(false);
   };
 
+  // convenience wrappers so buttons can call named functions instead of inline lambdas
+  const handleCloseSidebar = () => setSbOpen(false);
+  const handleNavigate = (label) => navigate(label);
+  const handleOpenModal = () => setModal(true);
+  const handleOpenDetail = (i) => openDetail(i);
+  const handleToggleDd = () => setDd((p) => !p);
+  const handleOpenSidebar = () => setSbOpen(true);
+  const openFeedback = () => setNav("Feedback");
+
+  // open the related internship when a feedback item is clicked
+  const openInternshipFromFeedback = (fb) => {
+    const byId = fb.internshipId
+      ? internships.find((it) => it.id === fb.internshipId)
+      : null;
+    const byStudent = internships.find((it) =>
+      (it.students || []).some((s) => s.name === fb.name),
+    );
+    const byCompany = internships.find((it) => it.company === fb.company);
+    const target = byId || byStudent || byCompany;
+    if (target) {
+      openDetail(target);
+      setNav("Dashboard");
+    } else {
+      // graceful fallback
+      alert("Related internship not found for this feedback.");
+    }
+  };
+
   const navItems = [
     { I: LayoutDashboard, label: "Dashboard" },
     { I: MessageSquare, label: "Feedback" },
     { I: BarChart2, label: "Analytics" },
-    { I: Settings, label: "Settings" },
   ];
 
   const renderContent = () => {
-    if (openIntern)
+    // New API-based components
+    if (showCreatePage) {
       return (
-        <DetailPage intern={openIntern} onBack={() => setOpenIntern(null)} />
-      );
-    if (nav === "Dashboard")
-      return (
-        <DashView
-          internships={internships}
-          feedbacks={feedbacks}
-          setNav={setNav}
-          onOpen={openDetail}
+        <CreatePage
+          onSubmit={(newFaculty) => {
+            setShowCreatePage(false);
+            // Refresh dashboard
+            setNav("Dashboard");
+          }}
+          onCancel={() => setShowCreatePage(false)}
         />
       );
-    if (nav === "Feedback") return <FeedView feedbacks={feedbacks} />;
+    }
+    
+    if (openIntern) {
+      return (
+        <InternshipPage 
+          facultyId={openIntern} 
+          onBack={() => setOpenIntern(null)}
+          user={user}
+        />
+      );
+    }
+    
+    if (nav === "Dashboard") {
+      return (
+        <Dashboard
+          onNewFaculty={() => setShowCreatePage(true)}
+          onView={(id) => setOpenIntern(id)}
+          user={user}
+        />
+      );
+    }
+    
+    // Legacy views
+    if (nav === "Feedback")
+      return <FeedView feedbacks={feedbacks} onOpenFeedback={openInternshipFromFeedback} />;
     if (nav === "Analytics") return <AnalView internships={internships} />;
     if (nav === "Settings") return <SetView />;
     return null;
@@ -3094,7 +2854,10 @@ export default function App() {
     return (
       <>
         <style>{CSS}</style>
-        <LoginPage onLogin={() => setPage("dashboard")} />
+        <LoginPage 
+          onLogin={() => setPage("dashboard")} 
+          onUserSet={setUser}
+        />
       </>
     );
 
@@ -3112,7 +2875,7 @@ export default function App() {
             backdropFilter: "blur(4px)",
             animation: "fadeIn .18s ease",
           }}
-          onClick={() => setSbOpen(false)}
+          onClick={handleCloseSidebar}
         />
       )}
 
@@ -3153,7 +2916,7 @@ export default function App() {
               <div
                 key={label}
                 className={`nv${nav === label && !openIntern ? " on" : ""}`}
-                onClick={() => navigate(label)}
+                onClick={() => handleNavigate(label)}
               >
                 <I size={15} />
                 <span>{label}</span>
@@ -3220,64 +2983,18 @@ export default function App() {
 
           {/* Internship list */}
           <div className="sb-sec" style={{ flex: 1, overflowY: "auto" }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: 6,
-              }}
-            >
-              <div className="sb-lbl" style={{ marginBottom: 0 }}>
-                Internships
-              </div>
-              <button
-                className="bp"
-                style={{ padding: "3px 8px", fontSize: 10, borderRadius: 7 }}
-                onClick={() => setModal(true)}
-              >
-                <Plus size={9} /> New
-              </button>
-            </div>
-            {internships.slice(0, 6).map((i) => (
+            <div className="sb-lbl" style={{ marginBottom: 8 }}>Internships</div>
+            {internships.map((i, idx) => (
               <div
                 key={i.id}
-                className={`ii${openIntern?.id === i.id ? " sel" : ""}`}
-                onClick={() => openDetail(i)}
-                style={{
-                  animation: i.id === newId ? "fadeUp .42s ease" : undefined,
-                }}
+                className={`ii${newId === i.id ? " sel" : ""}`}
+                onClick={() => handleOpenDetail(i)}
               >
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: "rgba(255,255,255,.7)",
-                    fontWeight: 600,
-                    marginBottom: 1,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
+                <div style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,.8)" }}>
                   {i.title}
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                  <span
-                    style={{ fontSize: 9.5, color: "rgba(255,255,255,.3)" }}
-                  >
-                    {i.company}
-                  </span>
-                  <span
-                    className="badge"
-                    style={{
-                      background: SC[i.status].bg,
-                      color: SC[i.status].c,
-                      fontSize: 8.5,
-                      padding: "1px 5px",
-                    }}
-                  >
-                    {i.status}
-                  </span>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,.4)" }}>
+                  {i.status}
                 </div>
               </div>
             ))}
@@ -3285,7 +3002,7 @@ export default function App() {
 
           {/* Profile */}
           <div style={{ padding: "12px 12px 17px" }}>
-            <div className="spf" onClick={() => setDd((p) => !p)}>
+            <div className="spf" onClick={handleToggleDd}>
               <div
                 className="av"
                 style={{
@@ -3293,7 +3010,7 @@ export default function App() {
                   color: "#fff",
                 }}
               >
-                JD
+                {user ? (user.name ? user.name[0] : 'U') + (user.surname ? user.surname[0] : '') : 'U'}
               </div>
               <div style={{ flex: 1, overflow: "hidden" }}>
                 <div
@@ -3306,10 +3023,10 @@ export default function App() {
                     whiteSpace: "nowrap",
                   }}
                 >
-                  Jane Doe
+                  {user ? `${user.name} ${user.surname}` : 'User'}
                 </div>
                 <div style={{ fontSize: 10, color: "rgba(255,255,255,.3)" }}>
-                  HR Manager
+                  {user ? user.role : 'Guest'}
                 </div>
               </div>
               <ChevronDown
@@ -3322,24 +3039,19 @@ export default function App() {
               />
               {dd && (
                 <div className="sdd">
-                  {[
-                    { I: UserCheck, l: "My Profile" },
-                    { I: Settings, l: "Preferences" },
-                    { I: Shield, l: "Security" },
-                    { I: LogOut, l: "Sign Out", a: () => setPage("login") },
-                  ].map(({ I, l, a }) => (
-                    <div
-                      key={l}
-                      className="sddi"
-                      onClick={() => {
-                        setDd(false);
-                        a?.();
-                      }}
-                    >
-                      <I size={12} />
-                      {l}
-                    </div>
-                  ))}
+                  <div
+                    className="sddi"
+                    onClick={() => {
+                      setDd(false);
+                      // Clear user data from localStorage
+                      clearUserFromStorage();
+                      setUser(null);
+                      setPage("login");
+                    }}
+                  >
+                    <LogOut size={12} />
+                    Sign Out
+                  </div>
                 </div>
               )}
             </div>
@@ -3350,7 +3062,7 @@ export default function App() {
         <div className="main">
           <div className="tbar">
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <button className="bi hmb" onClick={() => setSbOpen(true)}>
+              <button className="bi hmb" onClick={handleOpenSidebar}>
                 <Menu size={16} />
               </button>
               {openIntern ? (
@@ -3401,9 +3113,70 @@ export default function App() {
               )}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div className="sbox">
+              <div className="sbox" style={{ position: "relative" }}>
                 <Search size={13} color="var(--t3)" />
-                <input placeholder="Search…" />
+                <input
+                  placeholder="Search internships…"
+                  value={search}
+                  onChange={ev => setSearch(ev.target.value)}
+                  style={{ width: 160 }}
+                />
+                {search && searchResults.length > 0 && (
+                  <div style={{
+                    position: "absolute",
+                    top: "100%",
+                    left: 0,
+                    right: 0,
+                    background: "#fff",
+                    border: "1px solid #eee",
+                    borderRadius: 8,
+                    boxShadow: "0 4px 18px rgba(99,91,255,.09)",
+                    zIndex: 10,
+                    marginTop: 2,
+                    maxHeight: 180,
+                    overflowY: "auto"
+                  }}>
+                    {searchResults.map((i) => (
+                      <div
+                        key={i.id}
+                        style={{
+                          padding: "8px 14px",
+                          cursor: "pointer",
+                          fontSize: 13,
+                          borderBottom: "1px solid #f3f3f3",
+                          background: openIntern?.id === i.id ? "#f0f1f7" : undefined
+                        }}
+                        onClick={() => {
+                          setOpenIntern(i);
+                          setSearch("");
+                          setSearchResults([]);
+                        }}
+                      >
+                        {i.title}
+                        <span style={{ color: "#888", fontSize: 11, marginLeft: 8 }}>{i.company}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {search && searchResults.length === 0 && (
+                  <div style={{
+                    position: "absolute",
+                    top: "100%",
+                    left: 0,
+                    right: 0,
+                    background: "#fff",
+                    border: "1px solid #eee",
+                    borderRadius: 8,
+                    boxShadow: "0 4px 18px rgba(99,91,255,.09)",
+                    zIndex: 10,
+                    marginTop: 2,
+                    padding: "8px 14px",
+                    fontSize: 13,
+                    color: "#888"
+                  }}>
+                    No internships found
+                  </div>
+                )}
               </div>
               <div style={{ position: "relative" }}>
                 <button className="bi">
@@ -3412,7 +3185,7 @@ export default function App() {
                 <div className="ndot" />
               </div>
               {!openIntern && (
-                <button className="bp" onClick={() => setModal(true)}>
+                <button className="bp" onClick={handleOpenModal}>
                   <Plus size={13} /> Add
                 </button>
               )}

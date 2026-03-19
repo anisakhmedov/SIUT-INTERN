@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   LayoutDashboard,
   MessageSquare,
@@ -43,8 +43,11 @@ import {
   Camera,
   AtSign,
   Filter,
+  UserCircle,
 } from "lucide-react";
-import { getUserFromStorage, clearUserFromStorage } from "./utils/storageUtils";
+import { getUserFromStorage, clearUserFromStorage, saveUserToStorage } from "./utils/storageUtils";
+
+
 
 // login page component lives in its own file now
 import LoginPage from "./components/LoginPage";
@@ -241,10 +244,6 @@ const SC = {
   Upcoming: { c: "#f5a623", bg: "rgba(245,166,35,.1)", dot: "#f5a623" },
 };
 
-const TUTORS = [];
-const INTERNSHIPS0 = [];
-const FEEDBACKS0 = [];
-
 const DAY_TEXTS = [];
 const PALETTES = [
   ["#635bff", "#06c9a0"],
@@ -254,6 +253,23 @@ const PALETTES = [
   ["#635bff", "#ff5fa0"],
   ["#06c9a0", "#635bff"],
 ];
+
+// Add the missing CHART data
+const CHART = [
+  { v: 42, l: "Jan" },
+  { v: 58, l: "Feb" },
+  { v: 48, l: "Mar" },
+  { v: 62, l: "Apr" },
+  { v: 55, l: "May" },
+  { v: 70, l: "Jun" },
+  { v: 65, l: "Jul" },
+  { v: 75, l: "Aug" },
+  { v: 80, l: "Sep" },
+  { v: 72, l: "Oct" },
+  { v: 85, l: "Nov" },
+  { v: 90, l: "Dec" },
+];
+
 function makeDays(startStr, tutorIdx) {
   const t = TUTORS[tutorIdx % 4];
   const base = new Date(startStr || "2024-02-01");
@@ -280,16 +296,6 @@ function makeDays(startStr, tutorIdx) {
     };
   });
 }
-
-const CHART = [
-  { l: "Jan", v: 12 },
-  { l: "Feb", v: 19 },
-  { l: "Mar", v: 15 },
-  { l: "Apr", v: 24 },
-  { l: "May", v: 21 },
-  { l: "Jun", v: 28 },
-  { l: "Jul", v: 32 },
-];
 
 /* ═══════════════════════════════════════════════
    SHARED COMPONENTS
@@ -618,6 +624,19 @@ function AddModal({ onClose, onAdd }) {
   );
 }
 
+const TUTORS = [
+  {
+    name: "John Doe",
+    av: "JD",
+    avB: "linear-gradient(135deg,#635bff,#06c9a0)",
+  },
+  {
+    name: "Jane Doe",
+    av: "JD",
+    avB: "linear-gradient(135deg,#635bff,#06c9a0)",
+  },
+]
+
 /* ═══════════════════════════════════════════════
    DETAIL PAGE
 ═══════════════════════════════════════════════ */
@@ -704,14 +723,14 @@ function DetailPage({ intern, onBack }) {
     setLb(newPhoto);
   };
 
-// simple named handlers for button clarity
-const openComments = () => setPanel(true);
-const closeComments = () => setPanel(false);
-const toggleApproval = () => setApproved((p) => !p);
-const clearApproval = () => setApproved(false);
-const printReport = () => window.print();
-const prevDay = () => goDay(day - 1);
-const nextDay = () => goDay(day + 1);
+  // simple named handlers for button clarity
+  const openComments = () => setPanel(true);
+  const closeComments = () => setPanel(false);
+  const toggleApproval = () => setApproved((p) => !p);
+  const clearApproval = () => setApproved(false);
+  const printReport = () => window.print();
+  const prevDay = () => goDay(day - 1);
+  const nextDay = () => goDay(day + 1);
 
   return (
     <div className="dp">
@@ -1830,7 +1849,7 @@ function DashView({ internships, feedbacks, setNav, onOpen, user }) {
                 marginBottom: 3,
               }}
             >
-              Good morning, {user ? user.name : 'User'} 👋
+              Good morning, {user ? user.name : "User"} 👋
             </div>
             <div style={{ fontSize: 13, opacity: 0.82 }}>
               {internships.filter((i) => i.status === "Active").length} active
@@ -2666,23 +2685,23 @@ function SetView() {
                     : "rgba(0,0,0,.13)",
                   cursor: "pointer",
                   transition: "all .28s",
-                  position: "relative",
-                  flexShrink: 0,
                 }}
               >
                 <div
                   style={{
-                    position: "absolute",
-                    top: 2.5,
-                    left: n[k] ? 20 : 2.5,
-                    width: 17,
-                    height: 17,
-                    borderRadius: "50%",
-                    background: "#fff",
-                    transition: "left .26s",
-                    boxShadow: "0 1px 4px rgba(0,0,0,.2)",
+                    width: "100%",
+                    height: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
-                />
+                >
+                  {n[k] ? (
+                    <Check size={12} color="white" />
+                  ) : (
+                    <Minus size={10} color="rgba(255,255,255,.6)" />
+                  )}
+                </div>
               </div>
             </div>
           ))}
@@ -2693,19 +2712,20 @@ function SetView() {
 }
 
 /* ═══════════════════════════════════════════════
-   LOGIN PAGE
-═══════════════════════════════════════════════ */
-
-/* ═══════════════════════════════════════════════
    ROOT APP
 ═══════════════════════════════════════════════ */
 export default function App() {
+  // Move all state declarations here
+  const [TUTORS, setTutors] = useState([]);
+  const [INTERNSHIPS, setInternships] = useState([]);
+  const [FEEDBACKS, setFeedbacks] = useState([]);
+
   const [page, setPage] = useState("login");
   const [nav, setNav] = useState("Dashboard");
   const [openIntern, setOpenIntern] = useState(null);
   const [user, setUser] = useState(null);
-  const [internships, setInternships] = useState(INTERNSHIPS0);
-  const feedbacks = FEEDBACKS0;
+  // Remove redundant internships, feedbacks, tutors states since they're already declared above
+  const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(false);
   const [dd, setDd] = useState(false);
   const [sbOpen, setSbOpen] = useState(false);
@@ -2713,14 +2733,162 @@ export default function App() {
   const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [showCreatePage, setShowCreatePage] = useState(false);
+  const [students, setStudents] = useState([]); // Add students state
 
-  // Check localStorage on mount to restore user session
-  useEffect(() => {
-    const savedUser = getUserFromStorage();
-    if (savedUser) {
-      setUser(savedUser);
-      setPage('dashboard');
+  // Convenience wrapper functions for state updates
+  const handleCloseSidebar = () => setSbOpen(false);
+
+  const handleNavigate = (label) => {
+    setNav(label);
+    setOpenIntern(null);
+    setSbOpen(false);
+  };
+
+  const handleOpenModal = () => setShowCreatePage(true);
+
+  const handleOpenDetail = (intern) => {
+    setOpenIntern(intern.id);
+    setSbOpen(false);
+  };
+
+  const handleToggleDd = () => setDd((p) => !p);
+
+  const handleOpenSidebar = () => setSbOpen(true);
+
+  const openFeedback = () => setNav("Feedback");
+
+  // Function to handle opening internship from feedback
+  const openInternshipFromFeedback = (fb) => {
+    const byId = fb.internshipId
+      ? INTERNSHIPS.find((it) => it.id === fb.internshipId)
+      : null;
+    const byStudent = INTERNSHIPS.find((it) =>
+      (it.students || []).some((s) => s.name === fb.name),
+    );
+    const byCompany = INTERNSHIPS.find((it) => it.company === fb.company);
+    const target = byId || byStudent || byCompany;
+
+    if (target) {
+      setOpenIntern(target.id);
+      setNav("Dashboard");
+    } else {
+      // Graceful fallback if no matching internship is found
+      console.warn("Related internship not found for this feedback.");
     }
+  };
+
+  const API_URL = "https://siut-internship-35635e91d124.herokuapp.com";
+
+  // Fetch data from API on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Check localStorage on mount to restore user session
+        const savedUser = getUserFromStorage();
+        if (savedUser) {
+          setUser(savedUser);
+          
+          // Fetch students data when user logs in
+          try {
+            const response = await fetch(`${API_URL}/student`);
+            if (response.ok) {
+              const studentData = await response.json();
+              setStudents(studentData);
+            } else {
+              console.error('Failed to fetch students:', response.statusText);
+            }
+          } catch (error) {
+            console.error('Error fetching students:', error);
+          }
+          
+          setPage("dashboard");
+        }
+
+        // Fetch internships
+        const response = await fetch(`${API_URL}/faculty`);
+        if (response.ok) {
+          const data = await response.json();
+          // Transform the data to match the expected format
+          const transformedInternships = data.map((intern) => ({
+            id: intern._id,
+            title: intern.name,
+            company: intern.company,
+            status: intern.status || "Active",
+            start: intern.startDate || "2024-01-01",
+            end: intern.endDate || "2024-06-01",
+            role: intern.role || "Intern",
+            students: intern.students || [],
+            desc: intern.description || intern.plan,
+            ti: intern.tutorId ? parseInt(intern.tutorId) % 4 : 0,
+          }));
+          setInternships(transformedInternships);
+        }
+
+        // For now, using mock feedback data since it's not in the API
+        setFeedbacks([
+          {
+            id: 1,
+            name: "John Smith",
+            role: "Intern",
+            company: "Tech Corp",
+            text: "Great learning experience during my internship",
+            rating: 4,
+            time: "2 days ago",
+            avB: "linear-gradient(135deg,#635bff,#06c9a0)",
+            av: "JS",
+          },
+          {
+            id: 2,
+            name: "Emma Johnson",
+            role: "Mentor",
+            company: "Innovate Inc",
+            text: "Impressive work from the students this semester",
+            rating: 5,
+            time: "1 week ago",
+            avB: "linear-gradient(135deg,#06c9a0,#ff5fa0)",
+            av: "EJ",
+          },
+        ]);
+
+        // Mock tutors data
+        setTutors([
+          {
+            id: 0,
+            name: "Alex Johnson",
+            i: "AJ",
+            g: "linear-gradient(135deg,#635bff,#06c9a0)",
+            r: "Senior Tutor",
+          },
+          {
+            id: 1,
+            name: "Maria Garcia",
+            i: "MG",
+            g: "linear-gradient(135deg,#ff5fa0,#635bff)",
+            r: "Lead Tutor",
+          },
+          {
+            id: 2,
+            name: "David Chen",
+            i: "DC",
+            g: "linear-gradient(135deg,#06c9a0,#f5a623)",
+            r: "Senior Tutor",
+          },
+          {
+            id: 3,
+            name: "Sarah Williams",
+            i: "SW",
+            g: "linear-gradient(135deg,#f5a623,#ff5fa0)",
+            r: "Head Tutor",
+          },
+        ]);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
   // Fuzzy search algorithm for internships by name (marketplace style)
@@ -2733,7 +2901,7 @@ export default function App() {
     const query = search.trim().toLowerCase();
     const tokens = query.split(/\s+/);
     // Score internships by name relevance
-    const scored = internships.map((i) => {
+    const scored = INTERNSHIPS.map((i) => {
       const name = i.title.toLowerCase();
       let score = 0;
       // Exact match bonus
@@ -2743,7 +2911,8 @@ export default function App() {
       // Token match bonus
       score += tokens.reduce((acc, t) => (name.includes(t) ? acc + 20 : acc), 0);
       // Fuzzy: count matching chars in order
-      let idx = 0, matchCount = 0;
+      let idx = 0,
+        matchCount = 0;
       for (let c of query) {
         idx = name.indexOf(c, idx);
         if (idx !== -1) {
@@ -2755,51 +2924,31 @@ export default function App() {
       return { i, score };
     });
     // Sort by score descending, filter out zero scores
-    const results = scored.filter((r) => r.score > 0).sort((a, b) => b.score - a.score).map((r) => r.i);
+    const results = scored
+      .filter((r) => r.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .map((r) => r.i);
     setSearchResults(results);
-  }, [search, internships]);
+  }, [search, INTERNSHIPS]);
+
   const addIntern = (i) => {
-    setInternships((p) => [i, ...p]);
+    setInternships((prev) => [i, ...prev]);
     setNewId(i.id);
     setTimeout(() => setNewId(null), 900);
   };
+
   const navigate = (label) => {
     setNav(label);
     setOpenIntern(null);
     setSbOpen(false);
   };
-  const openDetail = (intern) => {
-    setOpenIntern(intern);
+
+  const openDetail = (internId) => {
+    setOpenIntern(internId);
     setSbOpen(false);
   };
 
-  // convenience wrappers so buttons can call named functions instead of inline lambdas
-  const handleCloseSidebar = () => setSbOpen(false);
-  const handleNavigate = (label) => navigate(label);
-  const handleOpenModal = () => setModal(true);
-  const handleOpenDetail = (i) => openDetail(i);
-  const handleToggleDd = () => setDd((p) => !p);
-  const handleOpenSidebar = () => setSbOpen(true);
-  const openFeedback = () => setNav("Feedback");
-
-  // open the related internship when a feedback item is clicked
-  const openInternshipFromFeedback = (fb) => {
-    const byId = fb.internshipId
-      ? internships.find((it) => it.id === fb.internshipId)
-      : null;
-    const byStudent = internships.find((it) =>
-      (it.students || []).some((s) => s.name === fb.name),
-    );
-    const byCompany = internships.find((it) => it.company === fb.company);
-    const target = byId || byStudent || byCompany;
-    if (target) {
-      openDetail(target);
-      setNav("Dashboard");
-    } else {
-      // graceful fallback
-      alert("Related internship not found for this feedback.");
-    }
-  };
+  // These convenience wrappers are now defined in the state declarations section
 
   const navItems = [
     { I: LayoutDashboard, label: "Dashboard" },
@@ -2808,11 +2957,37 @@ export default function App() {
   ];
 
   const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="pp">
+          <div style={{ textAlign: "center", padding: "40px" }}>
+            <div>Loading...</div>
+          </div>
+        </div>
+      );
+    }
+
     // New API-based components
     if (showCreatePage) {
       return (
         <CreatePage
+          students={students} // Pass students to CreatePage
           onSubmit={(newFaculty) => {
+            // Add the new faculty to our state
+            const transformedFaculty = {
+              id: newFaculty._id,
+              title: newFaculty.name,
+              company: newFaculty.company,
+              status: newFaculty.status || "Active",
+              start: newFaculty.startDate || "2024-01-01",
+              end: newFaculty.endDate || "2024-06-01",
+              role: newFaculty.role || "Intern",
+              students: newFaculty.students || [],
+              desc: newFaculty.description || newFaculty.plan,
+              ti: newFaculty.tutorId ? parseInt(newFaculty.tutorId) % 4 : 0,
+            };
+
+            setInternships((prev) => [transformedFaculty, ...prev]);
             setShowCreatePage(false);
             // Refresh dashboard
             setNav("Dashboard");
@@ -2821,31 +2996,34 @@ export default function App() {
         />
       );
     }
-    
+
     if (openIntern) {
       return (
-        <InternshipPage 
-          facultyId={openIntern} 
+        <InternshipPage
+          facultyId={openIntern}
           onBack={() => setOpenIntern(null)}
           user={user}
+          students={students} // Pass students to InternshipPage
         />
       );
     }
-    
+
     if (nav === "Dashboard") {
       return (
         <Dashboard
           onNewFaculty={() => setShowCreatePage(true)}
           onView={(id) => setOpenIntern(id)}
           user={user}
+          students={students} // Pass students to Dashboard
         />
       );
     }
-    
+
     // Legacy views
-    if (nav === "Feedback")
-      return <FeedView feedbacks={feedbacks} onOpenFeedback={openInternshipFromFeedback} />;
-    if (nav === "Analytics") return <AnalView internships={internships} />;
+    if (nav === "Feedback") {
+      return <FeedView feedbacks={FEEDBACKS} onOpenFeedback={() => {}} />;
+    }
+    if (nav === "Analytics") return <AnalView internships={INTERNSHIPS} />;
     if (nav === "Settings") return <SetView />;
     return null;
   };
@@ -2854,10 +3032,7 @@ export default function App() {
     return (
       <>
         <style>{CSS}</style>
-        <LoginPage 
-          onLogin={() => setPage("dashboard")} 
-          onUserSet={setUser}
-        />
+        <LoginPage onLogin={() => setPage("dashboard")} onUserSet={setUser} />
       </>
     );
 
@@ -2872,328 +3047,93 @@ export default function App() {
             inset: 0,
             background: "rgba(0,0,0,.44)",
             zIndex: 99,
-            backdropFilter: "blur(4px)",
-            animation: "fadeIn .18s ease",
           }}
           onClick={handleCloseSidebar}
-        />
+        ></div>
       )}
-
       <div className="shell">
-        {/* ── SIDEBAR ── */}
-        <aside className={`sb${sbOpen ? " open" : ""}`}>
+        <div className="sb">
           <div className="sb-top">
             <div className="sb-icon">
-              <GraduationCap size={18} color="#fff" />
+              <GraduationCap size={20} color="white" />
             </div>
-            <div>
-              <div
-                style={{
-                  fontFamily: "Syne",
-                  fontSize: 14,
-                  fontWeight: 800,
-                  color: "#fff",
-                }}
-              >
-                InternTrack
-              </div>
-              <div
-                style={{
-                  fontSize: 9,
-                  color: "rgba(255,255,255,.26)",
-                  fontWeight: 500,
-                }}
-              >
-                Management Portal
-              </div>
-            </div>
+            <h1 style={{ color: "#fff", fontFamily: "Syne", fontSize: 18, fontWeight: 800 }}>
+              SIUT AI
+            </h1>
           </div>
-
-          {/* Nav */}
+          
           <div className="sb-sec">
-            <div className="sb-lbl">Menu</div>
-            {navItems.map(({ I, label }) => (
+            <div className="sb-lbl">Main</div>
+            {navItems.map((item) => (
               <div
-                key={label}
-                className={`nv${nav === label && !openIntern ? " on" : ""}`}
-                onClick={() => handleNavigate(label)}
+                key={item.label}
+                className={`nv ${nav === item.label ? "on" : ""}`}
+                onClick={() => handleNavigate(item.label)}
               >
-                <I size={15} />
-                <span>{label}</span>
-                {nav === label && !openIntern && (
-                  <ChevronRight
-                    size={12}
-                    style={{ marginLeft: "auto", opacity: 0.5 }}
-                  />
-                )}
+                <item.I size={16} color={nav === item.label ? "var(--a1)" : "rgba(255,255,255,.4)"} />
+                <span style={{ color: nav === item.label ? "#fff" : "rgba(255,255,255,.4)" }}>{item.label}</span>
               </div>
             ))}
           </div>
-
-          {/* Status */}
-          <div className="sb-sec">
-            <div className="sb-lbl">Status</div>
-            <div className="sb-stat">
-              {Object.entries(SC).map(([k, v]) => {
-                const cnt = internships.filter((i) => i.status === k).length;
-                return (
-                  <div
-                    key={k}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "5px 0",
-                      borderBottom:
-                        k !== "Upcoming"
-                          ? "1px solid rgba(255,255,255,.04)"
-                          : "none",
-                    }}
-                  >
-                    <div
-                      style={{ display: "flex", alignItems: "center", gap: 6 }}
-                    >
-                      <div
-                        style={{
-                          width: 6,
-                          height: 6,
-                          borderRadius: "50%",
-                          background: v.dot,
-                          boxShadow: `0 0 6px ${v.dot}`,
-                        }}
-                      />
-                      <span
-                        style={{
-                          fontSize: 11,
-                          color: "rgba(255,255,255,.42)",
-                          fontWeight: 500,
-                        }}
-                      >
-                        {k}
-                      </span>
-                    </div>
-                    <span style={{ fontSize: 11, color: v.c, fontWeight: 700 }}>
-                      {cnt}
-                    </span>
-                  </div>
-                );
-              })}
+          
+          <div className="spf" onClick={handleToggleDd}>
+            <div className="av" style={{ background: user?.avatarBg || "linear-gradient(135deg,#635bff,#06c9a0)" }}>
+              {user?.initials || "U"}
             </div>
-          </div>
-
-          {/* Internship list */}
-          <div className="sb-sec" style={{ flex: 1, overflowY: "auto" }}>
-            <div className="sb-lbl" style={{ marginBottom: 8 }}>Internships</div>
-            {internships.map((i, idx) => (
-              <div
-                key={i.id}
-                className={`ii${newId === i.id ? " sel" : ""}`}
-                onClick={() => handleOpenDetail(i)}
-              >
-                <div style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,.8)" }}>
-                  {i.title}
-                </div>
-                <div style={{ fontSize: 10, color: "rgba(255,255,255,.4)" }}>
-                  {i.status}
-                </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ color: "#fff", fontSize: 13, fontWeight: 600 }}>
+                {user?.name || "User"}
               </div>
-            ))}
-          </div>
-
-          {/* Profile */}
-          <div style={{ padding: "12px 12px 17px" }}>
-            <div className="spf" onClick={handleToggleDd}>
-              <div
-                className="av"
-                style={{
-                  background: "linear-gradient(135deg,#635bff,#06c9a0)",
-                  color: "#fff",
-                }}
-              >
-                {user ? (user.name ? user.name[0] : 'U') + (user.surname ? user.surname[0] : '') : 'U'}
+              <div style={{ color: "rgba(255,255,255,.5)", fontSize: 11, fontWeight: 500 }}>
+                {user?.role || "Role"}
               </div>
-              <div style={{ flex: 1, overflow: "hidden" }}>
-                <div
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: "rgba(255,255,255,.8)",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {user ? `${user.name} ${user.surname}` : 'User'}
-                </div>
-                <div style={{ fontSize: 10, color: "rgba(255,255,255,.3)" }}>
-                  {user ? user.role : 'Guest'}
-                </div>
-              </div>
-              <ChevronDown
-                size={12}
-                color="rgba(255,255,255,.35)"
-                style={{
-                  transform: dd ? "rotate(180deg)" : "none",
-                  transition: ".18s",
-                }}
-              />
-              {dd && (
-                <div className="sdd">
-                  <div
-                    className="sddi"
-                    onClick={() => {
-                      setDd(false);
-                      // Clear user data from localStorage
-                      clearUserFromStorage();
-                      setUser(null);
-                      setPage("login");
-                    }}
-                  >
-                    <LogOut size={12} />
-                    Sign Out
-                  </div>
-                </div>
-              )}
             </div>
+            {dd && (
+              <div className="sdd">
+                <div className="sddi" onClick={openFeedback}>
+                  <MessageSquare size={14} />
+                  <span>Feedback</span>
+                </div>
+                <div className="sddi" onClick={() => {
+                  setPage("login");
+                  setUser(null);
+                  clearUserFromStorage();
+                }}>
+                  <LogOut size={14} />
+                  <span>Logout</span>
+                </div>
+              </div>
+            )}
           </div>
-        </aside>
-
-        {/* ── MAIN ── */}
+        </div>
+        
         <div className="main">
           <div className="tbar">
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <button className="bi hmb" onClick={handleOpenSidebar}>
+            <div className="sbox">
+              <Search color="var(--t2)" size={16} />
+              <input
+                type="text"
+                placeholder="Search internships..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <button className="hmb bi" onClick={handleOpenSidebar}>
                 <Menu size={16} />
               </button>
-              {openIntern ? (
-                <div>
-                  <div
-                    style={{
-                      fontFamily: "Syne",
-                      fontSize: 16,
-                      fontWeight: 800,
-                      color: "var(--t1)",
-                    }}
-                  >
-                    {openIntern.title}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 11,
-                      color: "var(--t3)",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 3,
-                    }}
-                  >
-                    <Building2 size={10} />
-                    {openIntern.company}
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  <div
-                    style={{
-                      fontFamily: "Syne",
-                      fontSize: 17,
-                      fontWeight: 800,
-                      color: "var(--t1)",
-                    }}
-                  >
-                    {nav}
-                  </div>
-                  <div style={{ fontSize: 11, color: "var(--t3)" }}>
-                    {new Date().toLocaleDateString("en-US", {
-                      weekday: "long",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div className="sbox" style={{ position: "relative" }}>
-                <Search size={13} color="var(--t3)" />
-                <input
-                  placeholder="Search internships…"
-                  value={search}
-                  onChange={ev => setSearch(ev.target.value)}
-                  style={{ width: 160 }}
-                />
-                {search && searchResults.length > 0 && (
-                  <div style={{
-                    position: "absolute",
-                    top: "100%",
-                    left: 0,
-                    right: 0,
-                    background: "#fff",
-                    border: "1px solid #eee",
-                    borderRadius: 8,
-                    boxShadow: "0 4px 18px rgba(99,91,255,.09)",
-                    zIndex: 10,
-                    marginTop: 2,
-                    maxHeight: 180,
-                    overflowY: "auto"
-                  }}>
-                    {searchResults.map((i) => (
-                      <div
-                        key={i.id}
-                        style={{
-                          padding: "8px 14px",
-                          cursor: "pointer",
-                          fontSize: 13,
-                          borderBottom: "1px solid #f3f3f3",
-                          background: openIntern?.id === i.id ? "#f0f1f7" : undefined
-                        }}
-                        onClick={() => {
-                          setOpenIntern(i);
-                          setSearch("");
-                          setSearchResults([]);
-                        }}
-                      >
-                        {i.title}
-                        <span style={{ color: "#888", fontSize: 11, marginLeft: 8 }}>{i.company}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {search && searchResults.length === 0 && (
-                  <div style={{
-                    position: "absolute",
-                    top: "100%",
-                    left: 0,
-                    right: 0,
-                    background: "#fff",
-                    border: "1px solid #eee",
-                    borderRadius: 8,
-                    boxShadow: "0 4px 18px rgba(99,91,255,.09)",
-                    zIndex: 10,
-                    marginTop: 2,
-                    padding: "8px 14px",
-                    fontSize: 13,
-                    color: "#888"
-                  }}>
-                    No internships found
-                  </div>
-                )}
+              <div className="av" style={{ background: "linear-gradient(135deg,#635bff,#06c9a0)" }}>
+                {user?.initials || "U"}
               </div>
-              <div style={{ position: "relative" }}>
-                <button className="bi">
-                  <Bell size={15} />
-                </button>
-                <div className="ndot" />
-              </div>
-              {!openIntern && (
-                <button className="bp" onClick={handleOpenModal}>
-                  <Plus size={13} /> Add
-                </button>
-              )}
             </div>
           </div>
-          <div className="sa">{renderContent()}</div>
+          
+          <div className="sa">
+            {renderContent()}
+          </div>
         </div>
       </div>
     </>
   );
 }
+

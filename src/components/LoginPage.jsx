@@ -20,13 +20,13 @@ export default function LoginPage({ onLogin, onUserSet }) {
     setLoading(true);
     setErr('');
     try {
-      const response = await fetch(`${API_URL}/usersInternship`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      if (!response.ok) throw new Error('Login failed');
+      // First, fetch all users to find the matching one
+      const response = await fetch(`${API_URL}/users`);
+      if (!response.ok) throw new Error('Could not connect to authentication service');
+      
       const users = await response.json();
       const user = users.find(u => u.login === f.login && u.password === f.password);
+      
       if (user) {
         // Save user to localStorage using utility function
         saveUserToStorage(user);
@@ -36,7 +36,7 @@ export default function LoginPage({ onLogin, onUserSet }) {
         setErr('Invalid login credentials.');
       }
     } catch (error) {
-      setErr('Connection error. Please try again.');
+      setErr(error.message || 'Connection error. Please try again.');
       console.error('Login error:', error);
     } finally {
       setLoading(false);
@@ -197,13 +197,13 @@ export default function LoginPage({ onLogin, onUserSet }) {
             onClick={() =>
               setF((p) => ({
                 ...p,
-                login: 'jdoe',
-                password: 'secret123',
+                login: 'admin',
+                password: 'admin123',
               }))
             }
             style={{ fontSize: 12 }}
           >
-            Autofill
+            Demo Login
           </button>
         </div>
         <button className="lbtn" onClick={go}>

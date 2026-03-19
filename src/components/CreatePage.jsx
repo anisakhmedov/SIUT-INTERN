@@ -18,15 +18,21 @@ export default function CreatePage({ onSubmit, onCancel, students = [] }) { // A
   });
 
   const [selectedStudents, setSelectedStudents] = useState([]);
-  const [searchTerm, setSearchTerm] = useState(''); // This will now be used to filter the displayed students
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedFaculty, setSelectedFaculty] = useState(''); // Add faculty filter state
   const [error, setError] = useState('');
 
-  // Filter students based on search term
+  // Get unique faculties from students
+  const faculties = [...new Set(students.map(student => student.nameFaculty).filter(Boolean))];
+
+  // Filter students based on search term and faculty
   const filteredStudents = students.filter(student => 
     (student.name && student.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (student.surname && student.surname.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (student.lastname && student.lastname.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (student.nameFaculty && student.nameFaculty.toLowerCase().includes(searchTerm.toLowerCase()))
+  ).filter(student => 
+    !selectedFaculty || student.nameFaculty === selectedFaculty
   );
 
   // Filter out already selected students from the filtered list
@@ -250,6 +256,10 @@ export default function CreatePage({ onSubmit, onCancel, students = [] }) { // A
           display: flex;
           justify-content: space-between;
           align-items: center;
+          transition: background-color 0.2s ease;
+        }
+        .student-item:hover {
+          background-color: rgba(99,91,255, 0.05);
         }
         .student-item:last-child {
           border-bottom: none;
@@ -266,6 +276,11 @@ export default function CreatePage({ onSubmit, onCancel, students = [] }) { // A
           font-size: 12px;
           color: var(--t2, #5a6278);
         }
+        .student-id {
+          font-size: 11px;
+          color: var(--t3, #9ba3bb);
+          margin-top: 3px;
+        }
         .add-btn {
           background: rgba(6,201,160,.1);
           color: #06c9a0;
@@ -275,9 +290,14 @@ export default function CreatePage({ onSubmit, onCancel, students = [] }) { // A
           cursor: pointer;
           font-size: 12px;
           font-weight: 600;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          transition: all 0.2s ease;
         }
         .add-btn:hover {
           background: rgba(6,201,160,.2);
+          transform: translateY(-1px);
         }
         .selected-students-list {
           margin-top: 16px;
@@ -286,11 +306,16 @@ export default function CreatePage({ onSubmit, onCancel, students = [] }) { // A
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 8px 12px;
-          background: rgba(99,91,255,.1);
+          padding: 10px 12px;
+          background: linear-gradient(135deg, rgba(99,91,255, 0.1), rgba(6,201,160, 0.05));
           border-radius: 8px;
           margin-bottom: 8px;
           font-size: 13px;
+          border: 1px solid rgba(99,91,255, 0.15);
+          transition: transform 0.2s ease;
+        }
+        .selected-student:hover {
+          transform: translateX(2px);
         }
         .remove-btn {
           background: none;
@@ -298,6 +323,11 @@ export default function CreatePage({ onSubmit, onCancel, students = [] }) { // A
           color: #ef4444;
           cursor: pointer;
           padding: 4px;
+          border-radius: 4px;
+          transition: all 0.2s ease;
+        }
+        .remove-btn:hover {
+          background: rgba(239, 68, 68, 0.1);
         }
         .loading {
           text-align: center;
@@ -310,9 +340,29 @@ export default function CreatePage({ onSubmit, onCancel, students = [] }) { // A
           font-size: 13px;
           margin-top: 4px;
         }
+        .student-count {
+          display: inline-block;
+          background: rgba(99,91,255, 0.1);
+          color: var(--a1, #635bff);
+          border-radius: 20px;
+          padding: 3px 8px;
+          font-size: 11px;
+          font-weight: 600;
+          margin-left: 8px;
+        }
+        .no-students {
+          text-align: center;
+          padding: 20px;
+          color: var(--t3, #9ba3bb);
+          font-style: italic;
+        }
         @media (max-width: 900px) {
           .create-shell {
             grid-template-columns: 1fr;
+          }
+          .create-sidebar {
+            max-height: 50vh;
+            overflow-y: auto;
           }
         }
       `}</style>
@@ -461,7 +511,10 @@ export default function CreatePage({ onSubmit, onCancel, students = [] }) { // A
         </div>
         
         <div className="create-sidebar">
-          <h2 className="create-title" style={{ fontSize: '20px', marginBottom: '16px' }}>Add Students</h2>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <h2 className="create-title" style={{ fontSize: '20px', marginBottom: 0 }}>Add Students</h2>
+            <span className="student-count">{selectedStudents.length}</span>
+          </div>
           
           <div className="search-container">
             <Search className="search-icon" size={16} />
@@ -474,7 +527,21 @@ export default function CreatePage({ onSubmit, onCancel, students = [] }) { // A
             />
           </div>
           
-          {/* Show all students from API */}
+          {/* Faculty filter dropdown */}
+          <div style={{ marginBottom: '16px' }}>
+            <select
+              className="form-input"
+              value={selectedFaculty}
+              onChange={(e) => setSelectedFaculty(e.target.value)}
+            >
+              <option value="">All Faculties</option>
+              {faculties.map(faculty => (
+                <option key={faculty} value={faculty}>{faculty}</option>
+              ))}
+            </select>
+          </div>
+          
+          {/* Show all students from API with improved UI */}
           <div className="student-list">
             {unselectedStudents.length > 0 ? (
               unselectedStudents.map(student => (
@@ -486,6 +553,11 @@ export default function CreatePage({ onSubmit, onCancel, students = [] }) { // A
                     <div className="student-details">
                       Faculty: {student.nameFaculty}
                     </div>
+                    {student.studentId && (
+                      <div className="student-id">
+                        ID: {student.studentId}
+                      </div>
+                    )}
                   </div>
                   <button 
                     className="add-btn" 
@@ -496,8 +568,8 @@ export default function CreatePage({ onSubmit, onCancel, students = [] }) { // A
                 </div>
               ))
             ) : (
-              <div style={{ textAlign: 'center', padding: '20px', color: 'var(--t3, #9ba3bb)' }}>
-                {searchTerm ? 'No students found' : 'No students available'}
+              <div className="no-students">
+                {searchTerm || selectedFaculty ? 'No students found' : 'No students available'}
               </div>
             )}
           </div>
@@ -510,10 +582,10 @@ export default function CreatePage({ onSubmit, onCancel, students = [] }) { // A
               {selectedStudents.map(student => (
                 <div key={student._id} className="selected-student">
                   <span>
-                    {student.name} {student.surname} {student.lastname} 
-                    <small style={{ color: 'var(--t3, #9ba3bb)', marginLeft: '5px' }}>
-                      ({student.nameFaculty})
-                    </small>
+                    <strong>{student.name} {student.surname} {student.lastname}</strong>
+                    <div style={{ fontSize: '12px', color: 'var(--t2, #5a6278)', marginTop: '2px' }}>
+                      {student.nameFaculty} {student.studentId && `• ID: ${student.studentId}`}
+                    </div>
                   </span>
                   <button 
                     className="remove-btn" 

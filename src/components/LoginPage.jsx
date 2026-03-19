@@ -21,7 +21,7 @@ export default function LoginPage({ onLogin, onUserSet }) {
     setErr('');
     try {
       // First, fetch all users to find the matching one
-      const response = await fetch(`${API_URL}/users`);
+      const response = await fetch(`${API_URL}/usersInternship`);
       if (!response.ok) throw new Error('Could not connect to authentication service');
       
       const users = await response.json();

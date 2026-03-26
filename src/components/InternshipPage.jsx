@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
 const API_URL = 'https://siut-internship-35635e91d124.herokuapp.com';
 
@@ -11,9 +11,12 @@ export default function InternshipPage({ facultyId, onBack, user }) {
   const [showReportForm, setShowReportForm] = useState(false);
   const [reportTitle, setReportTitle] = useState('');
   const [reportDescription, setReportDescription] = useState('');
+  const [reportImages, setReportImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
   const [actionMessage, setActionMessage] = useState('');
   const [actionError, setActionError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [showFeedbackView, setShowFeedbackView] = useState(false);
   const commentsSectionRef = useRef(null);
   const feedbackTimeoutRef = useRef(null);
 
@@ -42,7 +45,6 @@ export default function InternshipPage({ facultyId, onBack, user }) {
   const canWriteReport = user?.role === 'Tutor' || user?.role === 'Admin';
   const canApprove = user?.role === 'Admin';
   const canExport = user?.role === 'Admin';
-  const canViewComments = ['Admin', 'Rector', 'Professor'].includes(user?.role);
 
   const clearActionFeedback = useCallback(() => {
     if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
@@ -100,34 +102,94 @@ export default function InternshipPage({ facultyId, onBack, user }) {
   const handleReportSubmit = useCallback(async (e) => {
     e.preventDefault();
     if (!currentDay) return;
-    const shortReport = {
-      title: reportTitle.trim() || 'Report',
-      description: reportDescription.trim() || '',
-      images: currentDay.shortReport?.images || [],
-      date: currentDay.shortReport?.date || new Date().toISOString(),
-      dayID: currentDay.shortReport?.dayID || null,
-    };
-    await updateDay(currentDay, { ...currentDay, shortReport }, dayIndex);
+    
+    const formData = new FormData();
+    reportImages.forEach(image => {
+      formData.append('images', image);
+    });
+    
+    // Add other report data
+    formData.append('title', reportTitle.trim() || 'Report');
+    formData.append('description', reportDescription.trim() || '');
+    formData.append('date', new Date().toISOString());
+    formData.append('dayID', currentDay._id || currentDay.id || '');
+
+    // Submit to backend
+    const res = await fetch(`${API_URL}/faculty/${facultyId}/days/${getDayId(currentDay)}/report`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.message || 'Failed to submit report');
+    }
+
+    await fetchFaculty(); // Refresh the data
+    setActionMessage('Report saved.');
+    clearActionFeedback();
     setShowReportForm(false);
-  }, [currentDay, reportTitle, reportDescription, updateDay, dayIndex]);
+    
+    // Reset form fields
+    setReportTitle('');
+    setReportDescription('');
+    setReportImages([]);
+    setImagePreviews([]);
+  }, [currentDay, reportTitle, reportDescription, reportImages, facultyId, getDayId, fetchFaculty, clearActionFeedback]);
+
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+    
+    const newValidImages = files.filter(file => {
+      if (!validImageTypes.includes(file.type)) {
+        alert(`${file.name} is not a valid image file. Only JPEG, PNG, WebP and GIF are allowed.`);
+        return false;
+      }
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        alert(`${file.name} is too large. Maximum size is 5MB.`);
+        return false;
+      }
+      return true;
+    });
+    
+    setReportImages(prev => [...prev, ...newValidImages]);
+    
+    // Create previews for the new images
+    newValidImages.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImagePreviews(prev => [...prev, { id: file.lastModified, src: reader.result, name: file.name }]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (imageId) => {
+    setReportImages(prev => prev.filter(img => img.lastModified !== imageId));
+    setImagePreviews(prev => prev.filter(img => img.id !== imageId));
+  };
 
   const handleApprove = useCallback(async () => {
     if (!currentDay) return;
     await updateDay(currentDay, { ...currentDay, approved: true }, dayIndex);
   }, [currentDay, updateDay, dayIndex]);
 
-  const handleViewComments = useCallback(() => {
-    commentsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, []);
-
   const handlePostComment = useCallback(async (e) => {
     e.preventDefault();
     const text = newComment.trim();
-    if (!text || !currentDay) return;
-    const comments = [...(currentDay.comments || []), text];
+    if (!text || !currentDay || !user) return;
+    
+    const newCommentObj = {
+      text: text,
+      date: new Date().toISOString(),
+      userID: user.id || user._id || 'unknown'
+    };
+    
+    const comments = [...(currentDay.comments || []), newCommentObj];
     await updateDay(currentDay, { ...currentDay, comments }, dayIndex);
     setNewComment('');
-  }, [currentDay, newComment, updateDay, dayIndex]);
+  }, [currentDay, newComment, updateDay, dayIndex, user]);
 
   const handleAddDay = useCallback(async () => {
     setSubmitting(true);
@@ -159,6 +221,23 @@ export default function InternshipPage({ facultyId, onBack, user }) {
       setSubmitting(false);
     }
   }, [facultyId, days.length, fetchFaculty, clearActionFeedback]);
+
+  const allComments = useMemo(() => {
+    if (!faculty || !faculty.days) return [];
+    return faculty.days.flatMap((day, index) => 
+      (day.comments || []).map(comment => ({
+        text: comment,
+        dayIndex: index,
+        dayNumber: day.dayNumber,
+        date: day.date
+      }))
+    );
+  }, [faculty]);
+
+  const navigateToDay = useCallback((dayIndex) => {
+    setDayIndex(dayIndex);
+    setShowFeedbackView(false);
+  }, []);
 
   const renderContent = () => {
     if (loading) {
@@ -278,49 +357,138 @@ export default function InternshipPage({ facultyId, onBack, user }) {
                 Export PDF
               </button>
             )}
-            {canViewComments && (
-              <button
-                type="button"
-                className="ip-btn ip-btn--primary"
-                onClick={handleViewComments}
-              >
-                View comments
-              </button>
-            )}
           </div>
 
           {showReportForm && currentDay && (
             <div className="ip-report-form-card">
-              <h4 className="ip-report-form-title">Write report — Day {currentDay.dayNumber}</h4>
-              <form onSubmit={handleReportSubmit}>
-                <div className="ip-field">
-                  <label className="ip-label" htmlFor="ip-report-title">Title</label>
-                  <input
-                    id="ip-report-title"
-                    type="text"
-                    value={reportTitle}
-                    onChange={(e) => setReportTitle(e.target.value)}
-                    className="ip-input"
-                    placeholder="Report title"
-                  />
+              <div className="ip-report-form-header">
+                <h4 className="ip-report-form-title">Write report — Day {currentDay.dayNumber}</h4>
+                <button 
+                  type="button" 
+                  className="ip-close-btn"
+                  onClick={() => {
+                    setShowReportForm(false);
+                    // Reset form fields when cancelling
+                    setReportTitle('');
+                    setReportDescription('');
+                    setReportImages([]);
+                    setImagePreviews([]);
+                  }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+              
+              <form onSubmit={handleReportSubmit} className="ip-report-form">
+                <div className="ip-field-group">
+                  <div className="ip-field">
+                    <label className="ip-label" htmlFor="ip-report-title">Title</label>
+                    <input
+                      id="ip-report-title"
+                      type="text"
+                      value={reportTitle}
+                      onChange={(e) => setReportTitle(e.target.value)}
+                      className="ip-input"
+                      placeholder="Report title"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="ip-field">
+                    <label className="ip-label" htmlFor="ip-report-desc">Description</label>
+                    <textarea
+                      id="ip-report-desc"
+                      value={reportDescription}
+                      onChange={(e) => setReportDescription(e.target.value)}
+                      className="ip-input ip-textarea"
+                      placeholder="What was done today?"
+                      rows={6}
+                      required
+                    />
+                  </div>
                 </div>
+                
+                {/* Image Upload Section */}
                 <div className="ip-field">
-                  <label className="ip-label" htmlFor="ip-report-desc">Description</label>
-                  <textarea
-                    id="ip-report-desc"
-                    value={reportDescription}
-                    onChange={(e) => setReportDescription(e.target.value)}
-                    className="ip-input"
-                    placeholder="What was done today?"
-                    rows={4}
-                  />
+                  <label className="ip-label" htmlFor="ip-report-images">Attachments</label>
+                  <div className="ip-image-upload-container">
+                    <label htmlFor="ip-report-images" className="ip-image-upload-area">
+                      <input
+                        id="ip-report-images"
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="ip-image-input"
+                      />
+                      <div className="ip-upload-content">
+                        <div className="ip-upload-icon">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                          </svg>
+                        </div>
+                        <p className="ip-upload-text">Click to upload or drag and drop</p>
+                        <p className="ip-upload-hint">SVG, PNG, JPG, GIF (max. 5MB)</p>
+                      </div>
+                    </label>
+                    
+                    {/* Preview of selected images */}
+                    {imagePreviews.length > 0 && (
+                      <div className="ip-image-previews-grid">
+                        {imagePreviews.map((preview) => (
+                          <div key={preview.id} className="ip-image-preview-item">
+                            <img src={preview.src} alt={preview.name} className="ip-image-preview" />
+                            <button 
+                              type="button" 
+                              className="ip-remove-image-btn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeImage(preview.id);
+                              }}
+                              aria-label="Remove image"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
+                
                 <div className="ip-form-actions">
-                  <button type="button" className="ip-btn ip-btn--secondary" onClick={() => setShowReportForm(false)}>
+                  <button 
+                    type="button" 
+                    className="ip-btn ip-btn--secondary"
+                    onClick={() => {
+                      setShowReportForm(false);
+                      // Reset form fields when cancelling
+                      setReportTitle('');
+                      setReportDescription('');
+                      setReportImages([]);
+                      setImagePreviews([]);
+                    }}
+                  >
                     Cancel
                   </button>
-                  <button type="submit" className="ip-btn ip-btn--primary" disabled={submitting}>
-                    {submitting ? 'Saving…' : 'Save report'}
+                  <button 
+                    type="submit" 
+                    className="ip-btn ip-btn--primary" 
+                    disabled={submitting}
+                  >
+                    {submitting ? (
+                      <>
+                        <span className="ip-spinner"></span> Saving…
+                      </>
+                    ) : 'Save Report'}
                   </button>
                 </div>
               </form>
@@ -392,7 +560,7 @@ export default function InternshipPage({ facultyId, onBack, user }) {
                       {currentDay.comments && currentDay.comments.length > 0 && (
                         <ul className="ip-comments-list">
                           {currentDay.comments.map((comment, idx) => (
-                            <li key={idx} className="ip-comment">{comment}</li>
+                            <li key={comment.commentID || idx} className="ip-comment">{comment.text}</li>
                           ))}
                         </ul>
                       )}
@@ -430,6 +598,44 @@ export default function InternshipPage({ facultyId, onBack, user }) {
               )}
             </div>
           )}
+          
+          {showFeedbackView && (
+            <div className="ip-feedback-view">
+              <div className="ip-feedback-header">
+                <h3 className="ip-feedback-title">All Comments</h3>
+                <button 
+                  type="button" 
+                  className="ip-btn ip-btn--secondary"
+                  onClick={() => setShowFeedbackView(false)}
+                >
+                  Back to Days
+                </button>
+              </div>
+              
+              {allComments.length > 0 ? (
+                <ul className="ip-comments-list">
+                  {allComments.map((comment, idx) => (
+                    <li key={idx} className="ip-comment">
+                      <div className="ip-comment-header">
+                        <span className="ip-comment-day">Day {comment.dayNumber} ({comment.date})</span>
+                        <button 
+                          type="button" 
+                          className="ip-comment-navigate-btn"
+                          onClick={() => navigateToDay(comment.dayIndex)}
+                        >
+                          Go to day
+                        </button>
+                      </div>
+                      <p className="ip-comment-text">{comment.text}</p>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="ip-empty-state">No comments found</div>
+              )}
+            </div>
+          )}
+
         </div>
       </div>
     );
@@ -728,10 +934,212 @@ const ipStyles = `
     font-size: 14px;
     box-shadow: 0 14px 44px rgba(99,91,255,.10);
   }
+  .ip-image-upload-container { margin-top: 12px; }
+  .ip-image-upload-area {
+    display: block;
+    position: relative;
+    border: 2px dashed rgba(99,91,255,.25);
+    border-radius: 16px;
+    padding: 40px 24px;
+    text-align: center;
+    cursor: pointer;
+    background: linear-gradient(135deg, rgba(99,91,255,.04), rgba(6,201,160,.02));
+    transition: all .3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    overflow: hidden;
+  }
+  .ip-image-upload-area:hover {
+    border-color: rgba(99,91,255,.4);
+    background: linear-gradient(135deg, rgba(99,91,255,.08), rgba(6,201,160,.05));
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(99,91,255,.12);
+  }
+  .ip-image-input { display: none; }
+  .ip-upload-content {
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .ip-upload-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: rgba(99,91,255,.1);
+    border-radius: 12px;
+    margin-left: auto;
+    margin-right: auto;
+    color: var(--a1, #635bff);
+  }
+  .ip-upload-text {
+    margin: 0;
+    color: var(--a1, #635bff);
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .ip-upload-hint {
+    margin: 0;
+    color: var(--t3, #9ba3bb);
+    font-size: 12px;
+  }
+  .ip-image-previews-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 12px;
+    margin-top: 18px;
+  }
+  .ip-image-preview-item {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(0,0,0,.05);
+    border: 1px solid rgba(0,0,0,.08);
+    aspect-ratio: 1;
+    transition: all .2s ease;
+  }
+  .ip-image-preview-item:hover {
+    box-shadow: 0 8px 24px rgba(99,91,255,.15);
+    transform: translateY(-2px);
+  }
+  .ip-image-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .ip-remove-image-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,.9);
+    border: 1px solid rgba(0,0,0,.1);
+    border-radius: 8px;
+    cursor: pointer;
+    color: #ef4444;
+    padding: 0;
+    transition: all .2s ease;
+    opacity: 0;
+  }
+  .ip-image-preview-item:hover .ip-remove-image-btn {
+    opacity: 1;
+  }
+  .ip-remove-image-btn:hover {
+    background: var(--a1, #635bff);
+    color: #fff;
+    transform: scale(1.1);
+  }
+  .ip-report-form-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .ip-close-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--t2, #5a6278);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: all .2s ease;
+  }
+  .ip-close-btn:hover {
+    background: rgba(0,0,0,.05);
+    color: var(--t1, #0c0e18);
+  }
+  .ip-field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .ip-textarea {
+    resize: vertical;
+    font-family: inherit;
+  }
+  .ip-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255,255,255,.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  .ip-feedback-view {
+    background: rgba(255,255,255,.86);
+    border: 1px solid rgba(0,0,0,.08);
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 14px 44px rgba(99,91,255,.10);
+  }
+  .ip-feedback-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(0,0,0,.06);
+  }
+  .ip-feedback-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--t1, #0c0e18);
+    margin: 0;
+  }
+  .ip-comment-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .ip-comment-day {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--t3, #9ba3bb);
+  }
+  .ip-comment-navigate-btn {
+    padding: 4px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(99,91,255,.2);
+    background: rgba(99,91,255,.08);
+    color: var(--a1, #635bff);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s ease;
+  }
+  .ip-comment-navigate-btn:hover {
+    background: rgba(99,91,255,.15);
+    border-color: rgba(99,91,255,.4);
+  }
+  .ip-comment-text { margin: 0; }
+  .ip-empty-state {
+    text-align: center;
+    color: var(--t3, #9ba3bb);
+    font-size: 14px;
+    padding: 24px;
+  }
   @media (min-width: 640px) {
     .ip-hero-title { font-size: 28px; }
     .ip-hero { padding: 28px; }
     .ip-hero-grid { grid-template-columns: repeat(3, 1fr); }
     .ip-hero-item--full { grid-column: 1 / -1; }
+    .ip-image-previews-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
   }
 `;

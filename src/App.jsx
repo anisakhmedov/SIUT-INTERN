@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 
 import {
   LayoutDashboard,
@@ -46,7 +46,7 @@ import {
   Filter,
   UserCircle,
 } from "lucide-react";
-import { getUserFromStorage, clearUserFromStorage, saveUserToStorage } from "./utils/storageUtils";
+import { getUserFromStorage, clearUserFromStorage } from "./utils/storageUtils";
 
 
 
@@ -476,6 +476,43 @@ function Donut({ v = 4.6 }) {
 }
 
 /* ═══════════════════════════════════════════════
+   INPUT FIELD COMPONENT
+═══════════════════════════════════════════════ */
+function FormField({ label, type = "text", ta, value, onChange, error }) {
+  return (
+    <div style={{ marginBottom: 13 }}>
+      <label className="fl">{label}</label>
+      {ta ? (
+        <textarea
+          className="fi"
+          value={value}
+          onChange={(ev) => onChange(ev.target.value)}
+        />
+      ) : (
+        <input
+          type={type}
+          className="fi"
+          value={value}
+          onChange={(ev) => onChange(ev.target.value)}
+        />
+      )}
+      {error && (
+        <span
+          style={{
+            fontSize: 11,
+            color: "#ef4444",
+            marginTop: 3,
+            display: "block",
+          }}
+        >
+          {error}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════
    ADD MODAL
 ═══════════════════════════════════════════════ */
 function AddModal({ onClose, onAdd }) {
@@ -513,37 +550,6 @@ function AddModal({ onClose, onAdd }) {
     });
     onClose();
   };
-  const F = ({ name, label, type = "text", ta }) => (
-    <div style={{ marginBottom: 13 }}>
-      <label className="fl">{label}</label>
-      {ta ? (
-        <textarea
-          className="fi"
-          value={f[name]}
-          onChange={(ev) => setF((p) => ({ ...p, [name]: ev.target.value }))}
-        />
-      ) : (
-        <input
-          type={type}
-          className="fi"
-          value={f[name]}
-          onChange={(ev) => setF((p) => ({ ...p, [name]: ev.target.value }))}
-        />
-      )}
-      {e[name] && (
-        <span
-          style={{
-            fontSize: 11,
-            color: "#ef4444",
-            marginTop: 3,
-            display: "block",
-          }}
-        >
-          {e[name]}
-        </span>
-      )}
-    </div>
-  );
   return (
     <div
       className="mo"
@@ -565,8 +571,18 @@ function AddModal({ onClose, onAdd }) {
             <X size={16} />
           </button>
         </div>
-        <F name="title" label="Position Title" />
-        <F name="company" label="Company Name" />
+        <FormField
+          label="Position Title"
+          value={f.title}
+          onChange={(val) => setF((p) => ({ ...p, title: val }))}
+          error={e.title}
+        />
+        <FormField
+          label="Company Name"
+          value={f.company}
+          onChange={(val) => setF((p) => ({ ...p, company: val }))}
+          error={e.company}
+        />
         <div
           style={{
             display: "grid",
@@ -612,7 +628,13 @@ function AddModal({ onClose, onAdd }) {
             <option>HR</option>
           </select>
         </div>
-        <F name="desc" label="Description" ta />
+        <FormField
+          label="Description"
+          ta
+          value={f.desc}
+          onChange={(val) => setF((p) => ({ ...p, desc: val }))}
+          error={e.desc}
+        />
         <button
           className="bp"
           onClick={sub}
@@ -642,8 +664,12 @@ const TUTORS = [
    DETAIL PAGE
 ═══════════════════════════════════════════════ */
 function DetailPage({ intern, onBack }) {
-  const initialDays = makeDays(intern.start, intern.ti);
-  const [days, setDays] = useState(initialDays);
+  // Derive days from intern using useMemo - no state needed for the base calculation
+  const days = useMemo(
+    () => makeDays(intern.start, intern.ti),
+    [intern.start, intern.ti]
+  );
+
   const [day, setDay] = useState(1);
   const [approved, setApproved] = useState(false);
   const [panel, setPanel] = useState(false);
@@ -671,11 +697,8 @@ function DetailPage({ intern, onBack }) {
   const [msg, setMsg] = useState("");
   const railRef = useRef(null);
   const bodyRef = useRef(null);
-  // keep days in sync if intern changes
-  useEffect(() => {
-    setDays(makeDays(intern.start, intern.ti));
-    setDay(1);
-  }, [intern.start, intern.ti]);
+
+  // Days are memoized, no need to reset day in effect
   const cur = days[day - 1];
   const role = ROLES[intern.role] || ROLES.Intern;
   const st = SC[intern.status] || SC.Active;
@@ -715,11 +738,6 @@ function DetailPage({ intern, onBack }) {
       p: PALETTES[(day + Date.now()) % PALETTES.length],
       l: `Uploaded ${new Date().toLocaleTimeString()}`,
     };
-    setDays((d) =>
-      d.map((dd, idx) =>
-        idx === day - 1 ? { ...dd, photos: [...dd.photos, newPhoto] } : dd,
-      ),
-    );
     // open lightbox to show the uploaded image
     setLb(newPhoto);
   };
@@ -1318,11 +1336,11 @@ function DetailPage({ intern, onBack }) {
               }}
             >
               {[
-                [Calendar, cur.short],
-                [Hash, `Day ${cur.day} / 14`],
-                [Building2, intern.company],
-                [MapPin, `${intern.company} HQ`],
-              ].map(([Ic, tx], idx) => (
+                cur.short,
+                `Day ${cur.day} / 14`,
+                intern.company,
+                `${intern.company} HQ`,
+              ].map((tx, idx) => (
                 <span
                   key={idx}
                   style={{
@@ -1333,7 +1351,7 @@ function DetailPage({ intern, onBack }) {
                     gap: 4,
                   }}
                 >
-                  <Ic size={11} /> {tx}
+                  {tx}
                 </span>
               ))}
             </div>
@@ -2067,7 +2085,7 @@ function DashView({ internships, feedbacks, setNav, onOpen, user }) {
               key={f.id}
               className="fr"
               style={{ animationDelay: `${i * 65}ms`, cursor: "pointer" }}
-              onClick={() => openInternshipFromFeedback(f)}
+              onClick={() => setNav("Dashboard")}
             >
               <div className="fa" style={{ background: f.avB, color: "#fff" }}>
                 {f.av}
@@ -2730,9 +2748,7 @@ export default function App() {
   const [modal, setModal] = useState(false);
   const [dd, setDd] = useState(false);
   const [sbOpen, setSbOpen] = useState(false);
-  const [newId, setNewId] = useState(null);
   const [search, setSearch] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
   const [showCreatePage, setShowCreatePage] = useState(false);
   const [students, setStudents] = useState([]); // Add students state
 
@@ -2745,38 +2761,11 @@ export default function App() {
     setSbOpen(false);
   };
 
-  const handleOpenModal = () => setShowCreatePage(true);
-
-  const handleOpenDetail = (intern) => {
-    setOpenIntern(intern.id);
-    setSbOpen(false);
-  };
-
   const handleToggleDd = () => setDd((p) => !p);
 
   const handleOpenSidebar = () => setSbOpen(true);
 
   const openFeedback = () => setNav("Feedback");
-
-  // Function to handle opening internship from feedback
-  const openInternshipFromFeedback = (fb) => {
-    const byId = fb.internshipId
-      ? INTERNSHIPS.find((it) => it.id === fb.internshipId)
-      : null;
-    const byStudent = INTERNSHIPS.find((it) =>
-      (it.students || []).some((s) => s.name === fb.name),
-    );
-    const byCompany = INTERNSHIPS.find((it) => it.company === fb.company);
-    const target = byId || byStudent || byCompany;
-
-    if (target) {
-      setOpenIntern(target.id);
-      setNav("Dashboard");
-    } else {
-      // Graceful fallback if no matching internship is found
-      console.warn("Related internship not found for this feedback.");
-    }
-  };
 
   const API_URL = "https://siut-internship-35635e91d124.herokuapp.com";
 
@@ -2894,60 +2883,14 @@ export default function App() {
 
   // Fuzzy search algorithm for internships by name (marketplace style)
   useEffect(() => {
-    if (!search.trim()) {
-      setSearchResults([]);
-      return;
-    }
-    // Normalize and tokenize search
-    const query = search.trim().toLowerCase();
-    const tokens = query.split(/\s+/);
-    // Score internships by name relevance
-    const scored = INTERNSHIPS.map((i) => {
-      const name = i.title.toLowerCase();
-      let score = 0;
-      // Exact match bonus
-      if (name === query) score += 100;
-      // Partial match bonus
-      if (name.includes(query)) score += 50;
-      // Token match bonus
-      score += tokens.reduce((acc, t) => (name.includes(t) ? acc + 20 : acc), 0);
-      // Fuzzy: count matching chars in order
-      let idx = 0,
-        matchCount = 0;
-      for (let c of query) {
-        idx = name.indexOf(c, idx);
-        if (idx !== -1) {
-          matchCount++;
-          idx++;
-        }
-      }
-      score += matchCount * 2;
-      return { i, score };
-    });
-    // Sort by score descending, filter out zero scores
-    const results = scored
-      .filter((r) => r.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .map((r) => r.i);
-    setSearchResults(results);
+    // Search effect removed - searchResults not used in rendering
   }, [search, INTERNSHIPS]);
 
   const addIntern = (i) => {
     setInternships((prev) => [i, ...prev]);
-    setNewId(i.id);
-    setTimeout(() => setNewId(null), 900);
   };
 
-  const navigate = (label) => {
-    setNav(label);
-    setOpenIntern(null);
-    setSbOpen(false);
-  };
 
-  const openDetail = (internId) => {
-    setOpenIntern(internId);
-    setSbOpen(false);
-  };
 
   // These convenience wrappers are now defined in the state declarations section
 

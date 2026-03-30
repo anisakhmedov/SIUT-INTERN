@@ -17,6 +17,10 @@ export default function InternshipPage({ facultyId, onBack, user }) {
   const [actionError, setActionError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [showFeedbackView, setShowFeedbackView] = useState(false);
+  const [isEditingReport, setIsEditingReport] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0); // 0-100 for progress tracking
+  const [showAddDayModal, setShowAddDayModal] = useState(false);
+  const [newDayDate, setNewDayDate] = useState(new Date().toISOString().slice(0, 10));
   const commentsSectionRef = useRef(null);
   const feedbackTimeoutRef = useRef(null);
 
@@ -92,10 +96,14 @@ export default function InternshipPage({ facultyId, onBack, user }) {
     if (currentDay?.shortReport) {
       setReportTitle(currentDay.shortReport.title || '');
       setReportDescription(currentDay.shortReport.description || '');
+      setIsEditingReport(true);
     } else {
       setReportTitle('');
       setReportDescription('');
+      setIsEditingReport(false);
     }
+    setReportImages([]);
+    setImagePreviews([]);
     setShowReportForm(true);
   }, [currentDay]);
 
@@ -103,39 +111,91 @@ export default function InternshipPage({ facultyId, onBack, user }) {
     e.preventDefault();
     if (!currentDay) return;
     
-    const formData = new FormData();
-    reportImages.forEach(image => {
-      formData.append('images', image);
-    });
+    setSubmitting(true);
+    setActionError('');
+    setActionMessage('');
+    setUploadProgress(0);
     
-    // Add other report data
-    formData.append('title', reportTitle.trim() || 'Report');
-    formData.append('description', reportDescription.trim() || '');
-    formData.append('date', new Date().toISOString());
-    formData.append('dayID', currentDay._id || currentDay.id || '');
+    try {
+      // Step 1: Upload images to API and collect URLs
+      const imageUrls = [];
+      if (reportImages && reportImages.length > 0) {
+        for (let i = 0; i < reportImages.length; i++) {
+          const image = reportImages[i];
+          const imageFormData = new FormData();
+          imageFormData.append('image', image);
+          
+          const uploadRes = await fetch(
+            `${API_URL}/faculty/${facultyId}/days/${getDayId(currentDay)}/images`,
+            {
+              method: 'POST',
+              body: imageFormData,
+            }
+          );
+          
+          if (!uploadRes.ok) {
+            const errorData = await uploadRes.json();
+            throw new Error(errorData.message || `Failed to upload image: ${image.name}`);
+          }
+          
+          const uploadedData = await uploadRes.json();
+          imageUrls.push(uploadedData.image.url);
+          
+          // Update progress
+          const progress = Math.round(((i + 1) / reportImages.length) * 100);
+          setUploadProgress(progress);
+        }
+      }
+      
+      // Step 2: Create/update report with image URLs
+      setActionMessage(`Uploading report (${reportImages.length} image${reportImages.length !== 1 ? 's' : ''} uploaded)...`);
+      
+      const reportPayload = {
+        ...currentDay,
+        shortReport: {
+          title: reportTitle.trim() || 'Report',
+          description: reportDescription.trim() || '',
+          images: imageUrls,
+          date: new Date().toISOString(),
+        },
+      };
+      
+      const method = isEditingReport ? 'PATCH' : 'POST';
+      const endpoint = isEditingReport 
+        ? `${API_URL}/faculty/${facultyId}/days/${getDayId(currentDay)}`
+        : `${API_URL}/faculty/${facultyId}/days/${getDayId(currentDay)}/report`;
+      
+      const reportRes = await fetch(endpoint, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(reportPayload),
+      });
 
-    // Submit to backend
-    const res = await fetch(`${API_URL}/faculty/${facultyId}/days/${getDayId(currentDay)}/report`, {
-      method: 'POST',
-      body: formData,
-    });
+      if (!reportRes.ok) {
+        const errorData = await reportRes.json();
+        throw new Error(errorData.message || `Failed to ${isEditingReport ? 'update' : 'submit'} report`);
+      }
 
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(errorData.message || 'Failed to submit report');
+      await fetchFaculty(); // Refresh the data
+      setActionMessage(`Report ${isEditingReport ? 'updated' : 'created'} with ${imageUrls.length} image(s).`);
+      clearActionFeedback();
+      setShowReportForm(false);
+      setIsEditingReport(false);
+      
+      // Reset form fields
+      setReportTitle('');
+      setReportDescription('');
+      setReportImages([]);
+      setImagePreviews([]);
+      setUploadProgress(0);
+    } catch (err) {
+      setActionError(err.message || 'Something went wrong.');
+      clearActionFeedback();
+    } finally {
+      setSubmitting(false);
+      setUploadProgress(0);
     }
-
-    await fetchFaculty(); // Refresh the data
-    setActionMessage('Report saved.');
-    clearActionFeedback();
-    setShowReportForm(false);
-    
-    // Reset form fields
-    setReportTitle('');
-    setReportDescription('');
-    setReportImages([]);
-    setImagePreviews([]);
-  }, [currentDay, reportTitle, reportDescription, reportImages, facultyId, getDayId, fetchFaculty, clearActionFeedback]);
+  }, [currentDay, reportTitle, reportDescription, reportImages, facultyId, getDayId, fetchFaculty, clearActionFeedback, isEditingReport]);
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
@@ -191,15 +251,19 @@ export default function InternshipPage({ facultyId, onBack, user }) {
     setNewComment('');
   }, [currentDay, newComment, updateDay, dayIndex, user]);
 
-  const handleAddDay = useCallback(async () => {
+  const handleAddDayClick = useCallback(() => {
+    setNewDayDate(new Date().toISOString().slice(0, 10));
+    setShowAddDayModal(true);
+  }, []);
+
+  const handleAddDayConfirm = useCallback(async () => {
     setSubmitting(true);
     setActionError('');
     setActionMessage('');
     try {
-      const today = new Date().toISOString().slice(0, 10);
       const newDay = {
         dayNumber: String((days.length || 0) + 1),
-        date: today,
+        date: newDayDate,
         approved: false,
         shortReport: null,
         comments: [],
@@ -214,22 +278,26 @@ export default function InternshipPage({ facultyId, onBack, user }) {
       setDayIndex(days.length);
       setActionMessage('Day added.');
       clearActionFeedback();
+      setShowAddDayModal(false);
+      setNewDayDate(new Date().toISOString().slice(0, 10));
     } catch (err) {
       setActionError(err.message || 'Failed to add day.');
       clearActionFeedback();
     } finally {
       setSubmitting(false);
     }
-  }, [facultyId, days.length, fetchFaculty, clearActionFeedback]);
+  }, [facultyId, days.length, newDayDate, fetchFaculty, clearActionFeedback]);
 
   const allComments = useMemo(() => {
     if (!faculty || !faculty.days) return [];
     return faculty.days.flatMap((day, index) => 
       (day.comments || []).map(comment => ({
-        text: comment,
+        text: comment.text || comment,
+        date: comment.date,
+        userID: comment.userID,
+        commentID: comment._id,
         dayIndex: index,
-        dayNumber: day.dayNumber,
-        date: day.date
+        dayNumber: day.dayNumber
       }))
     );
   }, [faculty]);
@@ -362,7 +430,7 @@ export default function InternshipPage({ facultyId, onBack, user }) {
           {showReportForm && currentDay && (
             <div className="ip-report-form-card">
               <div className="ip-report-form-header">
-                <h4 className="ip-report-form-title">Write report — Day {currentDay.dayNumber}</h4>
+                <h4 className="ip-report-form-title">{isEditingReport ? 'Edit report' : 'Write report'} — Day {currentDay.dayNumber}</h4>
                 <button 
                   type="button" 
                   className="ip-close-btn"
@@ -382,8 +450,8 @@ export default function InternshipPage({ facultyId, onBack, user }) {
                 </button>
               </div>
               
-              <form onSubmit={handleReportSubmit} className="ip-report-form">
-                <div className="ip-field-group">
+              <form onSubmit={handleReportSubmit} className="ip-report-form ip-report-form-wrapper">
+                <div className="ip-form-section">
                   <div className="ip-field">
                     <label className="ip-label" htmlFor="ip-report-title">Title</label>
                     <input
@@ -396,7 +464,11 @@ export default function InternshipPage({ facultyId, onBack, user }) {
                       required
                     />
                   </div>
-                  
+                </div>
+
+                <div className="ip-form-divider"></div>
+                
+                <div className="ip-form-section">
                   <div className="ip-field">
                     <label className="ip-label" htmlFor="ip-report-desc">Description</label>
                     <textarea
@@ -405,14 +477,15 @@ export default function InternshipPage({ facultyId, onBack, user }) {
                       onChange={(e) => setReportDescription(e.target.value)}
                       className="ip-input ip-textarea"
                       placeholder="What was done today?"
-                      rows={6}
+                      rows={5}
                       required
                     />
                   </div>
                 </div>
+
+                <div className="ip-form-divider"></div>
                 
-                {/* Image Upload Section */}
-                <div className="ip-field">
+                <div className="ip-form-section">
                   <label className="ip-label" htmlFor="ip-report-images">Attachments</label>
                   <div className="ip-image-upload-container">
                     <label htmlFor="ip-report-images" className="ip-image-upload-area">
@@ -465,6 +538,11 @@ export default function InternshipPage({ facultyId, onBack, user }) {
                 </div>
                 
                 <div className="ip-form-actions">
+                  {submitting && reportImages.length > 0 && uploadProgress > 0 && (
+                    <div className="ip-progress-bar">
+                      <div className="ip-progress-bar-fill" style={{ width: `${uploadProgress}%` }}></div>
+                    </div>
+                  )}
                   <button 
                     type="button" 
                     className="ip-btn ip-btn--secondary"
@@ -486,9 +564,13 @@ export default function InternshipPage({ facultyId, onBack, user }) {
                   >
                     {submitting ? (
                       <>
-                        <span className="ip-spinner"></span> Saving…
+                        <span className="ip-spinner"></span>
+                        {reportImages.length > 0 && uploadProgress > 0 && uploadProgress < 100 
+                          ? `Uploading (${uploadProgress}%)`
+                          : (isEditingReport ? 'Updating…' : 'Saving…')
+                        }
                       </>
-                    ) : 'Save Report'}
+                    ) : (isEditingReport ? 'Update Report' : 'Save Report')}
                   </button>
                 </div>
               </form>
@@ -497,38 +579,68 @@ export default function InternshipPage({ facultyId, onBack, user }) {
 
           {days.length > 0 ? (
             <div className="ip-days">
-              <div className="ip-day-nav">
-                <label className="ip-day-label" htmlFor="ip-day-select">Select day</label>
-                <select
-                  id="ip-day-select"
-                  value={dayIndex}
-                  onChange={(e) => setDayIndex(Number(e.target.value))}
-                  className="ip-select"
+              <div className="ip-day-carousel-wrapper">
+                <button
+                  type="button"
+                  className="ip-carousel-btn ip-carousel-btn--prev"
+                  disabled={dayIndex === 0}
+                  onClick={() => setDayIndex(Math.max(0, dayIndex - 1))}
                 >
-                  {days.map((d, idx) => (
-                    <option key={idx} value={idx}>
-                      Day {d.dayNumber} — {d.date || 'No date'}
-                    </option>
-                  ))}
-                </select>
-                <div className="ip-day-btns">
-                  <button
-                    type="button"
-                    className="ip-btn ip-btn--secondary"
-                    disabled={dayIndex === 0}
-                    onClick={() => setDayIndex(dayIndex - 1)}
-                  >
-                    ← Previous
-                  </button>
-                  <button
-                    type="button"
-                    className="ip-btn ip-btn--secondary"
-                    disabled={dayIndex === days.length - 1}
-                    onClick={() => setDayIndex(dayIndex + 1)}
-                  >
-                    Next →
-                  </button>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                  </svg>
+                </button>
+                
+                <div className="ip-carousel">
+                  <div className="ip-carousel-track" style={{ transform: `translateX(calc(-${dayIndex} * (100% + 16px)))` }}>
+                    {days.map((day, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        className={`ip-carousel-item ${dayIndex === idx ? 'ip-carousel-item--active' : ''}`}
+                        onClick={() => setDayIndex(idx)}
+                      >
+                        <span className="ip-carousel-day-number">Day {day.dayNumber}</span>
+                        <span className="ip-carousel-day-date">{day.date || 'No date'}</span>
+                        {day.approved && (
+                          <span className="ip-carousel-approved-badge">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            Approved
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                    
+                    {canWriteReport && (
+                      <button
+                        type="button"
+                        className="ip-carousel-add-day"
+                        onClick={handleAddDayClick}
+                        disabled={submitting}
+                        title="Add a new internship day"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="12" y1="5" x2="12" y2="19"></line>
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        <span className="ip-carousel-add-day-text">Add day</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
+                
+                <button
+                  type="button"
+                  className="ip-carousel-btn ip-carousel-btn--next"
+                  disabled={dayIndex >= days.length - 1 && !canWriteReport}
+                  onClick={() => setDayIndex(Math.min(days.length, dayIndex + 1))}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </button>
               </div>
 
               {currentDay && (
@@ -536,7 +648,23 @@ export default function InternshipPage({ facultyId, onBack, user }) {
                   <div className="ip-day-header">
                     <span className="ip-day-title">Day {currentDay.dayNumber} — {currentDay.date || 'No date'}</span>
                     <span className={`ip-day-badge ${currentDay.approved ? 'ip-day-badge--ok' : 'ip-day-badge--pending'}`}>
-                      {currentDay.approved ? '✓ Approved' : 'Pending'}
+                      {currentDay.approved ? (
+                        <>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                          </svg>
+                          Approved
+                        </>
+                      ) : (
+                        <>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="12"/>
+                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                          </svg>
+                          Pending
+                        </>
+                      )}
                     </span>
                   </div>
 
@@ -559,9 +687,22 @@ export default function InternshipPage({ facultyId, onBack, user }) {
                       <h4 className="ip-comments-title">Comments ({currentDay.comments?.length || 0})</h4>
                       {currentDay.comments && currentDay.comments.length > 0 && (
                         <ul className="ip-comments-list">
-                          {currentDay.comments.map((comment, idx) => (
-                            <li key={comment.commentID || idx} className="ip-comment">{comment.text}</li>
-                          ))}
+                          {currentDay.comments.map((comment, idx) => {
+                            const user = typeof comment.userID === 'object' ? comment.userID : null;
+                            const userName = user ? `${user.name} ${user.surname}` : 'Unknown User';
+                            const userRole = user ? user.role : '';
+                            return (
+                              <li key={comment._id || idx} className="ip-comment">
+                                <div className="ip-comment-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px', fontSize: '12px', color: 'var(--t3, #9ba3bb)' }}>
+                                  <div>
+                                    <div style={{ fontWeight: 600, color: 'var(--t1, #0c0e18)', marginBottom: '4px' }}>{userName} {userRole && <span style={{ fontSize: '11px', fontWeight: 500, color: 'var(--a1, #635bff)' }}>({userRole})</span>}</div>
+                                    <div>{new Date(comment.date).toLocaleDateString()} {new Date(comment.date).toLocaleTimeString()}</div>
+                                  </div>
+                                </div>
+                                <p style={{ margin: 0 }}>{comment.text}</p>
+                              </li>
+                            );
+                          })}
                         </ul>
                       )}
                       {canWriteReport && (
@@ -591,7 +732,7 @@ export default function InternshipPage({ facultyId, onBack, user }) {
                   type="button"
                   className="ip-btn ip-btn--primary"
                   disabled={submitting}
-                  onClick={handleAddDay}
+                  onClick={handleAddDayClick}
                 >
                   {submitting ? 'Adding…' : 'Add first day'}
                 </button>
@@ -614,25 +755,80 @@ export default function InternshipPage({ facultyId, onBack, user }) {
               
               {allComments.length > 0 ? (
                 <ul className="ip-comments-list">
-                  {allComments.map((comment, idx) => (
-                    <li key={idx} className="ip-comment">
-                      <div className="ip-comment-header">
-                        <span className="ip-comment-day">Day {comment.dayNumber} ({comment.date})</span>
-                        <button 
-                          type="button" 
-                          className="ip-comment-navigate-btn"
-                          onClick={() => navigateToDay(comment.dayIndex)}
-                        >
-                          Go to day
-                        </button>
-                      </div>
-                      <p className="ip-comment-text">{comment.text}</p>
-                    </li>
-                  ))}
+                  {allComments.map((comment, idx) => {
+                    const user = typeof comment.userID === 'object' ? comment.userID : null;
+                    const userName = user ? `${user.name} ${user.surname}` : 'Unknown User';
+                    const userRole = user ? user.role : '';
+                    return (
+                      <li key={comment.commentID || idx} className="ip-comment">
+                        <div className="ip-comment-header">
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: 600, color: 'var(--t1, #0c0e18)', marginBottom: '4px' }}>{userName} {userRole && <span style={{ fontSize: '11px', fontWeight: 500, color: 'var(--a1, #635bff)' }}>({userRole})</span>}</div>
+                            <span className="ip-comment-day">Day {comment.dayNumber} • {new Date(comment.date).toLocaleDateString()} {new Date(comment.date).toLocaleTimeString()}</span>
+                          </div>
+                          <button 
+                            type="button" 
+                            className="ip-comment-navigate-btn"
+                            onClick={() => navigateToDay(comment.dayIndex)}
+                          >
+                            Go to day
+                          </button>
+                        </div>
+                        <p className="ip-comment-text">{comment.text}</p>
+                      </li>
+                    );
+                  })}
                 </ul>
               ) : (
                 <div className="ip-empty-state">No comments found</div>
               )}
+            </div>
+          )}
+
+          {showAddDayModal && (
+            <div className="ip-modal-overlay" onClick={() => setShowAddDayModal(false)}>
+              <div className="ip-modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="ip-modal-header">
+                  <h3 className="ip-modal-title">Add New Day</h3>
+                  <button 
+                    type="button" 
+                    className="ip-close-btn"
+                    onClick={() => setShowAddDayModal(false)}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                </div>
+                <div className="ip-modal-body">
+                  <label className="ip-label" htmlFor="new-day-date">Select date for the new day</label>
+                  <input
+                    id="new-day-date"
+                    type="date"
+                    value={newDayDate}
+                    onChange={(e) => setNewDayDate(e.target.value)}
+                    className="ip-input ip-date-input"
+                  />
+                </div>
+                <div className="ip-modal-footer">
+                  <button 
+                    type="button" 
+                    className="ip-btn ip-btn--secondary"
+                    onClick={() => setShowAddDayModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="button" 
+                    className="ip-btn ip-btn--primary"
+                    onClick={handleAddDayConfirm}
+                    disabled={submitting}
+                  >
+                    {submitting ? 'Adding…' : 'Add Day'}
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 
@@ -726,8 +922,18 @@ const ipStyles = `
   }
   .ip-form-actions {
     display: flex;
-    gap: 10px;
-    margin-top: 16px;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(99,91,255,.1);
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  .ip-form-actions .ip-progress-bar {
+    width: 100%;
+    flex-basis: 100%;
+    margin: 0 0 12px 0;
   }
   .ip-hero {
     background: rgba(255,255,255,.86);
@@ -839,6 +1045,7 @@ const ipStyles = `
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: space-between;
     gap: 12px;
     margin-bottom: 20px;
     padding-bottom: 16px;
@@ -851,13 +1058,50 @@ const ipStyles = `
     color: var(--t1, #0c0e18);
   }
   .ip-day-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     font-size: 12px;
     font-weight: 600;
-    padding: 6px 12px;
+    padding: 7px 14px;
     border-radius: 10px;
+    transition: all .2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    white-space: nowrap;
   }
-  .ip-day-badge--ok { background: rgba(6,201,160,.15); color: #047857; }
-  .ip-day-badge--pending { background: rgba(245,166,35,.2); color: #b45309; }
+  .ip-day-badge svg {
+    flex-shrink: 0;
+  }
+  .ip-day-badge--ok {
+    background: linear-gradient(135deg, rgba(6,201,160,.12), rgba(6,201,160,.06));
+    color: #047857;
+    border: 1px solid rgba(6,201,160,.3);
+    box-shadow: inset 0 1px 2px rgba(6,201,160,.1), 0 2px 6px rgba(6,201,160,.08);
+  }
+  .ip-day-badge--ok:hover {
+    background: linear-gradient(135deg, rgba(6,201,160,.15), rgba(6,201,160,.08));
+    border-color: rgba(6,201,160,.5);
+    box-shadow: inset 0 1px 2px rgba(6,201,160,.1), 0 4px 12px rgba(6,201,160,.12);
+    transform: translateY(-1px);
+  }
+  .ip-day-badge--pending {
+    background: linear-gradient(135deg, rgba(245,166,35,.12), rgba(245,166,35,.06));
+    color: #b45309;
+    border: 1px solid rgba(245,166,35,.3);
+    box-shadow: inset 0 1px 2px rgba(245,166,35,.1), 0 2px 6px rgba(245,166,35,.08);
+  }
+  .ip-day-badge--pending:hover {
+    background: linear-gradient(135deg, rgba(245,166,35,.15), rgba(245,166,35,.08));
+    border-color: rgba(245,166,35,.5);
+    box-shadow: inset 0 1px 2px rgba(245,166,35,.1), 0 4px 12px rgba(245,166,35,.12);
+    transform: translateY(-1px);
+  }
+  .ip-day-badge--pending svg {
+    animation: pulse-info 2s ease-in-out infinite;
+  }
+  @keyframes pulse-info {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .6; }
+  }
   .ip-report {
     margin-bottom: 20px;
     padding: 16px;
@@ -908,21 +1152,29 @@ const ipStyles = `
     margin-top: 14px;
   }
   .ip-input {
-    flex: 1;
-    padding: 10px 14px;
+    padding: 12px 14px;
     border-radius: 12px;
-    border: 1.5px solid rgba(0,0,0,.10);
-    background: rgba(0,0,0,.03);
+    border: 1.5px solid rgba(0,0,0,.08);
+    background: linear-gradient(135deg, rgba(99,91,255,.02), rgba(255,255,255,.8));
     color: var(--t1, #0c0e18);
     font-family: 'Epilogue', system-ui, sans-serif;
     font-size: 14px;
     outline: none;
-    transition: border-color .2s ease, box-shadow .2s ease;
+    transition: all .25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-sizing: border-box;
+    width: 100%;
   }
-  .ip-input::placeholder { color: rgba(90,98,120,.55); }
+  .ip-comment-form .ip-input {
+    flex: 1;
+  }
+  .ip-input::placeholder { color: rgba(90,98,120,.5); }
   .ip-input:focus {
-    border-color: rgba(99,91,255,.55);
-    box-shadow: 0 0 0 4px rgba(99,91,255,.14);
+    border-color: rgba(99,91,255,.45);
+    box-shadow: 0 0 0 5px rgba(99,91,255,.08), inset 0 0 0 1px rgba(99,91,255,.1);
+    background: linear-gradient(135deg, rgba(99,91,255,.04), rgba(255,255,255,.95));
+  }
+  .ip-input:hover:not(:focus) {
+    border-color: rgba(99,91,255,.2);
   }
   .ip-empty-card {
     background: rgba(255,255,255,.86);
@@ -939,8 +1191,8 @@ const ipStyles = `
     display: block;
     position: relative;
     border: 2px dashed rgba(99,91,255,.25);
-    border-radius: 16px;
-    padding: 40px 24px;
+    border-radius: 14px;
+    padding: 28px 24px;
     text-align: center;
     cursor: pointer;
     background: linear-gradient(135deg, rgba(99,91,255,.04), rgba(6,201,160,.02));
@@ -962,17 +1214,15 @@ const ipStyles = `
     gap: 4px;
   }
   .ip-upload-icon {
-    font-size: 32px;
-    margin-bottom: 8px;
+    font-size: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
-    height: 48px;
-    background: rgba(99,91,255,.1);
-    border-radius: 12px;
-    margin-left: auto;
-    margin-right: auto;
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, rgba(99,91,255,.15), rgba(6,201,160,.08));
+    border-radius: 10px;
+    margin: 0 auto 6px auto;
     color: var(--a1, #635bff);
   }
   .ip-upload-text {
@@ -988,22 +1238,22 @@ const ipStyles = `
   }
   .ip-image-previews-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    gap: 12px;
-    margin-top: 18px;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 10px;
+    margin-top: 16px;
   }
   .ip-image-preview-item {
     position: relative;
-    border-radius: 12px;
+    border-radius: 10px;
     overflow: hidden;
     background: rgba(0,0,0,.05);
     border: 1px solid rgba(0,0,0,.08);
     aspect-ratio: 1;
-    transition: all .2s ease;
+    transition: all .2s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
   .ip-image-preview-item:hover {
-    box-shadow: 0 8px 24px rgba(99,91,255,.15);
-    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(99,91,255,.12);
+    transform: translateY(-2px) scale(1.03);
   }
   .ip-image-preview {
     width: 100%;
@@ -1012,29 +1262,31 @@ const ipStyles = `
   }
   .ip-remove-image-btn {
     position: absolute;
-    top: 4px;
-    right: 4px;
+    top: 6px;
+    right: 6px;
     width: 28px;
     height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255,255,255,.9);
-    border: 1px solid rgba(0,0,0,.1);
+    background: rgba(255,255,255,.95);
+    border: 1px solid rgba(0,0,0,.12);
     border-radius: 8px;
     cursor: pointer;
     color: #ef4444;
     padding: 0;
-    transition: all .2s ease;
+    transition: all .2s cubic-bezier(0.34, 1.56, 0.64, 1);
     opacity: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,.1);
   }
   .ip-image-preview-item:hover .ip-remove-image-btn {
     opacity: 1;
   }
   .ip-remove-image-btn:hover {
-    background: var(--a1, #635bff);
+    background: #ef4444;
     color: #fff;
-    transform: scale(1.1);
+    transform: scale(1.15);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, .3);
   }
   .ip-report-form-header {
     display: flex;
@@ -1059,14 +1311,33 @@ const ipStyles = `
     background: rgba(0,0,0,.05);
     color: var(--t1, #0c0e18);
   }
-  .ip-field-group {
+  .ip-report-form-wrapper {
+    max-width: 560px;
+    margin: 0 auto;
+  }
+  .ip-report-form {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 0;
+  }
+  .ip-form-section {
+    padding: 20px 0;
+  }
+  .ip-form-section:first-child {
+    padding-top: 0;
+  }
+  .ip-form-section:last-child {
+    padding-bottom: 0;
+  }
+  .ip-form-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(99,91,255,.15), transparent);
+    margin: 0;
   }
   .ip-textarea {
     resize: vertical;
-    font-family: inherit;
+    font-family: 'Epilogue', system-ui, sans-serif;
+    min-height: 140px;
   }
   .ip-spinner {
     display: inline-block;
@@ -1134,6 +1405,248 @@ const ipStyles = `
     color: var(--t3, #9ba3bb);
     font-size: 14px;
     padding: 24px;
+  }
+  .ip-day-carousel-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .ip-carousel-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid rgba(99,91,255,.2);
+    background: rgba(99,91,255,.08);
+    border-radius: 10px;
+    cursor: pointer;
+    color: var(--a1, #635bff);
+    transition: all .2s ease;
+    padding: 0;
+    flex-shrink: 0;
+  }
+  .ip-carousel-btn:hover:not(:disabled) {
+    background: rgba(99,91,255,.15);
+    border-color: rgba(99,91,255,.4);
+    transform: scale(1.05);
+  }
+  .ip-carousel-btn:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+  }
+  .ip-carousel {
+    flex: 1;
+    overflow: hidden;
+    border-radius: 14px;
+    background: rgba(255,255,255,.4);
+    padding: 8px;
+  }
+  .ip-carousel-track {
+    display: flex;
+    gap: 16px;
+    transition: transform .4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .ip-carousel-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1.5px solid rgba(99,91,255,.1);
+    background: rgba(255,255,255,.7);
+    cursor: pointer;
+    transition: all .3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    min-width: 120px;
+    text-align: center;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .ip-carousel-item:hover {
+    border-color: rgba(99,91,255,.3);
+    background: rgba(255,255,255,.95);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(99,91,255,.1);
+  }
+  .ip-carousel-item--active {
+    border-color: rgba(99,91,255,.5);
+    background: linear-gradient(135deg, rgba(99,91,255,.12), rgba(6,201,160,.08));
+    box-shadow: 0 8px 24px rgba(99,91,255,.15);
+  }
+  .ip-carousel-day-number {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--a1, #635bff);
+  }
+  .ip-carousel-day-date {
+    font-size: 11px;
+    color: var(--t3, #9ba3bb);
+  }
+  .ip-carousel-approved-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    background: linear-gradient(135deg, rgba(6,201,160,.15), rgba(6,201,160,.08));
+    color: #047857;
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(6,201,160,.25);
+    margin-top: 4px;
+    white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(6,201,160,.08);
+    transition: all .2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .ip-carousel-item:hover .ip-carousel-approved-badge {
+    background: linear-gradient(135deg, rgba(6,201,160,.2), rgba(6,201,160,.12));
+    border-color: rgba(6,201,160,.4);
+    box-shadow: 0 4px 8px rgba(6,201,160,.12);
+  }
+  .ip-carousel-item--active .ip-carousel-approved-badge {
+    background: linear-gradient(135deg, rgba(6,201,160,.25), rgba(6,201,160,.15));
+    border-color: rgba(6,201,160,.5);
+    box-shadow: 0 4px 12px rgba(6,201,160,.15);
+  }
+  .ip-carousel-add-day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 2px dashed rgba(99,91,255,.25);
+    background: linear-gradient(135deg, rgba(99,91,255,.06), rgba(6,201,160,.03));
+    cursor: pointer;
+    transition: all .3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    min-width: 120px;
+    text-align: center;
+    position: relative;
+    flex-shrink: 0;
+    color: var(--a1, #635bff);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .ip-carousel-add-day:hover:not(:disabled) {
+    border-color: rgba(99,91,255,.4);
+    background: linear-gradient(135deg, rgba(99,91,255,.1), rgba(6,201,160,.06));
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(99,91,255,.15);
+  }
+  .ip-carousel-add-day:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+  }
+  .ip-carousel-add-day svg {
+    width: 20px;
+    height: 20px;
+    color: var(--a1, #635bff);
+  }
+  .ip-carousel-add-day-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--a1, #635bff);
+  }
+  .ip-progress-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(0,0,0,.08);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 12px;
+  }
+  .ip-progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--a1, #635bff), var(--a2, #06c9a0));
+    border-radius: 2px;
+    transition: width .3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 0 10px rgba(99,91,255,.3);
+  }
+  .ip-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn .2s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .ip-modal-content {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    max-width: 400px;
+    width: 90%;
+    animation: slideUp .3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    overflow: hidden;
+  }
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .ip-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  }
+  .ip-modal-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--t1, #0c0e18);
+    margin: 0;
+  }
+  .ip-modal-body {
+    padding: 24px 20px;
+  }
+  .ip-modal-footer {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding: 16px 20px;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+  }
+  .ip-date-input {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1.5px solid rgba(0, 0, 0, 0.08);
+    background: linear-gradient(135deg, rgba(99, 91, 255, 0.02), rgba(255, 255, 255, 0.8));
+    color: var(--t1, #0c0e18);
+    font-family: 'Epilogue', system-ui, sans-serif;
+    font-size: 14px;
+    margin-top: 8px;
+    box-sizing: border-box;
+    outline: none;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .ip-date-input:focus {
+    border-color: rgba(99, 91, 255, 0.45);
+    box-shadow: 0 0 0 5px rgba(99, 91, 255, 0.08), inset 0 0 0 1px rgba(99, 91, 255, 0.1);
+    background: linear-gradient(135deg, rgba(99, 91, 255, 0.04), rgba(255, 255, 255, 0.95));
+  }
+  .ip-date-input:hover:not(:focus) {
+    border-color: rgba(99, 91, 255, 0.2);
   }
   @media (min-width: 640px) {
     .ip-hero-title { font-size: 28px; }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Search, X, Plus } from 'lucide-react';
 
 const API_URL = 'https://siut-internship-35635e91d124.herokuapp.com';

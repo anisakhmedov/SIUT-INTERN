@@ -6,7 +6,6 @@ export default function Dashboard({ onNewFaculty, onView }) {
   const [faculties, setFaculties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     fetchFaculties();
@@ -280,19 +279,12 @@ export default function Dashboard({ onNewFaculty, onView }) {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          if (!deletingId) {
-                            removeFaculty(faculty._id);
-                          }
+                          removeFaculty(faculty._id);
                         }}
-                        disabled={deletingId === faculty._id}
-                        title={deletingId === faculty._id ? "Deleting..." : "Delete internship"}
-                        aria-label={deletingId === faculty._id ? "Deleting internship..." : "Delete internship"}
+                        title="Delete internship"
+                        aria-label="Delete internship"
                       >
-                        {deletingId === faculty._id ? (
-                          <span className="spinner">✓</span>
-                        ) : (
-                          '×'
-                        )}
+                        ×
                       </button>
                     </div>
                   </article>

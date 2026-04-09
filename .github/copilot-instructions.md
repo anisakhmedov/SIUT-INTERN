@@ -1,4 +1,4 @@
-# Copilot Instructions for SIUT AI Codebase
+# Copilot Instructions for SIUT Codebase
 
 ## Project Overview
 - **Frontend:** React (JSX) with Vite for fast development and HMR.

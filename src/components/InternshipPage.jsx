@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
-const API_URL = 'https://siut-internship-35635e91d124.herokuapp.com';
+const API_URL = 'http://localhost:7777'; // Change this to your actual API URL
 
 export default function InternshipPage({ facultyId, onBack, user }) {
   const [faculty, setFaculty] = useState(null);
@@ -44,12 +44,6 @@ export default function InternshipPage({ facultyId, onBack, user }) {
     fetchFaculty();
   }, [fetchFaculty]);
 
-  const days = faculty?.days || [];
-  const currentDay = days[dayIndex];
-  const canWriteReport = user?.role === 'Tutor' || user?.role === 'Admin';
-  const canApprove = user?.role === 'Admin';
-  const canExport = user?.role === 'Admin';
-
   const clearActionFeedback = useCallback(() => {
     if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
     feedbackTimeoutRef.current = setTimeout(() => {
@@ -63,6 +57,33 @@ export default function InternshipPage({ facultyId, onBack, user }) {
     if (!day) return null;
     return day._id ?? day.id ?? null;
   }, []);
+
+  const extractImageUrls = useCallback((day) => {
+    if (!day) return [];
+
+    const sourceImages = Array.isArray(day.images)
+      ? day.images
+      : (Array.isArray(day.shortReport?.images) ? day.shortReport.images : []);
+
+    return sourceImages
+      .map((item) => {
+        if (typeof item === 'string') return item;
+        if (item && typeof item.url === 'string') return item.url;
+        return null;
+      })
+      .filter(Boolean);
+  }, []);
+
+  const days = faculty?.days || [];
+  const currentDay = days[dayIndex];
+  const currentDayImageUrls = useMemo(() => extractImageUrls(currentDay), [extractImageUrls, currentDay]);
+  const currentDayCommentsCount = currentDay?.comments?.length || 0;
+  const currentDayStatusLabel = currentDay
+    ? (currentDay.shortReport ? (currentDay.approved ? 'Reported and approved' : 'Reported, pending review') : 'No report yet')
+    : 'No day selected';
+  const canWriteReport = user?.role === 'Tutor' || user?.role === 'Admin';
+  const canApprove = user?.role === 'Admin';
+  const canExport = user?.role === 'Admin';
 
   const updateDay = useCallback(async (day, payload, index = null) => {
     const dayId = getDayId(day) ?? (index != null ? String(index) : null);
@@ -117,53 +138,103 @@ export default function InternshipPage({ facultyId, onBack, user }) {
     setUploadProgress(0);
     
     try {
-      // Step 1: Upload images to API and collect URLs
-      const imageUrls = [];
+      const dayId = getDayId(currentDay);
+      if (!dayId) throw new Error('Day could not be identified. Try refreshing.');
+
+      const existingImageUrls = extractImageUrls(currentDay);
+
+      const extractShortReportImageUrls = (day) => {
+        const shortReportImages = Array.isArray(day?.shortReport?.images) ? day.shortReport.images : [];
+        return shortReportImages
+          .map((item) => {
+            if (typeof item === 'string') return item;
+            if (item && typeof item.url === 'string') return item.url;
+            return null;
+          })
+          .filter(Boolean);
+      };
+
+      let uploadedUrls = [];
+
+      // Step 1: Upload images in one multipart/form-data request
       if (reportImages && reportImages.length > 0) {
-        for (let i = 0; i < reportImages.length; i++) {
-          const image = reportImages[i];
-          const imageFormData = new FormData();
-          imageFormData.append('image', image);
-          
-          const uploadRes = await fetch(
-            `${API_URL}/faculty/${facultyId}/days/${getDayId(currentDay)}/images`,
-            {
-              method: 'POST',
-              body: imageFormData,
-            }
-          );
-          
-          if (!uploadRes.ok) {
-            const errorData = await uploadRes.json();
-            throw new Error(errorData.message || `Failed to upload image: ${image.name}`);
+        const imageFormData = new FormData();
+
+        // Recommended field: append every file under "images"
+        reportImages.forEach((file) => {
+          imageFormData.append('images', file);
+        });
+
+        // Backward compatibility: also send first file under "image"
+        imageFormData.append('image', reportImages[0]);
+
+        const uploadRes = await fetch(
+          `${API_URL}/faculty/${facultyId}/days/${dayId}/images`,
+          {
+            method: 'POST',
+            body: imageFormData,
           }
-          
-          const uploadedData = await uploadRes.json();
-          imageUrls.push(uploadedData.image.url);
-          
-          // Update progress
-          const progress = Math.round(((i + 1) / reportImages.length) * 100);
-          setUploadProgress(progress);
+        );
+
+        if (!uploadRes.ok) {
+          const errorData = await uploadRes.json();
+          throw new Error(errorData.message || 'Failed to upload image(s).');
+        }
+
+        const uploadedData = await uploadRes.json();
+        const responseUrls = [];
+
+        if (Array.isArray(uploadedData?.images)) {
+          uploadedData.images.forEach((item) => {
+            if (typeof item === 'string') responseUrls.push(item);
+            else if (item?.url) responseUrls.push(item.url);
+          });
+        }
+
+        if (uploadedData?.image?.url) responseUrls.push(uploadedData.image.url);
+
+        uploadedUrls = Array.from(new Set(responseUrls.filter(Boolean)));
+        if (uploadedUrls.length === 0) {
+          throw new Error('Upload succeeded but image URL is missing in response.');
+        }
+        setUploadProgress(100);
+
+        // Step 2: Immediate verification via GET /faculty/:id
+        const verifyAfterUploadRes = await fetch(`${API_URL}/faculty/${facultyId}`);
+        if (!verifyAfterUploadRes.ok) throw new Error('Failed to verify uploaded image state.');
+        const verifyAfterUploadFaculty = await verifyAfterUploadRes.json();
+        const verifyDay = (verifyAfterUploadFaculty?.days || []).find((d) => (d?._id ?? d?.id ?? null) === dayId);
+        if (!verifyDay) throw new Error('Uploaded image verification failed: day not found.');
+
+        const shortReportUrlsAfterUpload = extractShortReportImageUrls(verifyDay);
+        const hasUploadedUrlsInShortReport = uploadedUrls.every((url) => shortReportUrlsAfterUpload.includes(url));
+        if (!hasUploadedUrlsInShortReport) {
+          throw new Error('Uploaded image URL was not found in shortReport.images after upload.');
         }
       }
+
+      const finalImageUrls = uploadedUrls.length > 0
+        ? Array.from(new Set([...existingImageUrls, ...uploadedUrls]))
+        : existingImageUrls;
       
       // Step 2: Create/update report with image URLs
       setActionMessage(`Uploading report (${reportImages.length} image${reportImages.length !== 1 ? 's' : ''} uploaded)...`);
       
       const reportPayload = {
         ...currentDay,
+        images: finalImageUrls,
         shortReport: {
           title: reportTitle.trim() || 'Report',
           description: reportDescription.trim() || '',
-          images: imageUrls,
+          images: finalImageUrls,
           date: new Date().toISOString(),
         },
       };
       
       const method = isEditingReport ? 'PATCH' : 'POST';
       const endpoint = isEditingReport 
-        ? `${API_URL}/faculty/${facultyId}/days/${getDayId(currentDay)}`
-        : `${API_URL}/faculty/${facultyId}/days/${getDayId(currentDay)}/report`;
+        ? `${API_URL}/faculty/${facultyId}/days/${dayId}`
+        : `${API_URL}/faculty/${facultyId}/days/${dayId}/report`;
       
       const reportRes = await fetch(endpoint, {
         method,
@@ -176,8 +247,23 @@ export default function InternshipPage({ facultyId, onBack, user }) {
         throw new Error(errorData.message || `Failed to ${isEditingReport ? 'update' : 'submit'} report`);
       }
 
+      // Step 3: Verify images remain after normal update flow
+      if (uploadedUrls.length > 0) {
+        const verifyAfterUpdateRes = await fetch(`${API_URL}/faculty/${facultyId}`);
+        if (!verifyAfterUpdateRes.ok) throw new Error('Failed to verify images after report update.');
+        const verifyAfterUpdateFaculty = await verifyAfterUpdateRes.json();
+        const verifyDayAfterUpdate = (verifyAfterUpdateFaculty?.days || []).find((d) => (d?._id ?? d?.id ?? null) === dayId);
+        if (!verifyDayAfterUpdate) throw new Error('Post-update verification failed: day not found.');
+
+        const urlsAfterUpdate = extractImageUrls(verifyDayAfterUpdate);
+        const allUploadedUrlsRemain = uploadedUrls.every((url) => urlsAfterUpdate.includes(url));
+        if (!allUploadedUrlsRemain) {
+          throw new Error('Image was uploaded but did not remain after report update.');
+        }
+      }
+
       await fetchFaculty(); // Refresh the data
-      setActionMessage(`Report ${isEditingReport ? 'updated' : 'created'} with ${imageUrls.length} image(s).`);
+      setActionMessage(`Report ${isEditingReport ? 'updated' : 'created'} with ${finalImageUrls.length} image(s).`);
       clearActionFeedback();
       setShowReportForm(false);
       setIsEditingReport(false);
@@ -195,7 +281,7 @@ export default function InternshipPage({ facultyId, onBack, user }) {
       setSubmitting(false);
       setUploadProgress(0);
     }
-  }, [currentDay, reportTitle, reportDescription, reportImages, facultyId, getDayId, fetchFaculty, clearActionFeedback, isEditingReport]);
+  }, [currentDay, reportTitle, reportDescription, reportImages, facultyId, getDayId, fetchFaculty, clearActionFeedback, isEditingReport, extractImageUrls]);
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
@@ -356,7 +442,23 @@ export default function InternshipPage({ facultyId, onBack, user }) {
           </button>
 
           <header className="ip-hero">
-            <h1 className="ip-hero-title">{faculty.name}</h1>
+            <div className="ip-hero-top">
+              <div className="ip-hero-copyblock">
+                <span className="ip-eyebrow">Internship workspace</span>
+                <h1 className="ip-hero-title">{faculty.name}</h1>
+                <p className="ip-hero-copy">
+                  Review daily progress, attach evidence, and keep the approval trail clear for everyone involved.
+                </p>
+              </div>
+              <div className="ip-hero-statuslist" aria-label="Current internship status">
+                <span className="ip-status-pill">{currentDay ? `Day ${currentDay.dayNumber}` : 'No day selected'}</span>
+                <span className={`ip-status-pill ${currentDay?.approved ? 'ip-status-pill--ok' : 'ip-status-pill--warn'}`}>
+                  {currentDay?.approved ? 'Approved' : 'Pending review'}
+                </span>
+                <span className="ip-status-pill">{canWriteReport ? 'Editable' : 'Read only'}</span>
+              </div>
+            </div>
+
             <div className="ip-hero-grid">
               <div className="ip-hero-item">
                 <span className="ip-hero-label">Company</span>
@@ -371,12 +473,12 @@ export default function InternshipPage({ facultyId, onBack, user }) {
                 <span className="ip-hero-value">{faculty.duration}</span>
               </div>
               <div className="ip-hero-item">
-                <span className="ip-hero-label">Status</span>
-                <span className="ip-hero-value">{faculty.status}</span>
-              </div>
-              <div className="ip-hero-item ip-hero-item--full">
                 <span className="ip-hero-label">Plan</span>
                 <span className="ip-hero-value">{faculty.plan}</span>
+              </div>
+              <div className="ip-hero-item">
+                <span className="ip-hero-label">Status</span>
+                <span className="ip-hero-value">{faculty.status}</span>
               </div>
               {faculty.progressAll != null && (
                 <div className="ip-hero-item">
@@ -384,12 +486,25 @@ export default function InternshipPage({ facultyId, onBack, user }) {
                   <span className="ip-hero-value">{faculty.progressAll}</span>
                 </div>
               )}
-              {faculty.tutorID && (
-                <div className="ip-hero-item">
-                  <span className="ip-hero-label">Tutor ID</span>
-                  <span className="ip-hero-value">{faculty.tutorID}</span>
-                </div>
-              )}
+            </div>
+
+            <div className="ip-hero-summary" aria-label="Current day summary">
+              <div className="ip-summary-card">
+                <span className="ip-summary-label">Current day</span>
+                <strong className="ip-summary-value">{currentDay ? `Day ${currentDay.dayNumber}` : 'None selected'}</strong>
+              </div>
+              <div className="ip-summary-card">
+                <span className="ip-summary-label">Evidence</span>
+                <strong className="ip-summary-value">{currentDayImageUrls.length}</strong>
+              </div>
+              <div className="ip-summary-card">
+                <span className="ip-summary-label">Comments</span>
+                <strong className="ip-summary-value">{currentDayCommentsCount}</strong>
+              </div>
+              <div className="ip-summary-card ip-summary-card--wide">
+                <span className="ip-summary-label">Review state</span>
+                <strong className="ip-summary-value">{currentDayStatusLabel}</strong>
+              </div>
             </div>
           </header>
 
@@ -646,7 +761,10 @@ export default function InternshipPage({ facultyId, onBack, user }) {
               {currentDay && (
                 <div className="ip-day-card">
                   <div className="ip-day-header">
-                    <span className="ip-day-title">Day {currentDay.dayNumber} — {currentDay.date || 'No date'}</span>
+                    <div>
+                      <span className="ip-day-title">Day {currentDay.dayNumber}</span>
+                      <div className="ip-day-subtitle">{currentDay.date || 'No date'}</div>
+                    </div>
                     <span className={`ip-day-badge ${currentDay.approved ? 'ip-day-badge--ok' : 'ip-day-badge--pending'}`}>
                       {currentDay.approved ? (
                         <>
@@ -672,9 +790,9 @@ export default function InternshipPage({ facultyId, onBack, user }) {
                     <div className="ip-report">
                       <h4 className="ip-report-title">{currentDay.shortReport.title || 'Untitled'}</h4>
                       <p className="ip-report-desc">{currentDay.shortReport.description}</p>
-                      {currentDay.shortReport.images && currentDay.shortReport.images.length > 0 && (
+                      {currentDayImageUrls.length > 0 && (
                         <div className="ip-report-images">
-                          {currentDay.shortReport.images.map((img, idx) => (
+                          {currentDayImageUrls.map((img, idx) => (
                             <img key={idx} src={img} alt={`Report ${idx + 1}`} className="ip-report-img" />
                           ))}
                         </div>
@@ -845,11 +963,25 @@ const ipStyles = `
     min-height: calc(100vh - 64px);
     padding: clamp(16px, 3vw, 44px);
     background:
-      radial-gradient(1200px 600px at 10% 0%, rgba(99,91,255,.10), transparent 60%),
+      radial-gradient(1200px 600px at 10% 0%, rgba(99,91,255,.12), transparent 60%),
       radial-gradient(900px 520px at 90% 10%, rgba(6,201,160,.10), transparent 55%),
-      linear-gradient(180deg, rgba(240,241,247,.65), rgba(255,255,255,1));
+      linear-gradient(180deg, rgba(241,244,250,.92), rgba(255,255,255,1));
   }
   .ip-shell { width: 100%; max-width: 880px; margin: 0 auto; }
+  .ip-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(99,91,255,.08);
+    color: var(--a1, #635bff);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
   .ip-back {
     display: inline-flex;
     align-items: center;
@@ -867,14 +999,14 @@ const ipStyles = `
   }
   .ip-back:hover { color: var(--a2, #06c9a0); }
   .ip-loading, .ip-empty {
-    background: rgba(255,255,255,.86);
+    background: rgba(255,255,255,.92);
     border: 1px solid rgba(0,0,0,.08);
-    border-radius: 18px;
-    padding: 48px 24px;
+    border-radius: 22px;
+    padding: 56px 24px;
     text-align: center;
     color: var(--t2, #5a6278);
     font-size: 15px;
-    box-shadow: 0 14px 44px rgba(99,91,255,.10);
+    box-shadow: 0 18px 50px rgba(99,91,255,.10);
   }
   .ip-alert {
     display: flex;
@@ -899,12 +1031,13 @@ const ipStyles = `
     font-size: 13px;
   }
   .ip-report-form-card {
-    background: rgba(255,255,255,.86);
+    background: rgba(255,255,255,.92);
     border: 1px solid rgba(0,0,0,.08);
-    border-radius: 18px;
+    border-radius: 22px;
     padding: 24px;
     margin-bottom: 24px;
-    box-shadow: 0 14px 44px rgba(99,91,255,.10);
+    box-shadow: 0 18px 50px rgba(99,91,255,.10);
+    backdrop-filter: blur(18px);
   }
   .ip-report-form-title {
     font-size: 16px;
@@ -936,26 +1069,85 @@ const ipStyles = `
     margin: 0 0 12px 0;
   }
   .ip-hero {
-    background: rgba(255,255,255,.86);
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(255,255,255,.84));
     border: 1px solid rgba(0,0,0,.08);
-    border-radius: 18px;
+    border-radius: 24px;
     padding: 24px;
     margin-bottom: 24px;
-    box-shadow: 0 14px 44px rgba(99,91,255,.10);
+    box-shadow: 0 18px 60px rgba(99,91,255,.10);
     backdrop-filter: blur(18px);
   }
+  .ip-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(600px 220px at 10% 0%, rgba(99,91,255,.10), transparent 60%);
+    pointer-events: none;
+  }
+  .ip-hero-top,
+  .ip-hero-summary {
+    position: relative;
+    z-index: 1;
+  }
+  .ip-hero-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    align-items: flex-start;
+    margin-bottom: 20px;
+  }
+  .ip-hero-copyblock { max-width: 560px; }
+  .ip-hero-copy {
+    margin: 12px 0 0;
+    color: var(--t2, #5a6278);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .ip-hero-statuslist {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  .ip-status-pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: rgba(99,91,255,.08);
+    color: var(--a1, #635bff);
+    border: 1px solid rgba(99,91,255,.12);
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .ip-status-pill--ok { background: rgba(6,201,160,.10); color: #047857; border-color: rgba(6,201,160,.18); }
+  .ip-status-pill--warn { background: rgba(245,166,35,.12); color: #b45309; border-color: rgba(245,166,35,.18); }
   .ip-hero-title {
     font-family: 'Syne', system-ui, sans-serif;
-    font-size: 24px;
+    font-size: clamp(24px, 4vw, 36px);
     font-weight: 700;
     letter-spacing: -0.02em;
     color: var(--t1, #0c0e18);
-    margin: 0 0 20px 0;
+    margin: 0;
   }
   .ip-hero-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px 24px;
+    gap: 14px 18px;
+    position: relative;
+    z-index: 1;
+  }
+  .ip-hero-item {
+    min-height: 76px;
+    padding: 16px;
+    border-radius: 16px;
+    background: rgba(248,250,255,.92);
+    border: 1px solid rgba(99,91,255,.08);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
   }
   .ip-hero-item--full { grid-column: 1 / -1; }
   .ip-hero-label {
@@ -968,11 +1160,47 @@ const ipStyles = `
     margin-bottom: 4px;
   }
   .ip-hero-value { font-size: 14px; color: var(--t1, #0c0e18); }
+  .ip-hero-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 18px;
+  }
+  .ip-summary-card {
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: rgba(248,250,255,.95);
+    border: 1px solid rgba(99,91,255,.08);
+  }
+  .ip-summary-card--wide { grid-column: span 2; }
+  .ip-summary-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--t3, #9ba3bb);
+  }
+  .ip-summary-value {
+    display: block;
+    color: var(--t1, #0c0e18);
+    font-size: 14px;
+    line-height: 1.35;
+  }
   .ip-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
     margin-bottom: 24px;
+    position: sticky;
+    top: 12px;
+    z-index: 5;
+    padding: 12px;
+    border-radius: 18px;
+    background: rgba(255,255,255,.72);
+    border: 1px solid rgba(0,0,0,.06);
+    backdrop-filter: blur(18px);
   }
   .ip-btn {
     display: inline-flex;
@@ -1034,11 +1262,11 @@ const ipStyles = `
   }
   .ip-day-btns { display: flex; gap: 8px; }
   .ip-day-card {
-    background: rgba(255,255,255,.86);
+    background: rgba(255,255,255,.94);
     border: 1px solid rgba(0,0,0,.08);
-    border-radius: 18px;
+    border-radius: 22px;
     padding: 24px;
-    box-shadow: 0 14px 44px rgba(99,91,255,.10);
+    box-shadow: 0 18px 50px rgba(99,91,255,.10);
     backdrop-filter: blur(18px);
   }
   .ip-day-header {
@@ -1056,6 +1284,11 @@ const ipStyles = `
     font-size: 18px;
     font-weight: 700;
     color: var(--t1, #0c0e18);
+  }
+  .ip-day-subtitle {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--t3, #9ba3bb);
   }
   .ip-day-badge {
     display: inline-flex;
@@ -1104,8 +1337,8 @@ const ipStyles = `
   }
   .ip-report {
     margin-bottom: 20px;
-    padding: 16px;
-    background: rgba(0,0,0,.03);
+    padding: 18px;
+    background: linear-gradient(180deg, rgba(99,91,255,.05), rgba(6,201,160,.03));
     border-radius: 14px;
     border: 1px solid rgba(0,0,0,.06);
   }
@@ -1138,22 +1371,24 @@ const ipStyles = `
   }
   .ip-comments-list { list-style: none; margin: 0; padding: 0; }
   .ip-comment {
-    padding: 12px 14px;
-    background: rgba(255,255,255,.9);
+    padding: 14px 16px;
+    background: rgba(255,255,255,.95);
     border: 1px solid rgba(0,0,0,.06);
-    border-radius: 12px;
+    border-radius: 16px;
     font-size: 13px;
     color: var(--t2, #5a6278);
     margin-bottom: 8px;
+    box-shadow: 0 8px 24px rgba(15,23,42,.04);
   }
   .ip-comment-form {
     display: flex;
     gap: 10px;
     margin-top: 14px;
+    align-items: stretch;
   }
   .ip-input {
     padding: 12px 14px;
-    border-radius: 12px;
+    border-radius: 14px;
     border: 1.5px solid rgba(0,0,0,.08);
     background: linear-gradient(135deg, rgba(99,91,255,.02), rgba(255,255,255,.8));
     color: var(--t1, #0c0e18);
@@ -1177,14 +1412,14 @@ const ipStyles = `
     border-color: rgba(99,91,255,.2);
   }
   .ip-empty-card {
-    background: rgba(255,255,255,.86);
+    background: rgba(255,255,255,.92);
     border: 1px solid rgba(0,0,0,.08);
-    border-radius: 18px;
-    padding: 40px 24px;
+    border-radius: 22px;
+    padding: 44px 24px;
     text-align: center;
     color: var(--t2, #5a6278);
     font-size: 14px;
-    box-shadow: 0 14px 44px rgba(99,91,255,.10);
+    box-shadow: 0 18px 50px rgba(99,91,255,.10);
   }
   .ip-image-upload-container { margin-top: 12px; }
   .ip-image-upload-area {
@@ -1238,7 +1473,7 @@ const ipStyles = `
   }
   .ip-image-previews-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     gap: 10px;
     margin-top: 16px;
   }
@@ -1460,10 +1695,11 @@ const ipStyles = `
     background: rgba(255,255,255,.7);
     cursor: pointer;
     transition: all .3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    min-width: 120px;
+    min-width: 100%;
+    max-width: 100%;
     text-align: center;
     position: relative;
-    flex-shrink: 0;
+    flex: 0 0 100%;
   }
   .ip-carousel-item:hover {
     border-color: rgba(99,91,255,.3);
@@ -1524,10 +1760,11 @@ const ipStyles = `
     background: linear-gradient(135deg, rgba(99,91,255,.06), rgba(6,201,160,.03));
     cursor: pointer;
     transition: all .3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    min-width: 120px;
+    min-width: 100%;
+    max-width: 100%;
     text-align: center;
     position: relative;
-    flex-shrink: 0;
+    flex: 0 0 100%;
     color: var(--a1, #635bff);
     font-size: 13px;
     font-weight: 600;
@@ -1554,16 +1791,16 @@ const ipStyles = `
   }
   .ip-progress-bar {
     width: 100%;
-    height: 4px;
+    height: 6px;
     background: rgba(0,0,0,.08);
-    border-radius: 2px;
+    border-radius: 999px;
     overflow: hidden;
     margin-top: 12px;
   }
   .ip-progress-bar-fill {
     height: 100%;
     background: linear-gradient(90deg, var(--a1, #635bff), var(--a2, #06c9a0));
-    border-radius: 2px;
+    border-radius: 999px;
     transition: width .3s cubic-bezier(0.34, 1.56, 0.64, 1);
     box-shadow: 0 0 10px rgba(99,91,255,.3);
   }
@@ -1649,10 +1886,18 @@ const ipStyles = `
     border-color: rgba(99, 91, 255, 0.2);
   }
   @media (min-width: 640px) {
-    .ip-hero-title { font-size: 28px; }
+    .ip-hero-title { font-size: 32px; }
     .ip-hero { padding: 28px; }
     .ip-hero-grid { grid-template-columns: repeat(3, 1fr); }
     .ip-hero-item--full { grid-column: 1 / -1; }
     .ip-image-previews-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+  }
+  @media (max-width: 760px) {
+    .ip-hero-top { flex-direction: column; }
+    .ip-hero-statuslist { justify-content: flex-start; }
+    .ip-hero-summary { grid-template-columns: 1fr 1fr; }
+    .ip-summary-card--wide { grid-column: 1 / -1; }
+    .ip-actions { position: static; }
+    .ip-comment-form { flex-direction: column; }
   }
 `;

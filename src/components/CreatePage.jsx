@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, X, Plus } from 'lucide-react';
 
 const API_URL = 'https://siut-internship-35635e91d124.herokuapp.com';
@@ -21,6 +21,32 @@ export default function CreatePage({ onSubmit, onCancel, students = [] }) { // A
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFaculty, setSelectedFaculty] = useState(''); // Add faculty filter state
   const [error, setError] = useState('');
+  const [tutors, setTutors] = useState([]);
+  const [loadingTutors, setLoadingTutors] = useState(false);
+
+  // Fetch tutors and professors on component mount
+  useEffect(() => {
+    const fetchTutors = async () => {
+      try {
+        setLoadingTutors(true);
+        const response = await fetch(`${API_URL}/usersInternship`);
+        if (response.ok) {
+          const data = await response.json();
+          // Filter for Tutor and Professor roles
+          const filtered = (Array.isArray(data) ? data : data.data || []).filter(
+            user => user.role === 'Tutor' || user.role === 'Professor'
+          );
+          setTutors(filtered);
+        }
+      } catch (err) {
+        console.error('Error fetching tutors:', err);
+      } finally {
+        setLoadingTutors(false);
+      }
+    };
+    
+    fetchTutors();
+  }, []);
 
   // Get unique faculties from students
   const faculties = [...new Set(students.map(student => student.nameFaculty).filter(Boolean))];
@@ -48,6 +74,30 @@ export default function CreatePage({ onSubmit, onCancel, students = [] }) { // A
     }));
   };
 
+  const handleAutofill = () => {
+    const today = new Date();
+    const end = new Date(today);
+    end.setDate(end.getDate() + 90);
+
+    const startDate = today.toISOString().slice(0, 10);
+    const endDate = end.toISOString().slice(0, 10);
+
+    setFormData(prev => ({
+      ...prev,
+      name: prev.name || 'Frontend Internship Program',
+      company: prev.company || 'SIUT Labs',
+      location: prev.location || 'Baku',
+      duration: prev.duration || '3 months',
+      status: prev.status || 'Active',
+      plan: prev.plan || 'Build and maintain internship portal features, submit daily reports, and complete mentor reviews.',
+      startDate: prev.startDate || startDate,
+      endDate: prev.endDate || endDate,
+      tutorID: prev.tutorID || 'tutor-demo-001'
+    }));
+
+    setError('');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -55,7 +105,7 @@ export default function CreatePage({ onSubmit, onCancel, students = [] }) { // A
       // Prepare the payload
       const payload = {
         ...formData,
-        students: selectedStudents.map(s => ({
+        numberOfStudents: selectedStudents.map(s => ({
           _id: s._id,
           name: s.name,
           surname: s.surname,
@@ -142,6 +192,16 @@ export default function CreatePage({ onSubmit, onCancel, students = [] }) { // A
           color: var(--t1, #0c0e18);
           margin: 0 0 24px 0;
         }
+        .create-title-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          margin-bottom: 24px;
+        }
+        .create-title-row .create-title {
+          margin: 0;
+        }
         .form-group {
           margin-bottom: 20px;
         }
@@ -204,6 +264,17 @@ export default function CreatePage({ onSubmit, onCancel, students = [] }) { // A
           border: 1px solid rgba(0,0,0,.12);
           background: rgba(255,255,255,.8);
           color: var(--t1, #0c0e18);
+        }
+        .btn-autofill {
+          border: 1px solid rgba(99,91,255,.18);
+          background: rgba(99,91,255,.08);
+          color: var(--a1, #635bff);
+          padding: 8px 12px;
+          font-size: 12px;
+        }
+        .btn-autofill:hover:not(:disabled) {
+          background: rgba(99,91,255,.14);
+          transform: translateY(-1px);
         }
         .btn-danger {
           border: 1px solid rgba(220, 38, 38, 0.2);
@@ -364,13 +435,22 @@ export default function CreatePage({ onSubmit, onCancel, students = [] }) { // A
             max-height: 50vh;
             overflow-y: auto;
           }
+          .create-title-row {
+            flex-direction: column;
+            align-items: flex-start;
+          }
         }
       `}</style>
 
       <div className="create-shell">
         <div className="create-main">
           <div className="create-card">
-            <h1 className="create-title">Create New Internship</h1>
+            <div className="create-title-row">
+              <h1 className="create-title">Create New Internship</h1>
+              <button type="button" className="btn btn-autofill" onClick={handleAutofill}>
+                Autofill Form
+              </button>
+            </div>
             
             {error && (
               <div className="error" style={{ 
@@ -488,14 +568,21 @@ export default function CreatePage({ onSubmit, onCancel, students = [] }) { // A
               </div>
               
               <div className="form-group">
-                <label className="form-label">Tutor ID</label>
-                <input
-                  type="text"
+                <label className="form-label">Select Tutor or Professor</label>
+                <select
                   name="tutorID"
                   value={formData.tutorID}
                   onChange={handleChange}
                   className="form-input"
-                />
+                  disabled={loadingTutors}
+                >
+                  <option value="">-- Select a Tutor/Professor --</option>
+                  {tutors.map(tutor => (
+                    <option key={tutor._id} value={tutor._id}>
+                      {tutor.name} {tutor.surname} ({tutor.role})
+                    </option>
+                  ))}
+                </select>
               </div>
               
               <div className="form-group" style={{ marginTop: '30px' }}>

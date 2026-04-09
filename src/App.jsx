@@ -55,6 +55,7 @@ import LoginPage from "./components/LoginPage";
 import Dashboard from "./components/Dashboard";
 import CreatePage from "./components/CreatePage";
 import InternshipPage from "./components/InternshipPage";
+import CreateTutorPage from "./components/CreateTutorPage";
 
 /* ═══════════════════════════════════════════════
    STYLES
@@ -2898,6 +2899,7 @@ export default function App() {
     { I: LayoutDashboard, label: "Dashboard" },
     { I: MessageSquare, label: "Feedback" },
     { I: BarChart2, label: "Analytics" },
+    ...(user?.role === "Admin" ? [{ I: UserCheck, label: "Create Tutors" }] : []),
   ];
 
   const renderContent = () => {
@@ -2958,9 +2960,14 @@ export default function App() {
           onNewFaculty={() => setShowCreatePage(true)}
           onView={(id) => setOpenIntern(id)}
           user={user}
-          students={students} // Pass students to Dashboard
+          students={students}
+          search={search}
         />
       );
+    }
+
+    if (nav === "Create Tutors") {
+      return <CreateTutorPage apiUrl={API_URL} />;
     }
 
     // Legacy views
@@ -3002,7 +3009,7 @@ export default function App() {
               <GraduationCap size={20} color="white" />
             </div>
             <h1 style={{ color: "#fff", fontFamily: "Syne", fontSize: 18, fontWeight: 800 }}>
-              SIUT AI
+              SIUT
             </h1>
           </div>
           

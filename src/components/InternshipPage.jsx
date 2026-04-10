@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 
 const API_URL = 'http://localhost:7777'; // Change this to your actual API URL
 
-export default function InternshipPage({ facultyId, onBack, user }) {
+export default function InternshipPage({ facultyId, onBack, user, initialDayIndex, focusCommentKey }) {
   const [faculty, setFaculty] = useState(null);
   const [dayIndex, setDayIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -21,6 +21,7 @@ export default function InternshipPage({ facultyId, onBack, user }) {
   const [uploadProgress, setUploadProgress] = useState(0); // 0-100 for progress tracking
   const [showAddDayModal, setShowAddDayModal] = useState(false);
   const [newDayDate, setNewDayDate] = useState(new Date().toISOString().slice(0, 10));
+  const [highlightedCommentKey, setHighlightedCommentKey] = useState('');
   const commentsSectionRef = useRef(null);
   const feedbackTimeoutRef = useRef(null);
 
@@ -58,6 +59,11 @@ export default function InternshipPage({ facultyId, onBack, user }) {
     return day._id ?? day.id ?? null;
   }, []);
 
+  const getCommentKey = useCallback((comment, index) => {
+    if (!comment) return `idx-${index}`;
+    return String(comment._id || `${comment.date || ''}-${comment.text || ''}-${index}`);
+  }, []);
+
   const extractImageUrls = useCallback((day) => {
     if (!day) return [];
 
@@ -74,7 +80,7 @@ export default function InternshipPage({ facultyId, onBack, user }) {
       .filter(Boolean);
   }, []);
 
-  const days = faculty?.days || [];
+  const days = useMemo(() => faculty?.days || [], [faculty]);
   const currentDay = days[dayIndex];
   const currentDayImageUrls = useMemo(() => extractImageUrls(currentDay), [extractImageUrls, currentDay]);
   const currentDayCommentsCount = currentDay?.comments?.length || 0;
@@ -392,6 +398,40 @@ export default function InternshipPage({ facultyId, onBack, user }) {
     setDayIndex(dayIndex);
     setShowFeedbackView(false);
   }, []);
+
+  useEffect(() => {
+    if (!Array.isArray(days) || days.length === 0) return;
+    if (!Number.isInteger(initialDayIndex)) return;
+
+    const safeDayIndex = Math.max(0, Math.min(days.length - 1, initialDayIndex));
+    setDayIndex(safeDayIndex);
+  }, [days, initialDayIndex]);
+
+  useEffect(() => {
+    if (!focusCommentKey) return;
+    if (!currentDay) return;
+
+    const commentIndex = (currentDay.comments || []).findIndex(
+      (comment, index) => getCommentKey(comment, index) === String(focusCommentKey),
+    );
+
+    if (commentIndex < 0) return;
+
+    setHighlightedCommentKey(String(focusCommentKey));
+
+    const timerId = setTimeout(() => {
+      commentsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 140);
+
+    const clearTimer = setTimeout(() => {
+      setHighlightedCommentKey('');
+    }, 2600);
+
+    return () => {
+      clearTimeout(timerId);
+      clearTimeout(clearTimer);
+    };
+  }, [currentDay, focusCommentKey, getCommentKey]);
 
   const renderContent = () => {
     if (loading) {
@@ -809,8 +849,12 @@ export default function InternshipPage({ facultyId, onBack, user }) {
                             const user = typeof comment.userID === 'object' ? comment.userID : null;
                             const userName = user ? `${user.name} ${user.surname}` : 'Unknown User';
                             const userRole = user ? user.role : '';
+                            const commentKey = getCommentKey(comment, idx);
                             return (
-                              <li key={comment._id || idx} className="ip-comment">
+                              <li
+                                key={comment._id || idx}
+                                className={`ip-comment ${highlightedCommentKey === commentKey ? 'ip-comment--focus' : ''}`}
+                              >
                                 <div className="ip-comment-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px', fontSize: '12px', color: 'var(--t3, #9ba3bb)' }}>
                                   <div>
                                     <div style={{ fontWeight: 600, color: 'var(--t1, #0c0e18)', marginBottom: '4px' }}>{userName} {userRole && <span style={{ fontSize: '11px', fontWeight: 500, color: 'var(--a1, #635bff)' }}>({userRole})</span>}</div>
@@ -1377,6 +1421,17 @@ const ipStyles = `
     border-radius: 16px;
     font-size: 13px;
     color: var(--t2, #5a6278);
+  .ip-comment--focus {
+    border-color: rgba(99,91,255,.4);
+    background: linear-gradient(135deg, rgba(99,91,255,.14), rgba(6,201,160,.08));
+    box-shadow: 0 0 0 3px rgba(99,91,255,.14);
+    animation: ipCommentPulse 1.2s ease 1;
+  }
+  @keyframes ipCommentPulse {
+    0% { transform: translateY(0); }
+    35% { transform: translateY(-2px); }
+    100% { transform: translateY(0); }
+  }
     margin-bottom: 8px;
     box-shadow: 0 8px 24px rgba(15,23,42,.04);
   }

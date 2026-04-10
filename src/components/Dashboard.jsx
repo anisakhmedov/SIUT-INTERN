@@ -284,6 +284,7 @@ export default function Dashboard({ onNewFaculty, onView, search = '' }) {
           font-size: 10px;
           font-weight: 800;
           padding: 5px 11px;
+          margin-bottom: 10px;
           border-radius: 20px;
           text-transform: uppercase;
           letter-spacing: .05em;
@@ -352,13 +353,12 @@ export default function Dashboard({ onNewFaculty, onView, search = '' }) {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          transition: all .2s ease;
+          transition: background .2s ease, border-color .2s ease, color .2s ease;
           font-weight: 300;
         }
         .dw-btn-icon:hover {
           background: rgba(239,68,68,.15);
           border-color: rgba(220,38,38,.4);
-          transform: rotate(90deg);
         }
         @media (max-width: 768px) {
           .dw-list { grid-template-columns: 1fr; }

@@ -3,7 +3,6 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   LayoutDashboard,
   MessageSquare,
-  BarChart2,
   Settings,
   Bell,
   Search,
@@ -56,6 +55,7 @@ import Dashboard from "./components/Dashboard";
 import CreatePage from "./components/CreatePage";
 import InternshipPage from "./components/InternshipPage";
 import CreateTutorPage from "./components/CreateTutorPage";
+import StudentDocumentsPage from "./components/StudentDocumentsPage";
 
 /* ═══════════════════════════════════════════════
    STYLES
@@ -2308,6 +2308,9 @@ function FeedView({ feedbacks, onOpenFeedback }) {
         </div>
       </Reveal>
       <div className="gc" style={{ padding: 21 }}>
+        {list.length === 0 && (
+          <div style={{ color: "var(--t3)", fontSize: 13 }}>No comments found.</div>
+        )}
         {list.map((f, i) => (
           <Reveal key={f.id} delay={i * 50}>
             <div className="fr">
@@ -2378,210 +2381,6 @@ function FeedView({ feedbacks, onOpenFeedback }) {
           </Reveal>
         ))}
       </div>
-    </div>
-  );
-}
-
-/* ═══════════════════════════════════════════════
-   ANALYTICS VIEW
-═══════════════════════════════════════════════ */
-function AnalView({ internships }) {
-  const rd = Object.entries(ROLES).map(([k]) => ({
-    label: k,
-    val: internships.filter((i) => i.role === k).length,
-    c: ROLES[k].c,
-  }));
-  const kpis = [
-    {
-      I: Activity,
-      label: "Response Rate",
-      val: "94%",
-      sub: "Above target",
-      c: "#10b981",
-    },
-    {
-      I: Target,
-      label: "Goal Completion",
-      val: "78%",
-      sub: "3 pending",
-      c: "#635bff",
-    },
-    {
-      I: Award,
-      label: "Top Performers",
-      val: "12",
-      sub: "This quarter",
-      c: "#f5a623",
-    },
-    {
-      I: Zap,
-      label: "Avg Duration",
-      val: "3.2 mo",
-      sub: "Per internship",
-      c: "#06c9a0",
-    },
-    {
-      I: BookOpen,
-      label: "Mentors Active",
-      val: "8",
-      sub: "Of 10 total",
-      c: "#ff5fa0",
-    },
-    {
-      I: CheckCircle2,
-      label: "Satisfaction",
-      val: "91%",
-      sub: "Intern happiness",
-      c: "#10b981",
-    },
-  ];
-  return (
-    <div className="pp">
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: 16,
-          marginBottom: 20,
-        }}
-      >
-        <Reveal>
-          <div className="gc" style={{ padding: 21 }}>
-            <div
-              style={{
-                fontFamily: "Syne",
-                fontSize: 15,
-                fontWeight: 700,
-                color: "var(--t1)",
-                marginBottom: 16,
-              }}
-            >
-              Monthly Volume
-            </div>
-            <BarChart data={CHART} />
-          </div>
-        </Reveal>
-        <Reveal delay={80}>
-          <div className="gc" style={{ padding: 21 }}>
-            <div
-              style={{
-                fontFamily: "Syne",
-                fontSize: 15,
-                fontWeight: 700,
-                color: "var(--t1)",
-                marginBottom: 16,
-              }}
-            >
-              By Role
-            </div>
-            {rd.map((d) => (
-              <div key={d.label} style={{ marginBottom: 13 }}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginBottom: 4,
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: 12.5,
-                      fontWeight: 600,
-                      color: "var(--t1)",
-                    }}
-                  >
-                    {d.label}
-                  </span>
-                  <span style={{ fontSize: 12.5, color: d.c, fontWeight: 700 }}>
-                    {d.val}
-                  </span>
-                </div>
-                <div
-                  style={{
-                    height: 6,
-                    background: "rgba(0,0,0,.07)",
-                    borderRadius: 999,
-                    overflow: "hidden",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: `${(d.val / internships.length) * 100}%`,
-                      height: "100%",
-                      background: d.c,
-                      borderRadius: 999,
-                      transition: "width 1.2s ease",
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </Reveal>
-      </div>
-      <Reveal delay={160}>
-        <div className="gc" style={{ padding: 21 }}>
-          <div
-            style={{
-              fontFamily: "Syne",
-              fontSize: 15,
-              fontWeight: 700,
-              color: "var(--t1)",
-              marginBottom: 16,
-            }}
-          >
-            Key Performance Indicators
-          </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill,minmax(175px,1fr))",
-              gap: 14,
-            }}
-          >
-            {kpis.map((k) => (
-              <div key={k.label} className="mc" style={{ cursor: "default" }}>
-                <div
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 9,
-                    background: `${k.c}18`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginBottom: 12,
-                  }}
-                >
-                  <k.I size={16} color={k.c} />
-                </div>
-                <div
-                  style={{
-                    fontFamily: "Syne",
-                    fontSize: 21,
-                    fontWeight: 800,
-                    color: "var(--t1)",
-                    marginBottom: 1,
-                  }}
-                >
-                  {k.val}
-                </div>
-                <div
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: "var(--t1)",
-                    marginBottom: 1,
-                  }}
-                >
-                  {k.label}
-                </div>
-                <div style={{ fontSize: 11, color: k.c }}>{k.sub}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Reveal>
     </div>
   );
 }
@@ -2752,6 +2551,7 @@ export default function App() {
   const [search, setSearch] = useState("");
   const [showCreatePage, setShowCreatePage] = useState(false);
   const [students, setStudents] = useState([]); // Add students state
+  const [openCommentTarget, setOpenCommentTarget] = useState(null);
 
   // Convenience wrapper functions for state updates
   const handleCloseSidebar = () => setSbOpen(false);
@@ -2759,6 +2559,7 @@ export default function App() {
   const handleNavigate = (label) => {
     setNav(label);
     setOpenIntern(null);
+    setShowCreatePage(false);
     setSbOpen(false);
   };
 
@@ -2809,6 +2610,7 @@ export default function App() {
             end: intern.endDate || "2024-06-01",
             role: intern.role || "Intern",
             students: intern.students || [],
+            days: Array.isArray(intern.days) ? intern.days : [],
             desc: intern.description || intern.plan,
             ti: intern.tutorId ? parseInt(intern.tutorId) % 4 : 0,
           }));
@@ -2897,10 +2699,100 @@ export default function App() {
 
   const navItems = [
     { I: LayoutDashboard, label: "Dashboard" },
+    { I: Users, label: "Students" },
     { I: MessageSquare, label: "Feedback" },
-    { I: BarChart2, label: "Analytics" },
     ...(user?.role === "Admin" ? [{ I: UserCheck, label: "Create Tutors" }] : []),
   ];
+
+  const handleStudentUpdated = useCallback((updatedStudent) => {
+    if (!updatedStudent) return;
+
+    const updatedId = updatedStudent._id || updatedStudent.id || updatedStudent.studentId;
+    setStudents((current) => current.map((student, index) => {
+      const currentId = student._id || student.id || student.studentId || `${student?.name || 'student'}-${index}`;
+      return currentId === updatedId ? { ...student, ...updatedStudent } : student;
+    }));
+  }, []);
+
+  const searchPlaceholder = nav === "Students" ? "Search students..." : "Search internships...";
+
+  const commentFeedbacks = useMemo(() => {
+    const now = Date.now();
+
+    const toTimeLabel = (dateValue) => {
+      const date = new Date(dateValue);
+      if (Number.isNaN(date.getTime())) return "Unknown time";
+      const diffMs = Math.max(0, now - date.getTime());
+      const diffMin = Math.floor(diffMs / 60000);
+      if (diffMin < 1) return "just now";
+      if (diffMin < 60) return `${diffMin}m ago`;
+      const diffH = Math.floor(diffMin / 60);
+      if (diffH < 24) return `${diffH}h ago`;
+      const diffD = Math.floor(diffH / 24);
+      return `${diffD}d ago`;
+    };
+
+    const buildCommentKey = (comment, idx) => {
+      if (!comment) return `idx-${idx}`;
+      return String(comment._id || `${comment.date || ""}-${comment.text || ""}-${idx}`);
+    };
+
+    const rows = [];
+    INTERNSHIPS.forEach((intern) => {
+      const days = Array.isArray(intern.days) ? intern.days : [];
+      days.forEach((day, dayIndex) => {
+        const comments = Array.isArray(day?.comments) ? day.comments : [];
+        comments.forEach((comment, commentIndex) => {
+          const userObj = typeof comment?.userID === "object" && comment?.userID ? comment.userID : null;
+          const name = userObj
+            ? [userObj.name, userObj.surname].filter(Boolean).join(" ") || userObj.name
+            : "Unknown User";
+          const role = userObj?.role || "Intern";
+          const initials = name
+            .split(" ")
+            .filter(Boolean)
+            .slice(0, 2)
+            .map((part) => part[0]?.toUpperCase())
+            .join("") || "US";
+
+          rows.push({
+            id: `${intern.id}-d${dayIndex}-c${commentIndex}`,
+            internshipId: intern.id,
+            internshipTitle: intern.title,
+            dayIndex,
+            dayNumber: day?.dayNumber || dayIndex + 1,
+            commentKey: buildCommentKey(comment, commentIndex),
+            name,
+            role,
+            company: intern.company,
+            text: comment?.text || String(comment || ""),
+            time: toTimeLabel(comment?.date),
+            date: comment?.date || null,
+            av: initials,
+            avB: "linear-gradient(135deg,#635bff,#06c9a0)",
+            rating: 5,
+          });
+        });
+      });
+    });
+
+    return rows.sort((a, b) => {
+      const ta = a.date ? new Date(a.date).getTime() : 0;
+      const tb = b.date ? new Date(b.date).getTime() : 0;
+      return tb - ta;
+    });
+  }, [INTERNSHIPS]);
+
+  const handleOpenCommentFromFeedback = useCallback((feedbackItem) => {
+    if (!feedbackItem?.internshipId) return;
+    setOpenCommentTarget({
+      internshipId: feedbackItem.internshipId,
+      dayIndex: feedbackItem.dayIndex,
+      commentKey: feedbackItem.commentKey,
+    });
+    setOpenIntern(feedbackItem.internshipId);
+    setNav("Dashboard");
+  }, []);
 
   const renderContent = () => {
     if (loading) {
@@ -2947,8 +2839,17 @@ export default function App() {
       return (
         <InternshipPage
           facultyId={openIntern}
-          onBack={() => setOpenIntern(null)}
+          onBack={() => {
+            setOpenIntern(null);
+            setOpenCommentTarget(null);
+          }}
           user={user}
+          initialDayIndex={
+            openCommentTarget?.internshipId === openIntern ? openCommentTarget.dayIndex : undefined
+          }
+          focusCommentKey={
+            openCommentTarget?.internshipId === openIntern ? openCommentTarget.commentKey : undefined
+          }
           students={students} // Pass students to InternshipPage
         />
       );
@@ -2966,15 +2867,24 @@ export default function App() {
       );
     }
 
+    if (nav === "Students") {
+      return (
+        <StudentDocumentsPage
+          students={students}
+          search={search}
+          onStudentUpdated={handleStudentUpdated}
+        />
+      );
+    }
+
     if (nav === "Create Tutors") {
       return <CreateTutorPage apiUrl={API_URL} />;
     }
 
     // Legacy views
     if (nav === "Feedback") {
-      return <FeedView feedbacks={FEEDBACKS} onOpenFeedback={() => {}} />;
+      return <FeedView feedbacks={commentFeedbacks} onOpenFeedback={handleOpenCommentFromFeedback} />;
     }
-    if (nav === "Analytics") return <AnalView internships={INTERNSHIPS} />;
     if (nav === "Settings") return <SetView />;
     return null;
   };
@@ -3064,7 +2974,7 @@ export default function App() {
               <Search color="var(--t2)" size={16} />
               <input
                 type="text"
-                placeholder="Search internships..."
+                placeholder={searchPlaceholder}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />

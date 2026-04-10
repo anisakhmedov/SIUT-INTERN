@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
-const API_URL = 'https://siut-internship-35635e91d124.herokuapp.com';
+import { API_URL, buildAuthHeaders } from '../utils/apiClient';
 
 export default function Dashboard({ onNewFaculty, onView, search = '' }) {
   const [faculties, setFaculties] = useState([]);
@@ -25,7 +24,9 @@ export default function Dashboard({ onNewFaculty, onView, search = '' }) {
   const fetchFaculties = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/faculty`);
+      const response = await fetch(`${API_URL}/faculty`, {
+        headers: buildAuthHeaders(),
+      });
       if (!response.ok) throw new Error('Failed to fetch faculties');
       const data = await response.json();
       setFaculties(data);
@@ -41,7 +42,10 @@ export default function Dashboard({ onNewFaculty, onView, search = '' }) {
   const removeFaculty = async (id) => {
     if (!window.confirm('Are you sure you want to delete this internship?')) return;
     try {
-      const response = await fetch(`${API_URL}/faculty/${id}`, { method: 'DELETE' });
+      const response = await fetch(`${API_URL}/faculty/${id}`, {
+        method: 'DELETE',
+        headers: buildAuthHeaders(),
+      });
       if (!response.ok) throw new Error('Failed to delete');
       setFaculties(prevFaculties => prevFaculties.filter(f => f._id !== id));
     } catch (err) {

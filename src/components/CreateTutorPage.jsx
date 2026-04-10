@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { UserPlus, ShieldCheck } from 'lucide-react';
+import { API_URL, buildAuthHeaders } from '../utils/apiClient';
 
-const DEFAULT_API_URL = 'https://siut-internship-35635e91d124.herokuapp.com';
+const DEFAULT_API_URL = API_URL;
 
 export default function CreateTutorPage({ apiUrl = DEFAULT_API_URL }) {
   const [formData, setFormData] = useState({
@@ -27,9 +28,9 @@ export default function CreateTutorPage({ apiUrl = DEFAULT_API_URL }) {
     setSuccess('');
 
     try {
-      const response = await fetch(`${apiUrl}/usersInternship`, {
+      const response = await fetch(`${apiUrl}/usersInternship/register`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: buildAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(formData),
       });
 

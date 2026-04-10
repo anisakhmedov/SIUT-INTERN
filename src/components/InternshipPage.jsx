@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-
-const API_URL = 'http://localhost:7777'; // Change this to your actual API URL
+import { API_URL, buildAuthHeaders } from '../utils/apiClient';
 
 export default function InternshipPage({ facultyId, onBack, user, initialDayIndex, focusCommentKey }) {
   const [faculty, setFaculty] = useState(null);
@@ -28,7 +27,9 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
   const fetchFaculty = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/faculty/${facultyId}`);
+      const response = await fetch(`${API_URL}/faculty/${facultyId}`, {
+        headers: buildAuthHeaders(),
+      });
       if (!response.ok) throw new Error('Failed to fetch faculty');
       const data = await response.json();
       setFaculty(data);
@@ -104,7 +105,7 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
     try {
       const res = await fetch(`${API_URL}/faculty/${facultyId}/days/${dayId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: buildAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error('Update failed');
@@ -178,6 +179,7 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
           `${API_URL}/faculty/${facultyId}/days/${dayId}/images`,
           {
             method: 'POST',
+            headers: buildAuthHeaders(),
             body: imageFormData,
           }
         );
@@ -206,7 +208,9 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
         setUploadProgress(100);
 
         // Step 2: Immediate verification via GET /faculty/:id
-        const verifyAfterUploadRes = await fetch(`${API_URL}/faculty/${facultyId}`);
+        const verifyAfterUploadRes = await fetch(`${API_URL}/faculty/${facultyId}`, {
+          headers: buildAuthHeaders(),
+        });
         if (!verifyAfterUploadRes.ok) throw new Error('Failed to verify uploaded image state.');
         const verifyAfterUploadFaculty = await verifyAfterUploadRes.json();
         const verifyDay = (verifyAfterUploadFaculty?.days || []).find((d) => (d?._id ?? d?.id ?? null) === dayId);
@@ -244,7 +248,7 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
       
       const reportRes = await fetch(endpoint, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: buildAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(reportPayload),
       });
 
@@ -255,7 +259,9 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
 
       // Step 3: Verify images remain after normal update flow
       if (uploadedUrls.length > 0) {
-        const verifyAfterUpdateRes = await fetch(`${API_URL}/faculty/${facultyId}`);
+        const verifyAfterUpdateRes = await fetch(`${API_URL}/faculty/${facultyId}`, {
+          headers: buildAuthHeaders(),
+        });
         if (!verifyAfterUpdateRes.ok) throw new Error('Failed to verify images after report update.');
         const verifyAfterUpdateFaculty = await verifyAfterUpdateRes.json();
         const verifyDayAfterUpdate = (verifyAfterUpdateFaculty?.days || []).find((d) => (d?._id ?? d?.id ?? null) === dayId);
@@ -362,7 +368,7 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
       };
       const res = await fetch(`${API_URL}/faculty/${facultyId}/days`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: buildAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(newDay),
       });
       if (!res.ok) throw new Error('Failed to add day');

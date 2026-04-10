@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, X, Plus } from 'lucide-react';
-
-const API_URL = 'https://siut-internship-35635e91d124.herokuapp.com';
+import { API_URL, buildAuthHeaders } from '../utils/apiClient';
 
 export default function CreatePage({ onSubmit, onCancel, students = [] }) { // Accept students as prop
   const [formData, setFormData] = useState({
@@ -29,7 +28,9 @@ export default function CreatePage({ onSubmit, onCancel, students = [] }) { // A
     const fetchTutors = async () => {
       try {
         setLoadingTutors(true);
-        const response = await fetch(`${API_URL}/usersInternship`);
+        const response = await fetch(`${API_URL}/usersInternship`, {
+          headers: buildAuthHeaders(),
+        });
         if (response.ok) {
           const data = await response.json();
           // Filter for Tutor and Professor roles
@@ -117,9 +118,7 @@ export default function CreatePage({ onSubmit, onCancel, students = [] }) { // A
       // Submit to the API
       const response = await fetch(`${API_URL}/faculty`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: buildAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(payload)
       });
 

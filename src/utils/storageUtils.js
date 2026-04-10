@@ -4,6 +4,7 @@ const STORAGE_KEYS = {
   USER: 'siut_user',
   USER_ID: 'siut_user_id',
   USER_LOGIN: 'siut_user_login',
+  AUTH_TOKEN: 'siut_auth_token',
 };
 
 /**
@@ -18,6 +19,26 @@ export const saveUserToStorage = (user) => {
   } catch (error) {
     console.error('Error saving user to localStorage:', error);
   }
+};
+
+/**
+ * Save JWT auth token to localStorage
+ * @param {string} token - JWT token
+ */
+export const saveAuthTokenToStorage = (token) => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token || '');
+  } catch (error) {
+    console.error('Error saving auth token to localStorage:', error);
+  }
+};
+
+/**
+ * Get JWT auth token from localStorage
+ * @returns {string|null} Token or null
+ */
+export const getAuthTokenFromStorage = () => {
+  return localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
 };
 
 /**
@@ -59,6 +80,7 @@ export const clearUserFromStorage = () => {
     localStorage.removeItem(STORAGE_KEYS.USER);
     localStorage.removeItem(STORAGE_KEYS.USER_ID);
     localStorage.removeItem(STORAGE_KEYS.USER_LOGIN);
+    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
   } catch (error) {
     console.error('Error clearing user from localStorage:', error);
   }

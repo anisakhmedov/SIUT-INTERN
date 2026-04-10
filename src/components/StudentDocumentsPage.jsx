@@ -91,28 +91,6 @@ export default function StudentDocumentsPage({ students = [], search = '', onStu
     return values.sort((a, b) => a.localeCompare(b));
   }, [localStudents]);
 
-  const documentStats = useMemo(() => {
-    const stats = {
-      total: localStudents.length,
-      withPassport: 0,
-      withMedicine: 0,
-      complete: 0,
-      missingAny: 0,
-    };
-
-    localStudents.forEach((student) => {
-      const passportReady = hasImage(student, 'passport');
-      const medicineReady = hasImage(student, 'medicine');
-
-      if (passportReady) stats.withPassport += 1;
-      if (medicineReady) stats.withMedicine += 1;
-      if (passportReady && medicineReady) stats.complete += 1;
-      if (!passportReady || !medicineReady) stats.missingAny += 1;
-    });
-
-    return stats;
-  }, [hasImage, localStudents]);
-
   const filteredStudents = useMemo(() => {
     const externalSearch = search.trim().toLowerCase();
     const internalSearch = localSearch.trim().toLowerCase();
@@ -1164,29 +1142,6 @@ export default function StudentDocumentsPage({ students = [], search = '', onStu
           <div className="student-docs-head">
             <div>
               <p className="student-docs-eyebrow"><FileImage size={13} /> Document upload</p>
-              <h1 className="student-docs-title">Student passport and medicine images</h1>
-              <p className="student-docs-subtitle">
-                Select a student from the list, then upload one image at a time. Validation is enforced before the request is sent.
-              </p>
-            </div>
-            <div className="student-docs-head-right">
-              <div className="student-docs-count">
-                <Users size={14} /> {documentStats.total} total students
-              </div>
-              <div className="student-docs-quickstats" aria-label="Document completion summary">
-                <div className="student-docs-quickstat">
-                  <strong>{documentStats.withPassport}</strong>
-                  <span>Passport uploaded</span>
-                </div>
-                <div className="student-docs-quickstat">
-                  <strong>{documentStats.withMedicine}</strong>
-                  <span>Medicine uploaded</span>
-                </div>
-                <div className="student-docs-quickstat">
-                  <strong>{documentStats.complete}</strong>
-                  <span>Fully complete</span>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -1336,16 +1291,6 @@ export default function StudentDocumentsPage({ students = [], search = '', onStu
                     </div>
                   )}
                 </article>
-              </section>
-
-              <section className="student-docs-panel" style={{ marginTop: 18 }}>
-                <div className="student-docs-eyebrow"><AlertCircle size={13} /> Upload rules</div>
-                <div className="student-mini">
-                  <span><strong>Allowed types:</strong> image/jpeg, image/png, image/gif, image/webp</span>
-                  <span><strong>Max size:</strong> 15MB</span>
-                  <span><strong>Request field:</strong> image</span>
-                  <span><strong>Method:</strong> PATCH</span>
-                </div>
               </section>
             </>
           ) : (

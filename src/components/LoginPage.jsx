@@ -3,9 +3,8 @@ import {
   GraduationCap,
   AlertCircle,
 } from 'lucide-react';
-import { saveUserToStorage } from '../utils/storageUtils';
-
-const API_URL = 'https://siut-internship-35635e91d124.herokuapp.com';
+import { saveAuthTokenToStorage, saveUserToStorage } from '../utils/storageUtils';
+import { API_URL } from '../utils/apiClient';
 
 export default function LoginPage({ onLogin, onUserSet }) {
   const [f, setF] = useState({ login: '', password: '' });
@@ -20,21 +19,29 @@ export default function LoginPage({ onLogin, onUserSet }) {
     setLoading(true);
     setErr('');
     try {
-      // First, fetch all users to find the matching one
-      const response = await fetch(`${API_URL}/usersInternship`);
-      if (!response.ok) throw new Error('Could not connect to authentication service');
-      
-      const users = await response.json();
-      const user = users.find(u => u.login === f.login && u.password === f.password);
-      
-      if (user) {
-        // Save user to localStorage using utility function
-        saveUserToStorage(user);
-        if (onUserSet) onUserSet(user);
-        onLogin();
-      } else {
-        setErr('Invalid login credentials.');
+      const response = await fetch(`${API_URL}/usersInternship/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ login: f.login, password: f.password }),
+      });
+
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(payload?.message || 'Invalid login credentials.');
       }
+
+      const user = payload?.user;
+      const token = payload?.token;
+
+      if (!user || !token) {
+        throw new Error('Authentication response is missing user or token.');
+      }
+
+      saveUserToStorage(user);
+      saveAuthTokenToStorage(token);
+      if (onUserSet) onUserSet(user);
+      onLogin();
     } catch (error) {
       setErr(error.message || 'Connection error. Please try again.');
       console.error('Login error:', error);

@@ -46,6 +46,7 @@ import {
   UserCircle,
 } from "lucide-react";
 import { getUserFromStorage, clearUserFromStorage } from "./utils/storageUtils";
+import { API_URL, buildAuthHeaders } from "./utils/apiClient";
 
 
 
@@ -56,6 +57,7 @@ import CreatePage from "./components/CreatePage";
 import InternshipPage from "./components/InternshipPage";
 import CreateTutorPage from "./components/CreateTutorPage";
 import StudentDocumentsPage from "./components/StudentDocumentsPage";
+import UserEducationPage from "./components/UserEducationPage";
 
 /* ═══════════════════════════════════════════════
    STYLES
@@ -81,6 +83,9 @@ html,body{height:100%;font-family:'Epilogue',sans-serif;background:var(--bg);}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes dotP{0%,100%{transform:scale(1)}50%{transform:scale(1.5);opacity:.6}}
 @keyframes logoF{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.page-stage{position:relative;min-height:100%;}
+.page-transition{animation:pageIn .34s cubic-bezier(.22,1,.36,1) both;will-change:transform,opacity;}
+@keyframes pageIn{from{opacity:0;transform:translateY(10px) scale(.995)}to{opacity:1;transform:translateY(0) scale(1)}}
 .reveal{opacity:0;transform:translateY(20px);transition:opacity .55s ease,transform .55s ease;}
 .reveal.in{opacity:1;transform:translateY(0);}
 
@@ -2281,39 +2286,109 @@ function DashView({ internships, feedbacks, setNav, onOpen, user }) {
 ═══════════════════════════════════════════════ */
 function FeedView({ feedbacks, onOpenFeedback }) {
   const [filter, setFilter] = useState("All");
-  const handleFilterChange = (r) => setFilter(r);
-  const list =
-    filter === "All" ? feedbacks : feedbacks.filter((f) => f.role === filter);
+
+  const roleOptions = useMemo(() => {
+    const roles = Array.from(new Set((feedbacks || []).map((item) => item?.role).filter(Boolean)));
+    return ["All", ...roles];
+  }, [feedbacks]);
+
+  const activeFilter = roleOptions.includes(filter) ? filter : "All";
+
+  const list = useMemo(
+    () => (activeFilter === "All" ? feedbacks : feedbacks.filter((f) => f.role === activeFilter)),
+    [activeFilter, feedbacks],
+  );
+
+  const roleSummary = useMemo(
+    () => roleOptions.filter((role) => role !== "All").map((role) => ({
+      role,
+      count: feedbacks.filter((item) => item.role === role).length,
+    })),
+    [feedbacks, roleOptions],
+  );
+
   return (
     <div className="pp">
       <Reveal>
         <div
+          className="gc"
+          style={{
+            padding: 20,
+            marginBottom: 14,
+            background: "linear-gradient(135deg, rgba(99,91,255,.10), rgba(6,201,160,.07))",
+            border: "1px solid rgba(99,91,255,.16)",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <div>
+              <div style={{ fontFamily: "Syne", fontSize: 22, fontWeight: 800, color: "var(--t1)", lineHeight: 1.1 }}>
+                Internship Comments Feed
+              </div>
+              <div style={{ marginTop: 6, fontSize: 12.5, color: "var(--t2)" }}>
+                Live comments from internship days. Click any item to open it in its internship page.
+              </div>
+            </div>
+            <div className="badge" style={{ background: "rgba(99,91,255,.14)", color: "#4f46e5", fontWeight: 700 }}>
+              <MessageCircle size={12} style={{ marginRight: 5 }} /> {feedbacks.length} total
+            </div>
+          </div>
+
+          {roleSummary.length > 0 && (
+            <div style={{ marginTop: 14, display: "flex", gap: 7, flexWrap: "wrap" }}>
+              {roleSummary.map((item) => (
+                <span
+                  key={item.role}
+                  className="badge"
+                  style={{
+                    background: "rgba(255,255,255,.72)",
+                    color: "var(--t2)",
+                    border: "1px solid rgba(0,0,0,.08)",
+                  }}
+                >
+                  {item.role}: {item.count}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div
           style={{
             display: "flex",
-            gap: 7,
-            marginBottom: 20,
+            gap: 8,
+            marginBottom: 16,
             flexWrap: "wrap",
           }}
         >
-          {["All", "Intern", "Mentor", "HR"].map((r) => (
+          {roleOptions.map((r) => (
             <button
               key={r}
-              onClick={() => handleFilterChange(r)}
-              className={filter === r ? "bp" : "bg"}
-              style={{ fontSize: 12 }}
+              onClick={() => setFilter(r)}
+              className={activeFilter === r ? "bp" : "bg"}
+              style={{ fontSize: 12, borderRadius: 999, padding: "7px 12px" }}
             >
-              {r === "All" ? "All Feedback" : ROLES[r]?.label || r}
+              {r === "All" ? "All Roles" : r}
             </button>
           ))}
         </div>
       </Reveal>
-      <div className="gc" style={{ padding: 21 }}>
+
+      <div className="gc" style={{ padding: 16 }}>
         {list.length === 0 && (
-          <div style={{ color: "var(--t3)", fontSize: 13 }}>No comments found.</div>
+          <div style={{ color: "var(--t3)", fontSize: 13, padding: 8 }}>No comments found.</div>
         )}
         {list.map((f, i) => (
           <Reveal key={f.id} delay={i * 50}>
-            <div className="fr">
+            <div
+              className="fr"
+              style={{
+                padding: "14px 12px",
+                borderRadius: 14,
+                border: "1px solid rgba(0,0,0,.08)",
+                background: "rgba(255,255,255,.84)",
+                marginBottom: 8,
+              }}
+            >
               <div
                 className="fa"
                 style={{
@@ -2347,13 +2422,13 @@ function FeedView({ feedbacks, onOpenFeedback }) {
                     className="badge"
                     style={{
                       background: ROLES[f.role]?.bg,
-                      color: ROLES[f.role]?.c,
+                      color: ROLES[f.role]?.c || "var(--t2)",
                     }}
                   >
                     {f.role}
                   </span>
                   <span style={{ fontSize: 11, color: "var(--t3)" }}>
-                    {f.company}
+                    {f.company} {f.dayNumber ? `· Day ${f.dayNumber}` : ""}
                   </span>
                 </div>
                 <div
@@ -2363,18 +2438,17 @@ function FeedView({ feedbacks, onOpenFeedback }) {
                 </div>
               </div>
               <div style={{ textAlign: "right", flexShrink: 0, minWidth: 76 }}>
-                <Stars n={f.rating} />
                 <div
-                  style={{ fontSize: 10.5, color: "var(--t3)", marginTop: 2 }}
+                  style={{ fontSize: 11, color: "var(--t3)", marginTop: 2, fontWeight: 600 }}
                 >
                   {f.time}
                 </div>
                 <button
-                  className="bg"
-                  style={{ marginTop: 6, padding: "3px 9px", fontSize: 10.5 }}
+                  className="bp"
+                  style={{ marginTop: 8, padding: "6px 11px", fontSize: 11 }}
                   onClick={() => onOpenFeedback(f)}
                 >
-                  <Eye size={11} /> View
+                  <Eye size={11} /> Open
                 </button>
               </div>
             </div>
@@ -2569,8 +2643,6 @@ export default function App() {
 
   const openFeedback = () => setNav("Feedback");
 
-  const API_URL = "https://siut-internship-35635e91d124.herokuapp.com";
-
   // Fetch data from API on mount
   useEffect(() => {
     const fetchData = async () => {
@@ -2582,7 +2654,9 @@ export default function App() {
           
           // Fetch students data when user logs in
           try {
-            const response = await fetch(`${API_URL}/student`);
+            const response = await fetch(`${API_URL}/student`, {
+              headers: buildAuthHeaders(),
+            });
             if (response.ok) {
               const studentData = await response.json();
               setStudents(studentData);
@@ -2597,7 +2671,9 @@ export default function App() {
         }
 
         // Fetch internships
-        const response = await fetch(`${API_URL}/faculty`);
+        const response = await fetch(`${API_URL}/faculty`, {
+          headers: buildAuthHeaders(),
+        });
         if (response.ok) {
           const data = await response.json();
           // Transform the data to match the expected format
@@ -2612,7 +2688,9 @@ export default function App() {
             students: intern.students || [],
             days: Array.isArray(intern.days) ? intern.days : [],
             desc: intern.description || intern.plan,
-            ti: intern.tutorId ? parseInt(intern.tutorId) % 4 : 0,
+            ti: Number.isFinite(Number.parseInt(intern.tutorID, 10))
+              ? Number.parseInt(intern.tutorID, 10) % 4
+              : 0,
           }));
           setInternships(transformedInternships);
         }
@@ -2701,6 +2779,7 @@ export default function App() {
     { I: LayoutDashboard, label: "Dashboard" },
     { I: Users, label: "Students" },
     { I: MessageSquare, label: "Feedback" },
+    { I: BookOpen, label: "User Education" },
     ...(user?.role === "Admin" ? [{ I: UserCheck, label: "Create Tutors" }] : []),
   ];
 
@@ -2714,7 +2793,12 @@ export default function App() {
     }));
   }, []);
 
-  const searchPlaceholder = nav === "Students" ? "Search students..." : "Search internships...";
+  const searchPlaceholder =
+    nav === "Students"
+      ? "Search students..."
+      : nav === "User Education"
+        ? "Search onboarding..."
+        : "Search internships...";
 
   const commentFeedbacks = useMemo(() => {
     const now = Date.now();
@@ -2794,7 +2878,14 @@ export default function App() {
     setNav("Dashboard");
   }, []);
 
-  const renderContent = () => {
+  const pageTransitionKey = useMemo(() => {
+    if (loading) return "loading";
+    if (showCreatePage) return "create-page";
+    if (openIntern) return `internship-${openIntern}`;
+    return `nav-${nav}`;
+  }, [loading, nav, openIntern, showCreatePage]);
+
+  const contentNode = useMemo(() => {
     if (loading) {
       return (
         <div className="pp">
@@ -2805,13 +2896,11 @@ export default function App() {
       );
     }
 
-    // New API-based components
     if (showCreatePage) {
       return (
         <CreatePage
-          students={students} // Pass students to CreatePage
+          students={students}
           onSubmit={(newFaculty) => {
-            // Add the new faculty to our state
             const transformedFaculty = {
               id: newFaculty._id,
               title: newFaculty.name,
@@ -2822,12 +2911,13 @@ export default function App() {
               role: newFaculty.role || "Intern",
               students: newFaculty.students || [],
               desc: newFaculty.description || newFaculty.plan,
-              ti: newFaculty.tutorId ? parseInt(newFaculty.tutorId) % 4 : 0,
+              ti: Number.isFinite(Number.parseInt(newFaculty.tutorID, 10))
+                ? Number.parseInt(newFaculty.tutorID, 10) % 4
+                : 0,
             };
 
             setInternships((prev) => [transformedFaculty, ...prev]);
             setShowCreatePage(false);
-            // Refresh dashboard
             setNav("Dashboard");
           }}
           onCancel={() => setShowCreatePage(false)}
@@ -2850,7 +2940,7 @@ export default function App() {
           focusCommentKey={
             openCommentTarget?.internshipId === openIntern ? openCommentTarget.commentKey : undefined
           }
-          students={students} // Pass students to InternshipPage
+          students={students}
         />
       );
     }
@@ -2881,13 +2971,29 @@ export default function App() {
       return <CreateTutorPage apiUrl={API_URL} />;
     }
 
-    // Legacy views
     if (nav === "Feedback") {
       return <FeedView feedbacks={commentFeedbacks} onOpenFeedback={handleOpenCommentFromFeedback} />;
     }
+
+    if (nav === "User Education") {
+      return <UserEducationPage user={user} />;
+    }
+
     if (nav === "Settings") return <SetView />;
     return null;
-  };
+  }, [
+    loading,
+    showCreatePage,
+    students,
+    openIntern,
+    user,
+    openCommentTarget,
+    nav,
+    search,
+    handleStudentUpdated,
+    commentFeedbacks,
+    handleOpenCommentFromFeedback,
+  ]);
 
   if (page === "login")
     return (
@@ -2990,7 +3096,11 @@ export default function App() {
           </div>
           
           <div className="sa">
-            {renderContent()}
+            <div className="page-stage">
+              <div key={pageTransitionKey} className="page-transition">
+                {contentNode}
+              </div>
+            </div>
           </div>
         </div>
       </div>

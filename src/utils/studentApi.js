@@ -1,4 +1,5 @@
-const API_URL = 'https://siut-internship-35635e91d124.herokuapp.com';
+import { API_URL } from './apiClient';
+import { getAuthTokenFromStorage } from './storageUtils';
 
 export const STUDENT_IMAGE_ALLOWED_TYPES = [
   'image/jpeg',
@@ -57,6 +58,11 @@ function uploadStudentImage(studentId, file, endpointPath, onProgress) {
     const xhr = new XMLHttpRequest();
 
     xhr.open('PATCH', `${API_URL}/student/${studentId}/${endpointPath}`);
+
+    const token = getAuthTokenFromStorage();
+    if (token) {
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    }
 
     xhr.upload.onprogress = (event) => {
       if (!onProgress) return;

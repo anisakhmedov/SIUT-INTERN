@@ -247,7 +247,6 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
   const progressHue = useMemo(() => Math.round((progressPercent / 100) * 120), [progressPercent]);
   const currentDay = days[dayIndex];
   const currentDayImageUrls = useMemo(() => extractImageUrls(currentDay), [extractImageUrls, currentDay]);
-  const currentDayCommentsCount = currentDay?.comments?.length || 0;
  
   const canWriteReport = user?.role === 'Tutor' || user?.role === 'Admin';
   const canEditInternship = user?.role === 'Tutor' || user?.role === 'Admin';

@@ -1,35 +1,26 @@
-import React, { useState } from 'react';
-import {
-  GraduationCap,
-  AlertCircle,
-} from 'lucide-react';
-import { saveAuthTokenToStorage, saveUserToStorage } from '../utils/storageUtils';
-import { API_URL } from '../utils/apiClient';
+import React, { useEffect, useState } from 'react';
+import { GraduationCap } from 'lucide-react';
+import { post, setAuthSession } from '../utils/apiClient';
+import { toast } from '../utils/toast';
 
-export default function LoginPage({ onLogin, onUserSet }) {
+export default function LoginPage({ onLogin, onUserSet, sessionMessage = '' }) {
   const [f, setF] = useState({ login: '', password: '' });
-  const [err, setErr] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (sessionMessage) {
+      toast.warning(sessionMessage);
+    }
+  }, [sessionMessage]);
 
   const go = async () => {
     if (!f.login || !f.password) {
-      setErr('Please fill in all fields.');
+      toast.warning('Please fill in all fields.');
       return;
     }
     setLoading(true);
-    setErr('');
     try {
-      const response = await fetch(`${API_URL}/usersInternship/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ login: f.login, password: f.password }),
-      });
-
-      const payload = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        throw new Error(payload?.message || 'Invalid login credentials.');
-      }
+      const payload = await post('/usersInternship/login', { login: f.login, password: f.password }, { auth: false, handleUnauthorized: false });
 
       const user = payload?.user;
       const token = payload?.token;
@@ -38,12 +29,15 @@ export default function LoginPage({ onLogin, onUserSet }) {
         throw new Error('Authentication response is missing user or token.');
       }
 
-      saveUserToStorage(user);
-      saveAuthTokenToStorage(token);
+      setAuthSession({ token, user });
       if (onUserSet) onUserSet(user);
       onLogin();
     } catch (error) {
-      setErr(error.message || 'Connection error. Please try again.');
+      if (error?.status === 401) {
+        toast.error('Invalid login credentials.');
+      } else {
+        toast.error(error.message || 'Connection error. Please try again.');
+      }
       console.error('Login error:', error);
     } finally {
       setLoading(false);
@@ -176,21 +170,6 @@ export default function LoginPage({ onLogin, onUserSet }) {
           onChange={(ev) => setF((p) => ({ ...p, password: ev.target.value }))}
           onKeyDown={(ev) => ev.key === 'Enter' && go()}
         />
-        {err && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              marginBottom: 10,
-              color: '#f87171',
-              fontSize: 12,
-            }}
-          >
-            <AlertCircle size={12} />
-            {err}
-          </div>
-        )}
         <div
           style={{
             display: 'flex',
@@ -209,11 +188,12 @@ export default function LoginPage({ onLogin, onUserSet }) {
               }))
             }
             style={{ fontSize: 12 }}
+            type="button"
           >
             Demo Login
           </button>
         </div>
-        <button className="lbtn" onClick={go}>
+          <button className="lbtn" onClick={go} type="button">
           {loading && (
             <div
               style={{

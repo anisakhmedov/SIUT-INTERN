@@ -1,5 +1,107 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { API_URL, buildAuthHeaders } from '../utils/apiClient';
+import { get, patch, post } from '../utils/apiClient';
+import { toast } from '../utils/toast';
+
+const INTERNSHIP_STATUS_OPTIONS = ['Pending', 'In Progress', 'Completed'];
+
+const clampProgress = (value) => Math.max(0, Math.min(100, Number.isFinite(value) ? value : 0));
+
+function hasReportContent(day) {
+  if (!day?.shortReport) return false;
+
+  const title = typeof day.shortReport.title === 'string' ? day.shortReport.title.trim() : '';
+  const description = typeof day.shortReport.description === 'string' ? day.shortReport.description.trim() : '';
+  const reportImages = Array.isArray(day.shortReport.images) ? day.shortReport.images : [];
+  const dayImages = Array.isArray(day.images) ? day.images : [];
+
+  return Boolean(title || description || reportImages.length || dayImages.length);
+}
+
+function calculateProgressPercent(days) {
+  const dayList = Array.isArray(days) ? days : [];
+  if (dayList.length === 0) return 0;
+
+  const reportedDays = dayList.filter((day) => hasReportContent(day)).length;
+  return clampProgress(Math.round((reportedDays / dayList.length) * 100));
+}
+
+function parseProgressPercent(value) {
+  const numericValue = typeof value === 'number'
+    ? value
+    : typeof value === 'string'
+      ? Number.parseFloat(value.replace('%', '').trim())
+      : NaN;
+
+  return Number.isFinite(numericValue) ? clampProgress(Math.round(numericValue)) : null;
+}
+
+function normalizeInternshipStatus(value) {
+  const raw = String(value || '').trim().toLowerCase();
+  if (raw === 'completed') return 'Completed';
+  if (raw === 'in progress' || raw === 'active') return 'In Progress';
+  return 'Pending';
+}
+
+function escapeHtml(text) {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function renderInlineMarkdown(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/_(.+?)_/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, '<code>$1</code>');
+}
+
+function renderSimpleMarkdown(text) {
+  const source = String(text || '').trim();
+  if (!source) return '<p>No plan provided.</p>';
+
+  const lines = source.split(/\r?\n/);
+  const chunks = [];
+  let inList = false;
+
+  lines.forEach((line) => {
+    const escaped = escapeHtml(line.trim());
+    if (!escaped) {
+      if (inList) {
+        chunks.push('</ul>');
+        inList = false;
+      }
+      return;
+    }
+
+    if (escaped.startsWith('- ')) {
+      if (!inList) {
+        chunks.push('<ul>');
+        inList = true;
+      }
+      chunks.push(`<li>${renderInlineMarkdown(escaped.slice(2))}</li>`);
+      return;
+    }
+
+    if (inList) {
+      chunks.push('</ul>');
+      inList = false;
+    }
+
+    if (escaped.startsWith('## ')) {
+      chunks.push(`<h3>${renderInlineMarkdown(escaped.slice(3))}</h3>`);
+      return;
+    }
+
+    chunks.push(`<p>${renderInlineMarkdown(escaped)}</p>`);
+  });
+
+  if (inList) chunks.push('</ul>');
+
+  return chunks.join('');
+}
 
 export default function InternshipPage({ facultyId, onBack, user, initialDayIndex, focusCommentKey }) {
   const [faculty, setFaculty] = useState(null);
@@ -10,33 +112,43 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
   const [showReportForm, setShowReportForm] = useState(false);
   const [reportTitle, setReportTitle] = useState('');
   const [reportDescription, setReportDescription] = useState('');
+  const [reportDayNumber, setReportDayNumber] = useState('');
+  const [reportDayDate, setReportDayDate] = useState('');
+  const [reportDayApproved, setReportDayApproved] = useState(false);
   const [reportImages, setReportImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
-  const [actionMessage, setActionMessage] = useState('');
-  const [actionError, setActionError] = useState('');
+  const [isInternshipEditMode, setIsInternshipEditMode] = useState(false);
+  const [baseInfoName, setBaseInfoName] = useState('');
+  const [baseInfoCompany, setBaseInfoCompany] = useState('');
+  const [baseInfoLocation, setBaseInfoLocation] = useState('');
+  const [baseInfoDuration, setBaseInfoDuration] = useState('');
+  const [baseInfoStatus, setBaseInfoStatus] = useState('');
+  const [baseInfoProgressAll, setBaseInfoProgressAll] = useState('');
+  const [baseInfoPlan, setBaseInfoPlan] = useState('');
+  const [activeImageSrc, setActiveImageSrc] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [showFeedbackView, setShowFeedbackView] = useState(false);
-  const [isEditingReport, setIsEditingReport] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0); // 0-100 for progress tracking
   const [showAddDayModal, setShowAddDayModal] = useState(false);
   const [newDayDate, setNewDayDate] = useState(new Date().toISOString().slice(0, 10));
   const [highlightedCommentKey, setHighlightedCommentKey] = useState('');
   const commentsSectionRef = useRef(null);
-  const feedbackTimeoutRef = useRef(null);
+  const reportDescriptionRef = useRef(null);
+  const planEditorRef = useRef(null);
+  const dayCarouselRef = useRef(null);
+  const dayItemRefs = useRef([]);
 
   const fetchFaculty = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/faculty/${facultyId}`, {
-        headers: buildAuthHeaders(),
-      });
-      if (!response.ok) throw new Error('Failed to fetch faculty');
-      const data = await response.json();
+      const data = await get(`/faculty/${facultyId}`);
       setFaculty(data);
       setError('');
+      return data;
     } catch (err) {
       setError(err.message);
       console.error('Error fetching faculty:', err);
+      return null;
     } finally {
       setLoading(false);
     }
@@ -45,15 +157,6 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
   useEffect(() => {
     fetchFaculty();
   }, [fetchFaculty]);
-
-  const clearActionFeedback = useCallback(() => {
-    if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
-    feedbackTimeoutRef.current = setTimeout(() => {
-      setActionMessage('');
-      setActionError('');
-      feedbackTimeoutRef.current = null;
-    }, 4000);
-  }, []);
 
   const getDayId = useCallback((day) => {
     if (!day) return null;
@@ -81,7 +184,64 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
       .filter(Boolean);
   }, []);
 
+  const resetDayForm = useCallback(() => {
+    setShowReportForm(false);
+    setReportTitle('');
+    setReportDescription('');
+    setReportDayNumber('');
+    setReportDayDate('');
+    setReportDayApproved(false);
+    setReportImages([]);
+    setImagePreviews([]);
+    setUploadProgress(0);
+  }, []);
+
+  const initBaseInfoFields = useCallback((facultySnapshot) => {
+    if (!facultySnapshot) return;
+    const durationValue = facultySnapshot?.duration
+      ? (typeof facultySnapshot.duration === 'string'
+        ? facultySnapshot.duration
+        : [facultySnapshot.duration?.start, facultySnapshot.duration?.end].filter(Boolean).join(' - '))
+      : '';
+
+    setBaseInfoName(facultySnapshot.name || '');
+    setBaseInfoCompany(facultySnapshot.company || '');
+    setBaseInfoLocation(facultySnapshot.location || '');
+    setBaseInfoDuration(durationValue);
+    setBaseInfoStatus(normalizeInternshipStatus(facultySnapshot.status));
+    setBaseInfoProgressAll(facultySnapshot.progressAll != null ? String(facultySnapshot.progressAll) : '');
+    setBaseInfoPlan(facultySnapshot.plan || '');
+  }, []);
+
+  const applyFormatting = useCallback((textareaRef, setter, before, after = '', placeholder = 'text') => {
+    const el = textareaRef?.current;
+    if (!el) return;
+
+    const start = el.selectionStart ?? 0;
+    const end = el.selectionEnd ?? 0;
+    const value = el.value ?? '';
+    const selected = value.slice(start, end);
+    const insert = `${before}${selected || placeholder}${after}`;
+    const nextValue = `${value.slice(0, start)}${insert}${value.slice(end)}`;
+
+    setter(nextValue);
+
+    requestAnimationFrame(() => {
+      el.focus();
+      if (selected) {
+        el.setSelectionRange(start + before.length, start + before.length + selected.length);
+      } else {
+        const cursorStart = start + before.length;
+        el.setSelectionRange(cursorStart, cursorStart + placeholder.length);
+      }
+    });
+  }, []);
+
   const days = useMemo(() => faculty?.days || [], [faculty]);
+  const reportedDaysCount = useMemo(() => days.filter((day) => hasReportContent(day)).length, [days]);
+  const progressPercent = useMemo(() => calculateProgressPercent(days), [days]);
+  const computedProgressLabel = useMemo(() => `${progressPercent}%`, [progressPercent]);
+  const progressHue = useMemo(() => Math.round((progressPercent / 100) * 120), [progressPercent]);
   const currentDay = days[dayIndex];
   const currentDayImageUrls = useMemo(() => extractImageUrls(currentDay), [extractImageUrls, currentDay]);
   const currentDayCommentsCount = currentDay?.comments?.length || 0;
@@ -89,46 +249,122 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
     ? (currentDay.shortReport ? (currentDay.approved ? 'Reported and approved' : 'Reported, pending review') : 'No report yet')
     : 'No day selected';
   const canWriteReport = user?.role === 'Tutor' || user?.role === 'Admin';
+  const canEditInternship = user?.role === 'Tutor' || user?.role === 'Admin';
   const canApprove = user?.role === 'Admin';
   const canExport = user?.role === 'Admin';
+
+  useEffect(() => {
+    if (!faculty || isInternshipEditMode) return;
+    initBaseInfoFields(faculty);
+  }, [faculty, isInternshipEditMode, initBaseInfoFields]);
+
+  const syncFacultyProgress = useCallback(async (facultySnapshot) => {
+    if (!facultySnapshot) return;
+
+    const expectedPercent = calculateProgressPercent(facultySnapshot.days || []);
+    const currentPercent = parseProgressPercent(facultySnapshot.progressAll);
+    const expectedLabel = `${expectedPercent}%`;
+
+    if (currentPercent === expectedPercent) {
+      if (String(facultySnapshot.progressAll || '').trim() !== expectedLabel) {
+        setFaculty((prev) => (prev ? { ...prev, progressAll: expectedLabel } : prev));
+      }
+      return;
+    }
+
+    try {
+      await patch(`/faculty/${facultyId}`, {
+        ...facultySnapshot,
+        progressAll: expectedLabel,
+      });
+      setFaculty((prev) => (prev ? { ...prev, progressAll: expectedLabel } : prev));
+    } catch (err) {
+      console.error('Failed to sync internship progress:', err);
+    }
+  }, [facultyId]);
 
   const updateDay = useCallback(async (day, payload, index = null) => {
     const dayId = getDayId(day) ?? (index != null ? String(index) : null);
     if (dayId == null) {
-      setActionError('Day could not be identified. Try refreshing.');
-      clearActionFeedback();
+      toast.error('Day could not be identified. Try refreshing.');
       return;
     }
     setSubmitting(true);
-    setActionError('');
-    setActionMessage('');
     try {
-      const res = await fetch(`${API_URL}/faculty/${facultyId}/days/${dayId}`, {
-        method: 'PATCH',
-        headers: buildAuthHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error('Update failed');
+      await patch(`/faculty/${facultyId}/days/${dayId}`, payload);
       await fetchFaculty(); // Refresh the data
-      setActionMessage('Saved.');
-      clearActionFeedback();
+      toast.success('Saved.');
     } catch (err) {
-      setActionError(err.message || 'Something went wrong.');
-      clearActionFeedback();
+      toast.error(err.message || 'Something went wrong.');
     } finally {
       setSubmitting(false);
     }
-  }, [facultyId, getDayId, fetchFaculty, clearActionFeedback]);
+  }, [facultyId, getDayId, fetchFaculty]);
+
+  const handleBaseInfoSubmit = useCallback(async (e) => {
+    if (e?.preventDefault) e.preventDefault();
+    if (!faculty) return;
+
+    setSubmitting(true);
+
+    try {
+      const nextName = baseInfoName.trim();
+      const nextCompany = baseInfoCompany.trim();
+      const nextLocation = baseInfoLocation.trim();
+      const nextDuration = baseInfoDuration.trim();
+      const nextStatus = normalizeInternshipStatus(baseInfoStatus);
+      const nextProgressAll = baseInfoProgressAll.trim();
+      const nextPlan = baseInfoPlan.trim();
+
+      if (!nextName) throw new Error('Internship name is required.');
+      if (!nextCompany) throw new Error('Company is required.');
+      if (!nextLocation) throw new Error('Location is required.');
+
+      const payload = {
+        ...faculty,
+        name: nextName,
+        company: nextCompany,
+        location: nextLocation,
+        duration: nextDuration || faculty.duration,
+        status: nextStatus,
+        progressAll: nextProgressAll,
+        plan: nextPlan,
+        locationYmaps: nextLocation === (faculty.location || '') ? faculty.locationYmaps : null,
+      };
+
+      await patch(`/faculty/${facultyId}`, payload);
+      const refreshedFaculty = await fetchFaculty();
+      await syncFacultyProgress(refreshedFaculty);
+      toast.success('Internship information saved.');
+      setIsInternshipEditMode(false);
+    } catch (err) {
+      toast.error(err.message || 'Something went wrong.');
+    } finally {
+      setSubmitting(false);
+    }
+  }, [faculty, facultyId, baseInfoName, baseInfoCompany, baseInfoLocation, baseInfoDuration, baseInfoStatus, baseInfoProgressAll, baseInfoPlan, fetchFaculty, syncFacultyProgress]);
+
+  const handleInternshipEditStart = useCallback(() => {
+    if (!faculty) return;
+    initBaseInfoFields(faculty);
+    setIsInternshipEditMode(true);
+  }, [faculty, initBaseInfoFields]);
+
+  const handleInternshipEditCancel = useCallback(() => {
+    if (faculty) initBaseInfoFields(faculty);
+    setIsInternshipEditMode(false);
+  }, [faculty, initBaseInfoFields]);
 
   const handleWriteReportOpen = useCallback(() => {
+    setReportDayNumber(currentDay?.dayNumber ? String(currentDay.dayNumber) : '');
+    setReportDayDate(currentDay?.date ? String(currentDay.date).slice(0, 10) : '');
+    setReportDayApproved(Boolean(currentDay?.approved));
     if (currentDay?.shortReport) {
       setReportTitle(currentDay.shortReport.title || '');
       setReportDescription(currentDay.shortReport.description || '');
-      setIsEditingReport(true);
     } else {
       setReportTitle('');
       setReportDescription('');
-      setIsEditingReport(false);
     }
     setReportImages([]);
     setImagePreviews([]);
@@ -140,8 +376,6 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
     if (!currentDay) return;
     
     setSubmitting(true);
-    setActionError('');
-    setActionMessage('');
     setUploadProgress(0);
     
     try {
@@ -175,21 +409,7 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
         // Backward compatibility: also send first file under "image"
         imageFormData.append('image', reportImages[0]);
 
-        const uploadRes = await fetch(
-          `${API_URL}/faculty/${facultyId}/days/${dayId}/images`,
-          {
-            method: 'POST',
-            headers: buildAuthHeaders(),
-            body: imageFormData,
-          }
-        );
-
-        if (!uploadRes.ok) {
-          const errorData = await uploadRes.json();
-          throw new Error(errorData.message || 'Failed to upload image(s).');
-        }
-
-        const uploadedData = await uploadRes.json();
+        const uploadedData = await post(`/faculty/${facultyId}/days/${dayId}/images`, imageFormData);
         const responseUrls = [];
 
         if (Array.isArray(uploadedData?.images)) {
@@ -208,11 +428,7 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
         setUploadProgress(100);
 
         // Step 2: Immediate verification via GET /faculty/:id
-        const verifyAfterUploadRes = await fetch(`${API_URL}/faculty/${facultyId}`, {
-          headers: buildAuthHeaders(),
-        });
-        if (!verifyAfterUploadRes.ok) throw new Error('Failed to verify uploaded image state.');
-        const verifyAfterUploadFaculty = await verifyAfterUploadRes.json();
+        const verifyAfterUploadFaculty = await get(`/faculty/${facultyId}`);
         const verifyDay = (verifyAfterUploadFaculty?.days || []).find((d) => (d?._id ?? d?.id ?? null) === dayId);
         if (!verifyDay) throw new Error('Uploaded image verification failed: day not found.');
 
@@ -228,42 +444,35 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
         : existingImageUrls;
       
       // Step 2: Create/update report with image URLs
-      setActionMessage(`Uploading report (${reportImages.length} image${reportImages.length !== 1 ? 's' : ''} uploaded)...`);
       
+      const normalizedTitle = reportTitle.trim();
+      const normalizedDescription = reportDescription.trim();
+      const normalizedDayNumber = reportDayNumber.trim();
+      const normalizedDayDate = reportDayDate || currentDay.date || '';
+
       const reportPayload = {
         ...currentDay,
+        dayNumber: normalizedDayNumber || currentDay.dayNumber,
+        date: normalizedDayDate,
+        approved: canApprove ? reportDayApproved : currentDay.approved,
         images: finalImageUrls,
-        shortReport: {
-          title: reportTitle.trim() || 'Report',
-          description: reportDescription.trim() || '',
-          images: finalImageUrls,
-          date: new Date().toISOString(),
-        },
       };
-      
-      const method = isEditingReport ? 'PATCH' : 'POST';
-      const endpoint = isEditingReport 
-        ? `${API_URL}/faculty/${facultyId}/days/${dayId}`
-        : `${API_URL}/faculty/${facultyId}/days/${dayId}/report`;
-      
-      const reportRes = await fetch(endpoint, {
-        method,
-        headers: buildAuthHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify(reportPayload),
-      });
 
-      if (!reportRes.ok) {
-        const errorData = await reportRes.json();
-        throw new Error(errorData.message || `Failed to ${isEditingReport ? 'update' : 'submit'} report`);
+      const shouldPersistReport = Boolean(currentDay?.shortReport || normalizedTitle || normalizedDescription || finalImageUrls.length > 0);
+      if (shouldPersistReport) {
+        reportPayload.shortReport = {
+          title: normalizedTitle || currentDay.shortReport?.title || 'Report',
+          description: normalizedDescription || currentDay.shortReport?.description || '',
+          images: finalImageUrls,
+          date: currentDay.shortReport?.date || new Date().toISOString(),
+        };
       }
+
+      await patch(`/faculty/${facultyId}/days/${dayId}`, reportPayload);
 
       // Step 3: Verify images remain after normal update flow
       if (uploadedUrls.length > 0) {
-        const verifyAfterUpdateRes = await fetch(`${API_URL}/faculty/${facultyId}`, {
-          headers: buildAuthHeaders(),
-        });
-        if (!verifyAfterUpdateRes.ok) throw new Error('Failed to verify images after report update.');
-        const verifyAfterUpdateFaculty = await verifyAfterUpdateRes.json();
+        const verifyAfterUpdateFaculty = await get(`/faculty/${facultyId}`);
         const verifyDayAfterUpdate = (verifyAfterUpdateFaculty?.days || []).find((d) => (d?._id ?? d?.id ?? null) === dayId);
         if (!verifyDayAfterUpdate) throw new Error('Post-update verification failed: day not found.');
 
@@ -274,26 +483,17 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
         }
       }
 
-      await fetchFaculty(); // Refresh the data
-      setActionMessage(`Report ${isEditingReport ? 'updated' : 'created'} with ${finalImageUrls.length} image(s).`);
-      clearActionFeedback();
-      setShowReportForm(false);
-      setIsEditingReport(false);
-      
-      // Reset form fields
-      setReportTitle('');
-      setReportDescription('');
-      setReportImages([]);
-      setImagePreviews([]);
-      setUploadProgress(0);
+      const refreshedFaculty = await fetchFaculty(); // Refresh the data
+      await syncFacultyProgress(refreshedFaculty);
+      toast.success(`Day saved with ${finalImageUrls.length} image(s).`);
+      resetDayForm();
     } catch (err) {
-      setActionError(err.message || 'Something went wrong.');
-      clearActionFeedback();
+      toast.error(err.message || 'Something went wrong.');
     } finally {
       setSubmitting(false);
       setUploadProgress(0);
     }
-  }, [currentDay, reportTitle, reportDescription, reportImages, facultyId, getDayId, fetchFaculty, clearActionFeedback, isEditingReport, extractImageUrls]);
+  }, [currentDay, reportTitle, reportDescription, reportDayNumber, reportDayDate, reportDayApproved, reportImages, facultyId, getDayId, fetchFaculty, extractImageUrls, canApprove, resetDayForm, syncFacultyProgress]);
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
@@ -301,11 +501,11 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
     
     const newValidImages = files.filter(file => {
       if (!validImageTypes.includes(file.type)) {
-        alert(`${file.name} is not a valid image file. Only JPEG, PNG, WebP and GIF are allowed.`);
+        toast.warning(`${file.name} is not a valid image file. Only JPEG, PNG, WebP and GIF are allowed.`);
         return false;
       }
       if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        alert(`${file.name} is too large. Maximum size is 5MB.`);
+        toast.warning(`${file.name} is too large. Maximum size is 5MB.`);
         return false;
       }
       return true;
@@ -356,8 +556,6 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
 
   const handleAddDayConfirm = useCallback(async () => {
     setSubmitting(true);
-    setActionError('');
-    setActionMessage('');
     try {
       const newDay = {
         dayNumber: String((days.length || 0) + 1),
@@ -366,25 +564,19 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
         shortReport: null,
         comments: [],
       };
-      const res = await fetch(`${API_URL}/faculty/${facultyId}/days`, {
-        method: 'POST',
-        headers: buildAuthHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify(newDay),
-      });
-      if (!res.ok) throw new Error('Failed to add day');
-      await fetchFaculty(); // Refresh the data
+      await post(`/faculty/${facultyId}/days`, newDay);
+      const refreshedFaculty = await fetchFaculty(); // Refresh the data
+      await syncFacultyProgress(refreshedFaculty);
       setDayIndex(days.length);
-      setActionMessage('Day added.');
-      clearActionFeedback();
+      toast.success('Day added.');
       setShowAddDayModal(false);
       setNewDayDate(new Date().toISOString().slice(0, 10));
     } catch (err) {
-      setActionError(err.message || 'Failed to add day.');
-      clearActionFeedback();
+      toast.error(err.message || 'Failed to add day.');
     } finally {
       setSubmitting(false);
     }
-  }, [facultyId, days.length, newDayDate, fetchFaculty, clearActionFeedback]);
+  }, [facultyId, days.length, newDayDate, fetchFaculty, syncFacultyProgress]);
 
   const allComments = useMemo(() => {
     if (!faculty || !faculty.days) return [];
@@ -412,6 +604,23 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
     const safeDayIndex = Math.max(0, Math.min(days.length - 1, initialDayIndex));
     setDayIndex(safeDayIndex);
   }, [days, initialDayIndex]);
+
+  useEffect(() => {
+    if (!Array.isArray(days) || days.length === 0) {
+      if (dayIndex !== 0) setDayIndex(0);
+      return;
+    }
+
+    if (dayIndex > days.length - 1) {
+      setDayIndex(days.length - 1);
+    }
+  }, [days, dayIndex]);
+
+  useEffect(() => {
+    const item = dayItemRefs.current[dayIndex];
+    if (!item) return;
+    item.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }, [dayIndex, days.length]);
 
   useEffect(() => {
     if (!focusCommentKey) return;
@@ -491,7 +700,13 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
             <div className="ip-hero-top">
               <div className="ip-hero-copyblock">
                 <span className="ip-eyebrow">Internship workspace</span>
-                <h1 className="ip-hero-title">{faculty.name}</h1>
+                <input
+                  className="ip-input ip-inline-title"
+                  value={baseInfoName}
+                  onChange={(e) => setBaseInfoName(e.target.value)}
+                  disabled={!isInternshipEditMode}
+                  aria-label="Internship name"
+                />
                 <p className="ip-hero-copy">
                   Review daily progress, attach evidence, and keep the approval trail clear for everyone involved.
                 </p>
@@ -501,47 +716,134 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                 <span className={`ip-status-pill ${currentDay?.approved ? 'ip-status-pill--ok' : 'ip-status-pill--warn'}`}>
                   {currentDay?.approved ? 'Approved' : 'Pending review'}
                 </span>
+                <span className={`ip-status-pill ip-status-pill--internship-${normalizeInternshipStatus(baseInfoStatus).toLowerCase().replace(/\s+/g, '-')}`}>
+                  {normalizeInternshipStatus(baseInfoStatus)}
+                </span>
                 <span className="ip-status-pill">{canWriteReport ? 'Editable' : 'Read only'}</span>
+                <span className="ip-status-pill">{faculty.plan ? 'Plan available' : 'No plan'}</span>
+                {canEditInternship && !isInternshipEditMode && (
+                  <button type="button" className="ip-status-action" onClick={handleInternshipEditStart}>
+                    Edit
+                  </button>
+                )}
+                {canEditInternship && isInternshipEditMode && (
+                  <>
+                    <button type="button" className="ip-status-action" onClick={handleBaseInfoSubmit} disabled={submitting}>
+                      {submitting ? 'Saving…' : 'Save'}
+                    </button>
+                    <button type="button" className="ip-status-action ip-status-action--cancel" onClick={handleInternshipEditCancel} disabled={submitting}>
+                      Cancel
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 
             <div className="ip-hero-grid">
               <div className="ip-hero-item">
                 <span className="ip-hero-label">Company</span>
-                <span className="ip-hero-value">{faculty.company}</span>
+                <input
+                  className="ip-input ip-inline-field"
+                  value={baseInfoCompany}
+                  onChange={(e) => setBaseInfoCompany(e.target.value)}
+                  disabled={!isInternshipEditMode}
+                  aria-label="Company"
+                />
               </div>
               <div className="ip-hero-item">
                 <span className="ip-hero-label">Location</span>
-                <span className="ip-hero-value">{faculty.location}</span>
+                <input
+                  className="ip-input ip-inline-field"
+                  value={baseInfoLocation}
+                  onChange={(e) => setBaseInfoLocation(e.target.value)}
+                  disabled={!isInternshipEditMode}
+                  aria-label="Location"
+                />
               </div>
               <div className="ip-hero-item">
                 <span className="ip-hero-label">Duration</span>
-                <span className="ip-hero-value">{faculty.duration}</span>
-              </div>
-              <div className="ip-hero-item">
-                <span className="ip-hero-label">Plan</span>
-                <span className="ip-hero-value">{faculty.plan}</span>
+                <input
+                  className="ip-input ip-inline-field"
+                  value={baseInfoDuration}
+                  onChange={(e) => setBaseInfoDuration(e.target.value)}
+                  disabled={!isInternshipEditMode}
+                  aria-label="Duration"
+                />
               </div>
               <div className="ip-hero-item">
                 <span className="ip-hero-label">Status</span>
-                <span className="ip-hero-value">{faculty.status}</span>
+                <select
+                  className="ip-input ip-inline-field"
+                  value={baseInfoStatus}
+                  onChange={(e) => setBaseInfoStatus(e.target.value)}
+                  disabled={!isInternshipEditMode}
+                  aria-label="Status"
+                >
+                  {INTERNSHIP_STATUS_OPTIONS.map((status) => (
+                    <option key={status} value={status}>{status}</option>
+                  ))}
+                </select>
               </div>
-              {faculty.progressAll != null && (
-                <div className="ip-hero-item">
-                  <span className="ip-hero-label">Progress</span>
-                  <span className="ip-hero-value">{faculty.progressAll}</span>
+              <div className="ip-hero-item">
+                <span className="ip-hero-label">Progress</span>
+                <div className="ip-progress-stack">
+                  <span
+                    className="ip-progress-chip"
+                    style={{
+                      color: `hsl(${progressHue} 76% 30%)`,
+                      borderColor: `hsla(${progressHue}, 75%, 45%, .35)`,
+                      background: `linear-gradient(135deg, hsla(${Math.max(0, progressHue - 25)}, 95%, 92%, .95), hsla(${Math.min(120, progressHue + 20)}, 95%, 88%, .95))`,
+                    }}
+                  >
+                    {computedProgressLabel}
+                  </span>
+                  <div className="ip-progress-track" aria-label={`Internship progress ${computedProgressLabel}`}>
+                    <div
+                      className="ip-progress-fill"
+                      style={{
+                        width: `${progressPercent}%`,
+                        background: `linear-gradient(90deg, hsl(${Math.max(0, progressHue - 24)} 82% 56%), hsl(${Math.min(120, progressHue + 12)} 80% 44%))`,
+                      }}
+                    ></div>
+                  </div>
+                  <span className="ip-progress-meta">{reportedDaysCount}/{days.length || 0} days reported</span>
                 </div>
-              )}
+              </div>
+            </div>
+
+            <div className="ip-plan-card" aria-label="Internship plan">
+              <div className="ip-plan-header">
+                <span className="ip-hero-label">Plan</span>
+              </div>
+              <div className="ip-format-toolbar" role="toolbar" aria-label="Plan text formatting">
+                <button type="button" className="ip-format-btn" disabled={!isInternshipEditMode} onClick={() => applyFormatting(planEditorRef, setBaseInfoPlan, '**', '**', 'bold')}>Bold</button>
+                <button type="button" className="ip-format-btn" disabled={!isInternshipEditMode} onClick={() => applyFormatting(planEditorRef, setBaseInfoPlan, '_', '_', 'italic')}>Italic</button>
+                <button type="button" className="ip-format-btn" disabled={!isInternshipEditMode} onClick={() => applyFormatting(planEditorRef, setBaseInfoPlan, '## ', '', 'Heading')}>H2</button>
+                <button type="button" className="ip-format-btn" disabled={!isInternshipEditMode} onClick={() => applyFormatting(planEditorRef, setBaseInfoPlan, '- ', '', 'List item')}>List</button>
+              </div>
+              <div className="ip-plan-text">
+                {isInternshipEditMode ? (
+                  <textarea
+                    ref={planEditorRef}
+                    className="ip-input ip-plan-editor"
+                    value={baseInfoPlan}
+                    onChange={(e) => setBaseInfoPlan(e.target.value)}
+                    rows={10}
+                    placeholder="Internship plan"
+                  />
+                ) : (
+                  <div
+                    className="ip-plan-rendered"
+                    dangerouslySetInnerHTML={{ __html: renderSimpleMarkdown(baseInfoPlan) }}
+                  ></div>
+                )}
+              </div>
             </div>
 
             <div className="ip-hero-summary" aria-label="Current day summary">
               <div className="ip-summary-card">
                 <span className="ip-summary-label">Current day</span>
                 <strong className="ip-summary-value">{currentDay ? `Day ${currentDay.dayNumber}` : 'None selected'}</strong>
-              </div>
-              <div className="ip-summary-card">
-                <span className="ip-summary-label">Evidence</span>
-                <strong className="ip-summary-value">{currentDayImageUrls.length}</strong>
               </div>
               <div className="ip-summary-card">
                 <span className="ip-summary-label">Comments</span>
@@ -554,12 +856,6 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
             </div>
           </header>
 
-          {(actionMessage || actionError) && (
-            <div className={actionError ? 'ip-alert' : 'ip-success'} style={{ marginBottom: 16 }}>
-              <span aria-hidden="true">{actionError ? '⚠' : '✓'}</span>
-              <span>{actionError || actionMessage}</span>
-            </div>
-          )}
           <div className="ip-actions">
             {canWriteReport && (
               <button
@@ -591,17 +887,12 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
           {showReportForm && currentDay && (
             <div className="ip-report-form-card">
               <div className="ip-report-form-header">
-                <h4 className="ip-report-form-title">{isEditingReport ? 'Edit report' : 'Write report'} — Day {currentDay.dayNumber}</h4>
+                <h4 className="ip-report-form-title">Edit day information — Day {currentDay.dayNumber}</h4>
                 <button 
                   type="button" 
                   className="ip-close-btn"
                   onClick={() => {
-                    setShowReportForm(false);
-                    // Reset form fields when cancelling
-                    setReportTitle('');
-                    setReportDescription('');
-                    setReportImages([]);
-                    setImagePreviews([]);
+                    resetDayForm();
                   }}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -613,6 +904,56 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
               
               <form onSubmit={handleReportSubmit} className="ip-report-form ip-report-form-wrapper">
                 <div className="ip-form-section">
+                  <div className="ip-form-grid">
+                    <div className="ip-field">
+                      <label className="ip-label" htmlFor="ip-day-number">Day number</label>
+                      <input
+                        id="ip-day-number"
+                        type="text"
+                        value={reportDayNumber}
+                        onChange={(e) => setReportDayNumber(e.target.value)}
+                        className="ip-input"
+                        placeholder="Day number"
+                      />
+                    </div>
+                    <div className="ip-field">
+                      <label className="ip-label" htmlFor="ip-day-date">Date</label>
+                      <input
+                        id="ip-day-date"
+                        type="date"
+                        value={reportDayDate}
+                        onChange={(e) => setReportDayDate(e.target.value)}
+                        className="ip-input"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="ip-form-divider"></div>
+
+                <div className="ip-form-section">
+                  <div className="ip-field">
+                    <label className="ip-label" htmlFor="ip-day-approved">Approval</label>
+                    <label className={`ip-checkbox-row ${canApprove ? '' : 'ip-checkbox-row--disabled'}`} htmlFor="ip-day-approved">
+                      <input
+                        id="ip-day-approved"
+                        type="checkbox"
+                        checked={reportDayApproved}
+                        onChange={(e) => setReportDayApproved(e.target.checked)}
+                        className="ip-checkbox"
+                        disabled={!canApprove}
+                      />
+                      <span>
+                        Mark this day as approved
+                        {!canApprove && <span className="ip-helper-text">Only Admin can change approval state.</span>}
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="ip-form-divider"></div>
+
+                <div className="ip-form-section">
                   <div className="ip-field">
                     <label className="ip-label" htmlFor="ip-report-title">Title</label>
                     <input
@@ -622,7 +963,6 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                       onChange={(e) => setReportTitle(e.target.value)}
                       className="ip-input"
                       placeholder="Report title"
-                      required
                     />
                   </div>
                 </div>
@@ -632,14 +972,20 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                 <div className="ip-form-section">
                   <div className="ip-field">
                     <label className="ip-label" htmlFor="ip-report-desc">Description</label>
+                    <div className="ip-format-toolbar" role="toolbar" aria-label="Report text formatting">
+                      <button type="button" className="ip-format-btn" onClick={() => applyFormatting(reportDescriptionRef, setReportDescription, '**', '**', 'bold')}>Bold</button>
+                      <button type="button" className="ip-format-btn" onClick={() => applyFormatting(reportDescriptionRef, setReportDescription, '_', '_', 'italic')}>Italic</button>
+                      <button type="button" className="ip-format-btn" onClick={() => applyFormatting(reportDescriptionRef, setReportDescription, '## ', '', 'Heading')}>H2</button>
+                      <button type="button" className="ip-format-btn" onClick={() => applyFormatting(reportDescriptionRef, setReportDescription, '- ', '', 'List item')}>List</button>
+                    </div>
                     <textarea
+                      ref={reportDescriptionRef}
                       id="ip-report-desc"
                       value={reportDescription}
                       onChange={(e) => setReportDescription(e.target.value)}
                       className="ip-input ip-textarea"
                       placeholder="What was done today?"
                       rows={5}
-                      required
                     />
                   </div>
                 </div>
@@ -708,12 +1054,7 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                     type="button" 
                     className="ip-btn ip-btn--secondary"
                     onClick={() => {
-                      setShowReportForm(false);
-                      // Reset form fields when cancelling
-                      setReportTitle('');
-                      setReportDescription('');
-                      setReportImages([]);
-                      setImagePreviews([]);
+                      resetDayForm();
                     }}
                   >
                     Cancel
@@ -728,10 +1069,10 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                         <span className="ip-spinner"></span>
                         {reportImages.length > 0 && uploadProgress > 0 && uploadProgress < 100 
                           ? `Uploading (${uploadProgress}%)`
-                          : (isEditingReport ? 'Updating…' : 'Saving…')
+                          : 'Saving…'
                         }
                       </>
-                    ) : (isEditingReport ? 'Update Report' : 'Save Report')}
+                    ) : 'Save Changes'}
                   </button>
                 </div>
               </form>
@@ -752,12 +1093,13 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                   </svg>
                 </button>
                 
-                <div className="ip-carousel">
-                  <div className="ip-carousel-track" style={{ transform: `translateX(calc(-${dayIndex} * (100% + 16px)))` }}>
+                <div className="ip-carousel" ref={dayCarouselRef}>
+                  <div className="ip-carousel-track">
                     {days.map((day, idx) => (
                       <button
                         key={idx}
                         type="button"
+                        ref={(el) => { dayItemRefs.current[idx] = el; }}
                         className={`ip-carousel-item ${dayIndex === idx ? 'ip-carousel-item--active' : ''}`}
                         onClick={() => setDayIndex(idx)}
                       >
@@ -777,6 +1119,7 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                     {canWriteReport && (
                       <button
                         type="button"
+                        ref={(el) => { dayItemRefs.current[days.length] = el; }}
                         className="ip-carousel-add-day"
                         onClick={handleAddDayClick}
                         disabled={submitting}
@@ -795,8 +1138,8 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                 <button
                   type="button"
                   className="ip-carousel-btn ip-carousel-btn--next"
-                  disabled={dayIndex >= days.length - 1 && !canWriteReport}
-                  onClick={() => setDayIndex(Math.min(days.length, dayIndex + 1))}
+                  disabled={dayIndex >= days.length - 1}
+                  onClick={() => setDayIndex(Math.min(days.length - 1, dayIndex + 1))}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="9 18 15 12 9 6"></polyline>
@@ -839,7 +1182,14 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                       {currentDayImageUrls.length > 0 && (
                         <div className="ip-report-images">
                           {currentDayImageUrls.map((img, idx) => (
-                            <img key={idx} src={img} alt={`Report ${idx + 1}`} className="ip-report-img" />
+                            <button
+                              key={idx}
+                              type="button"
+                              className="ip-report-img-btn"
+                              onClick={() => setActiveImageSrc(img)}
+                            >
+                              <img src={img} alt={`Report ${idx + 1}`} className="ip-report-img" />
+                            </button>
                           ))}
                         </div>
                       )}
@@ -950,6 +1300,25 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
               ) : (
                 <div className="ip-empty-state">No comments found</div>
               )}
+            </div>
+          )}
+
+          {activeImageSrc && (
+            <div className="ip-image-modal" onClick={() => setActiveImageSrc('')}>
+              <button
+                type="button"
+                className="ip-image-modal-close"
+                onClick={() => setActiveImageSrc('')}
+                aria-label="Close image preview"
+              >
+                ×
+              </button>
+              <img
+                src={activeImageSrc}
+                alt="Full size report"
+                className="ip-image-modal-content"
+                onClick={(e) => e.stopPropagation()}
+              />
             </div>
           )}
 
@@ -1096,12 +1465,50 @@ const ipStyles = `
     margin: 0 0 16px 0;
   }
   .ip-field { margin-bottom: 14px; }
+  .ip-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+  }
   .ip-label {
     display: block;
     font-size: 12px;
     font-weight: 700;
     color: var(--t2, #5a6278);
     margin-bottom: 6px;
+  }
+  .ip-checkbox-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1.5px solid rgba(0,0,0,.08);
+    background: linear-gradient(135deg, rgba(99,91,255,.02), rgba(255,255,255,.8));
+    cursor: pointer;
+    transition: all .2s ease;
+  }
+  .ip-checkbox-row:hover {
+    border-color: rgba(99,91,255,.2);
+    background: linear-gradient(135deg, rgba(99,91,255,.04), rgba(255,255,255,.9));
+  }
+  .ip-checkbox-row--disabled {
+    cursor: not-allowed;
+    opacity: .8;
+  }
+  .ip-checkbox {
+    margin-top: 2px;
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+    accent-color: var(--a1, #635bff);
+  }
+  .ip-helper-text {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--t3, #9ba3bb);
   }
   .ip-form-actions {
     display: flex;
@@ -1176,6 +1583,41 @@ const ipStyles = `
   }
   .ip-status-pill--ok { background: rgba(6,201,160,.10); color: #047857; border-color: rgba(6,201,160,.18); }
   .ip-status-pill--warn { background: rgba(245,166,35,.12); color: #b45309; border-color: rgba(245,166,35,.18); }
+  .ip-status-pill--internship-pending {
+    background: rgba(245,166,35,.14);
+    color: #9a4f00;
+    border-color: rgba(245,166,35,.35);
+  }
+  .ip-status-pill--internship-in-progress {
+    background: rgba(59,130,246,.14);
+    color: #1d4ed8;
+    border-color: rgba(59,130,246,.35);
+  }
+  .ip-status-pill--internship-completed {
+    background: rgba(34,197,94,.14);
+    color: #166534;
+    border-color: rgba(34,197,94,.35);
+  }
+  .ip-status-action {
+    min-height: 32px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(99,91,255,.24);
+    background: rgba(255,255,255,.82);
+    color: var(--a1, #635bff);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s ease;
+  }
+  .ip-status-action:hover:not(:disabled) {
+    background: #fff;
+    border-color: rgba(99,91,255,.45);
+  }
+  .ip-status-action--cancel {
+    color: var(--t2, #5a6278);
+    border-color: rgba(0,0,0,.16);
+  }
   .ip-hero-title {
     font-family: 'Syne', system-ui, sans-serif;
     font-size: clamp(24px, 4vw, 36px);
@@ -1183,6 +1625,18 @@ const ipStyles = `
     letter-spacing: -0.02em;
     color: var(--t1, #0c0e18);
     margin: 0;
+  }
+  .ip-inline-title {
+    font-family: 'Syne', system-ui, sans-serif;
+    font-size: clamp(24px, 4vw, 36px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    padding: 8px 12px;
+    margin: 0;
+  }
+  .ip-inline-field {
+    padding: 8px 10px;
+    font-size: 14px;
   }
   .ip-hero-grid {
     display: grid;
@@ -1210,6 +1664,148 @@ const ipStyles = `
     margin-bottom: 4px;
   }
   .ip-hero-value { font-size: 14px; color: var(--t1, #0c0e18); }
+  .ip-progress-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .ip-progress-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    min-width: 64px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(0,0,0,.12);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .02em;
+  }
+  .ip-progress-track {
+    width: 100%;
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, .08);
+    overflow: hidden;
+    border: 1px solid rgba(15, 23, 42, .08);
+  }
+  .ip-progress-fill {
+    height: 100%;
+    min-width: 0;
+    border-radius: 999px;
+    transition: width .35s ease, background .35s ease;
+  }
+  .ip-progress-meta {
+    font-size: 11px;
+    color: var(--t3, #9ba3bb);
+    font-weight: 600;
+  }
+  .ip-plan-card {
+    margin-top: 14px;
+    padding: 18px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, rgba(99,91,255,.08), rgba(6,201,160,.05));
+    border: 1px solid rgba(99,91,255,.12);
+    box-shadow: 0 10px 26px rgba(99,91,255,.08);
+  }
+  .ip-plan-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .ip-plan-toggle {
+    border: 1px solid rgba(99,91,255,.2);
+    background: rgba(255,255,255,.75);
+    color: var(--a1, #635bff);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s ease;
+    flex-shrink: 0;
+  }
+  .ip-plan-toggle:hover {
+    background: rgba(255,255,255,.95);
+    border-color: rgba(99,91,255,.35);
+  }
+  .ip-plan-text {
+    color: var(--t1, #0c0e18);
+    font-size: 15px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+  .ip-plan-editor {
+    min-height: 240px;
+    width: 100%;
+    resize: vertical;
+    line-height: 1.7;
+    font-size: 15px;
+  }
+  .ip-plan-rendered {
+    min-height: 220px;
+    padding: 14px;
+    border-radius: 14px;
+    border: 1.5px solid rgba(99,91,255,.08);
+    background: rgba(255,255,255,.88);
+    line-height: 1.75;
+    font-size: 15px;
+  }
+  .ip-plan-rendered h3 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    line-height: 1.3;
+    color: var(--t1, #0c0e18);
+  }
+  .ip-plan-rendered p {
+    margin: 0 0 10px;
+  }
+  .ip-plan-rendered p:last-child {
+    margin-bottom: 0;
+  }
+  .ip-plan-rendered ul {
+    margin: 0 0 10px 18px;
+    padding: 0;
+  }
+  .ip-plan-rendered li {
+    margin-bottom: 6px;
+  }
+  .ip-plan-rendered code {
+    background: rgba(15,23,42,.08);
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: 13px;
+  }
+  .ip-format-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 10px;
+  }
+  .ip-format-btn {
+    border: 1px solid rgba(99,91,255,.2);
+    background: rgba(255,255,255,.84);
+    color: var(--a1, #635bff);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s ease;
+  }
+  .ip-format-btn:hover {
+    background: #fff;
+    border-color: rgba(99,91,255,.4);
+  }
+  .ip-format-btn:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+  }
   .ip-hero-summary {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1412,6 +2008,13 @@ const ipStyles = `
     border-radius: 10px;
     border: 1px solid rgba(0,0,0,.08);
   }
+  .ip-report-img-btn {
+    border: none;
+    padding: 0;
+    background: transparent;
+    border-radius: 10px;
+    cursor: zoom-in;
+  }
   .ip-comments { margin-top: 20px; }
   .ip-comments-title {
     font-size: 14px;
@@ -1584,6 +2187,40 @@ const ipStyles = `
     transform: scale(1.15);
     box-shadow: 0 4px 12px rgba(239, 68, 68, .3);
   }
+  .ip-image-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.82);
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .ip-image-modal-content {
+    max-width: min(1200px, 95vw);
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: 12px;
+    box-shadow: 0 24px 80px rgba(0,0,0,.45);
+  }
+  .ip-image-modal-close {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    width: 42px;
+    height: 42px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.32);
+    background: rgba(0,0,0,.42);
+    color: #fff;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
   .ip-report-form-header {
     display: flex;
     align-items: center;
@@ -1706,7 +2343,9 @@ const ipStyles = `
     display: flex;
     align-items: center;
     gap: 12px;
+    width: 100%;
     margin-bottom: 24px;
+    min-width: 0;
   }
   .ip-carousel-btn {
     display: flex;
@@ -1714,19 +2353,21 @@ const ipStyles = `
     justify-content: center;
     width: 40px;
     height: 40px;
-    border: 1px solid rgba(99,91,255,.2);
-    background: rgba(99,91,255,.08);
+    border: 1px solid rgba(99,91,255,.24);
+    background: rgba(255,255,255,.95);
     border-radius: 10px;
     cursor: pointer;
     color: var(--a1, #635bff);
     transition: all .2s ease;
     padding: 0;
     flex-shrink: 0;
+    z-index: 2;
+    box-shadow: 0 8px 18px rgba(99,91,255,.12);
   }
   .ip-carousel-btn:hover:not(:disabled) {
-    background: rgba(99,91,255,.15);
-    border-color: rgba(99,91,255,.4);
-    transform: scale(1.05);
+    background: #fff;
+    border-color: rgba(99,91,255,.5);
+    transform: translateY(-1px) scale(1.03);
   }
   .ip-carousel-btn:disabled {
     opacity: .4;
@@ -1734,15 +2375,22 @@ const ipStyles = `
   }
   .ip-carousel {
     flex: 1;
-    overflow: hidden;
-    border-radius: 14px;
-    background: rgba(255,255,255,.4);
-    padding: 8px;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-radius: 16px;
+    background: rgba(255,255,255,.55);
+    border: 1px solid rgba(0,0,0,.06);
+    padding: 8px 6px;
+    scrollbar-width: none;
   }
+  .ip-carousel::-webkit-scrollbar { display: none; }
   .ip-carousel-track {
     display: flex;
-    gap: 16px;
-    transition: transform .4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    gap: 12px;
+    width: max-content;
+    min-width: 100%;
+    transition: none;
   }
   .ip-carousel-item {
     display: flex;
@@ -1756,11 +2404,11 @@ const ipStyles = `
     background: rgba(255,255,255,.7);
     cursor: pointer;
     transition: all .3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    min-width: 100%;
-    max-width: 100%;
+    min-width: clamp(150px, 28vw, 220px);
+    max-width: clamp(150px, 28vw, 220px);
     text-align: center;
     position: relative;
-    flex: 0 0 100%;
+    flex: 0 0 clamp(150px, 28vw, 220px);
   }
   .ip-carousel-item:hover {
     border-color: rgba(99,91,255,.3);
@@ -1821,11 +2469,11 @@ const ipStyles = `
     background: linear-gradient(135deg, rgba(99,91,255,.06), rgba(6,201,160,.03));
     cursor: pointer;
     transition: all .3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    min-width: 100%;
-    max-width: 100%;
+    min-width: clamp(150px, 28vw, 220px);
+    max-width: clamp(150px, 28vw, 220px);
     text-align: center;
     position: relative;
-    flex: 0 0 100%;
+    flex: 0 0 clamp(150px, 28vw, 220px);
     color: var(--a1, #635bff);
     font-size: 13px;
     font-weight: 600;
@@ -1960,5 +2608,7 @@ const ipStyles = `
     .ip-summary-card--wide { grid-column: 1 / -1; }
     .ip-actions { position: static; }
     .ip-comment-form { flex-direction: column; }
+    .ip-plan-card { padding: 16px; }
+    .ip-plan-text { font-size: 14px; line-height: 1.7; }
   }
 `;

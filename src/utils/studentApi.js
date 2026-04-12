@@ -1,5 +1,6 @@
 import { API_URL } from './apiClient';
 import { getAuthTokenFromStorage } from './storageUtils';
+import { logout } from './apiClient';
 
 export const STUDENT_IMAGE_ALLOWED_TYPES = [
   'image/jpeg',
@@ -80,6 +81,17 @@ function uploadStudentImage(studentId, file, endpointPath, onProgress) {
 
       if (xhr.status >= 200 && xhr.status < 300) {
         resolve(payload || {});
+        return;
+      }
+
+      if (xhr.status === 401) {
+        logout('expired');
+        reject(new Error('Session expired. Please login again.'));
+        return;
+      }
+
+      if (xhr.status === 403) {
+        reject(new Error("You don't have permission to perform this action"));
         return;
       }
 

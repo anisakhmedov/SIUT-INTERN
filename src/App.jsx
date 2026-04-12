@@ -46,7 +46,12 @@ import {
   UserCircle,
 } from "lucide-react";
 import { getUserFromStorage, clearUserFromStorage } from "./utils/storageUtils";
-import { API_URL, buildAuthHeaders } from "./utils/apiClient";
+import {
+  get,
+  getCurrentUser,
+  handleStoredTokenExpiry,
+  onAuthSessionExpired,
+} from "./utils/apiClient";
 
 
 
@@ -58,6 +63,7 @@ import InternshipPage from "./components/InternshipPage";
 import CreateTutorPage from "./components/CreateTutorPage";
 import StudentDocumentsPage from "./components/StudentDocumentsPage";
 import UserEducationPage from "./components/UserEducationPage";
+import ToastViewport from "./components/ToastViewport";
 
 /* ═══════════════════════════════════════════════
    STYLES
@@ -246,9 +252,16 @@ const ROLES = {
   Intern: { label: "Intern", c: "#ff5fa0", bg: "rgba(255,95,160,.1)" },
 };
 const SC = {
-  Active: { c: "#10b981", bg: "rgba(16,185,129,.1)", dot: "#10b981" },
-  Completed: { c: "#635bff", bg: "rgba(99,91,255,.1)", dot: "#635bff" },
-  Upcoming: { c: "#f5a623", bg: "rgba(245,166,35,.1)", dot: "#f5a623" },
+  "Pending": { c: "#b45309", bg: "rgba(245,166,35,.14)", dot: "#f5a623" },
+  "In Progress": { c: "#1d4ed8", bg: "rgba(59,130,246,.14)", dot: "#3b82f6" },
+  "Completed": { c: "#166534", bg: "rgba(34,197,94,.14)", dot: "#22c55e" },
+};
+
+const normalizeStatus = (status) => {
+  const raw = String(status || "").trim().toLowerCase();
+  if (raw === "completed") return "Completed";
+  if (raw === "in progress" || raw === "active") return "In Progress";
+  return "Pending";
 };
 
 const DAY_TEXTS = [];
@@ -550,7 +563,7 @@ function AddModal({ onClose, onAdd }) {
     onAdd({
       ...f,
       id: Date.now(),
-      status: new Date(f.start) > new Date() ? "Upcoming" : "Active",
+      status: "Pending",
       ti: Math.floor(Math.random() * 4),
       students: [],
     });
@@ -1877,7 +1890,7 @@ function DashView({ internships, feedbacks, setNav, onOpen, user }) {
               Good morning, {user ? user.name : "User"} 👋
             </div>
             <div style={{ fontSize: 13, opacity: 0.82 }}>
-              {internships.filter((i) => i.status === "Active").length} active
+              {internships.filter((i) => normalizeStatus(i.status) === "In Progress").length} in progress
               internships · {feedbacks.length} feedback items to review today.
             </div>
           </div>
@@ -2163,9 +2176,9 @@ function DashView({ internships, feedbacks, setNav, onOpen, user }) {
           </div>
           <span
             className="badge"
-            style={{ background: "rgba(245,166,35,.1)", color: "#f5a623" }}
+            style={{ background: "rgba(245,166,35,.14)", color: "#b45309" }}
           >
-            {internships.filter((i) => i.status === "Upcoming").length} upcoming
+            {internships.filter((i) => normalizeStatus(i.status) === "Pending").length} pending
           </span>
         </div>
         <div
@@ -2176,7 +2189,7 @@ function DashView({ internships, feedbacks, setNav, onOpen, user }) {
           }}
         >
           {internships.map((intern, idx) => {
-            const s = SC[intern.status];
+            const s = SC[normalizeStatus(intern.status)] || SC["Pending"];
             const r = ROLES[intern.role] || ROLES.Intern;
             return (
               <Reveal key={intern.id} delay={idx * 55}>
@@ -2626,6 +2639,7 @@ export default function App() {
   const [showCreatePage, setShowCreatePage] = useState(false);
   const [students, setStudents] = useState([]); // Add students state
   const [openCommentTarget, setOpenCommentTarget] = useState(null);
+  const [sessionMessage, setSessionMessage] = useState("");
 
   // Convenience wrapper functions for state updates
   const handleCloseSidebar = () => setSbOpen(false);
@@ -2647,52 +2661,52 @@ export default function App() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Check localStorage on mount to restore user session
-        const savedUser = getUserFromStorage();
-        if (savedUser) {
-          setUser(savedUser);
-          
-          // Fetch students data when user logs in
-          try {
-            const response = await fetch(`${API_URL}/student`, {
-              headers: buildAuthHeaders(),
-            });
-            if (response.ok) {
-              const studentData = await response.json();
-              setStudents(studentData);
-            } else {
-              console.error('Failed to fetch students:', response.statusText);
-            }
-          } catch (error) {
-            console.error('Error fetching students:', error);
-          }
-          
-          setPage("dashboard");
+        const hasValidToken = handleStoredTokenExpiry();
+        if (!hasValidToken) {
+          return;
         }
 
-        // Fetch internships
-        const response = await fetch(`${API_URL}/faculty`, {
-          headers: buildAuthHeaders(),
-        });
-        if (response.ok) {
-          const data = await response.json();
-          // Transform the data to match the expected format
-          const transformedInternships = data.map((intern) => ({
-            id: intern._id,
-            title: intern.name,
-            company: intern.company,
-            status: intern.status || "Active",
-            start: intern.startDate || "2024-01-01",
-            end: intern.endDate || "2024-06-01",
-            role: intern.role || "Intern",
-            students: intern.students || [],
-            days: Array.isArray(intern.days) ? intern.days : [],
-            desc: intern.description || intern.plan,
-            ti: Number.isFinite(Number.parseInt(intern.tutorID, 10))
-              ? Number.parseInt(intern.tutorID, 10) % 4
-              : 0,
-          }));
-          setInternships(transformedInternships);
+        try {
+          const currentUser = await getCurrentUser();
+          const savedUser = getUserFromStorage();
+          setUser(currentUser?.user || currentUser || savedUser || null);
+
+          const studentData = await get('/student');
+          if (studentData) {
+            setStudents(studentData);
+          }
+
+          const data = await get('/faculty');
+          if (data) {
+            const transformedInternships = data.map((intern) => ({
+              id: intern._id,
+              title: intern.name,
+              company: intern.company,
+              location: intern.location || '',
+              locationYmaps: Array.isArray(intern.locationYmaps) ? intern.locationYmaps : intern.locationYmaps || null,
+              status: normalizeStatus(intern.status),
+              start: intern.duration?.start || intern.startDate || "2024-01-01",
+              end: intern.duration?.end || intern.endDate || "2024-06-01",
+              role: intern.role || "Intern",
+              students: intern.students || [],
+              days: Array.isArray(intern.days) ? intern.days : [],
+              desc: intern.description || intern.plan,
+              ti: Number.isFinite(Number.parseInt(intern.tutorID, 10))
+                ? Number.parseInt(intern.tutorID, 10) % 4
+                : 0,
+            }));
+            setInternships(transformedInternships);
+          }
+
+          setPage("dashboard");
+        } catch (error) {
+          if (error?.status === 401) {
+            setSessionMessage('Session expired. Please login again.');
+            setUser(null);
+            setPage('login');
+          } else {
+            console.error('Session restore error:', error);
+          }
         }
 
         // For now, using mock feedback data since it's not in the API
@@ -2761,6 +2775,12 @@ export default function App() {
 
     fetchData();
   }, []);
+
+  useEffect(() => onAuthSessionExpired(() => {
+    setSessionMessage('Session expired. Please login again.');
+    setUser(null);
+    setPage('login');
+  }), []);
 
   // Fuzzy search algorithm for internships by name (marketplace style)
   useEffect(() => {
@@ -2900,14 +2920,17 @@ export default function App() {
       return (
         <CreatePage
           students={students}
+          user={user}
           onSubmit={(newFaculty) => {
             const transformedFaculty = {
               id: newFaculty._id,
               title: newFaculty.name,
               company: newFaculty.company,
-              status: newFaculty.status || "Active",
-              start: newFaculty.startDate || "2024-01-01",
-              end: newFaculty.endDate || "2024-06-01",
+              location: newFaculty.location || '',
+              locationYmaps: Array.isArray(newFaculty.locationYmaps) ? newFaculty.locationYmaps : newFaculty.locationYmaps || null,
+              status: normalizeStatus(newFaculty.status),
+              start: newFaculty.duration?.start || newFaculty.startDate || "2024-01-01",
+              end: newFaculty.duration?.end || newFaculty.endDate || "2024-06-01",
               role: newFaculty.role || "Intern",
               students: newFaculty.students || [],
               desc: newFaculty.description || newFaculty.plan,
@@ -2968,7 +2991,7 @@ export default function App() {
     }
 
     if (nav === "Create Tutors") {
-      return <CreateTutorPage apiUrl={API_URL} />;
+      return <CreateTutorPage />;
     }
 
     if (nav === "Feedback") {
@@ -2999,7 +3022,15 @@ export default function App() {
     return (
       <>
         <style>{CSS}</style>
-        <LoginPage onLogin={() => setPage("dashboard")} onUserSet={setUser} />
+        <LoginPage
+          onLogin={() => {
+            setSessionMessage('');
+            setPage("dashboard");
+          }}
+          onUserSet={setUser}
+          sessionMessage={sessionMessage}
+        />
+        <ToastViewport />
       </>
     );
 
@@ -3104,6 +3135,7 @@ export default function App() {
           </div>
         </div>
       </div>
+      <ToastViewport />
     </>
   );
 }

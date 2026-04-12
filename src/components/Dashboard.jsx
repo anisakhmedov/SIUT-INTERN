@@ -1,13 +1,218 @@
-import React, { useState, useEffect } from 'react';
-import { API_URL, buildAuthHeaders } from '../utils/apiClient';
+import React, { useState, useEffect } from "react";
+import { del, get } from "../utils/apiClient";
+import { toast } from "../utils/toast";
 
-export default function Dashboard({ onNewFaculty, onView, search = '' }) {
+const clampProgress = (value) =>
+  Math.max(0, Math.min(100, Number.isFinite(value) ? value : 0));
+
+const hasReportContent = (day) => {
+  if (!day?.shortReport) return false;
+
+  const title =
+    typeof day.shortReport.title === "string"
+      ? day.shortReport.title.trim()
+      : "";
+  const description =
+    typeof day.shortReport.description === "string"
+      ? day.shortReport.description.trim()
+      : "";
+  const reportImages = Array.isArray(day.shortReport.images)
+    ? day.shortReport.images
+    : [];
+  const dayImages = Array.isArray(day.images) ? day.images : [];
+
+  return Boolean(
+    title || description || reportImages.length || dayImages.length,
+  );
+};
+
+const calculateProgressFromDays = (days) => {
+  const dayList = Array.isArray(days) ? days : [];
+  if (dayList.length === 0) return null;
+
+  const reported = dayList.filter((day) => hasReportContent(day)).length;
+  return clampProgress(Math.round((reported / dayList.length) * 100));
+};
+
+const parseProgressValue = (value) => {
+  if (typeof value === "number" && Number.isFinite(value))
+    return clampProgress(Math.round(value));
+  if (typeof value === "string") {
+    const parsed = Number.parseFloat(value.replace("%", "").trim());
+    if (Number.isFinite(parsed)) return clampProgress(Math.round(parsed));
+  }
+  return null;
+};
+
+const normalizeStatus = (status) => {
+  const raw = String(status || "").trim().toLowerCase();
+  if (raw === "completed") return "Completed";
+  if (raw === "in progress" || raw === "active") return "In Progress";
+  return "Pending";
+};
+
+export default function Dashboard({ onNewFaculty, onView, search = "", user = null }) {
   const [faculties, setFaculties] = useState([]);
+  const [usersById, setUsersById] = useState({});
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+
+  const getFacultyId = (faculty) => faculty?._id ?? faculty?.id ?? null;
+
+  const getSupervisorLabel = (faculty) => {
+    const supervisor =
+      faculty?.tutorID || faculty?.tutor || faculty?.supervisor;
+
+    if (typeof supervisor === "string" && supervisor.trim()) {
+      const linkedUser = usersById[supervisor];
+      if (linkedUser) {
+        const linkedName = [
+          linkedUser.name,
+          linkedUser.surname,
+          linkedUser.lastname,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .trim();
+        if (linkedName) return linkedName;
+        if (linkedUser.login) return linkedUser.login;
+      }
+      return supervisor;
+    }
+
+    if (supervisor && typeof supervisor === "object") {
+      const fullName = [
+        supervisor.name,
+        supervisor.surname,
+        supervisor.lastname,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .trim();
+      if (fullName) return fullName;
+      if (supervisor.login) return supervisor.login;
+      if (supervisor.email) return supervisor.email;
+    }
+
+    const tutorName = [faculty?.tutorName, faculty?.supervisorName]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+    if (tutorName) return tutorName;
+
+    return "Not assigned";
+  };
+
+  const getSupervisorRecord = (faculty) => {
+    const supervisor =
+      faculty?.tutorID || faculty?.tutor || faculty?.supervisor;
+
+    if (supervisor && typeof supervisor === "object") return supervisor;
+
+    if (typeof supervisor === "string" && supervisor.trim()) {
+      return usersById[supervisor] || null;
+    }
+
+    return null;
+  };
+
+  const getSupervisorContact = (faculty) => {
+    const supervisorRecord = getSupervisorRecord(faculty);
+
+    if (supervisorRecord) {
+      return (
+        supervisorRecord.phone ||
+        supervisorRecord.email ||
+        supervisorRecord.login ||
+        "N/A"
+      );
+    }
+
+    return faculty?.tutorContact || faculty?.supervisorContact || "N/A";
+  };
+
+  const getWhenLabel = (faculty) => {
+    const formatDate = (value) => {
+      if (!value) return "";
+
+      // Supports ISO and plain date strings from backend.
+      const datePart = String(value).split("T")[0];
+      const parts = datePart.split("-");
+      if (parts.length === 3) {
+        const [year, month, day] = parts;
+        if (year && month && day) return `${day}.${month}.${year}`;
+      }
+
+      const parsed = new Date(value);
+      if (!Number.isNaN(parsed.getTime())) {
+        const day = String(parsed.getDate()).padStart(2, "0");
+        const month = String(parsed.getMonth() + 1).padStart(2, "0");
+        const year = parsed.getFullYear();
+        return `${day}.${month}.${year}`;
+      }
+
+      return String(value);
+    };
+
+    const start = formatDate(faculty?.duration?.start || faculty?.startDate);
+    const end = formatDate(faculty?.duration?.end || faculty?.endDate);
+
+    if (start && end) return `${start} - ${end}`;
+    return start || end || "N/A";
+  };
+
+  const getDurationLabel = (faculty) => {
+    const startRaw = faculty?.duration?.start || faculty?.startDate;
+    const endRaw = faculty?.duration?.end || faculty?.endDate;
+
+    if (!startRaw || !endRaw) {
+      if (typeof faculty?.duration === "string" && faculty.duration.trim())
+        return faculty.duration;
+      return "N/A";
+    }
+
+    const start = new Date(startRaw);
+    const end = new Date(endRaw);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()))
+      return "N/A";
+
+    const diffMs = end.getTime() - start.getTime();
+    const days = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)) + 1);
+    return `${days} day${days === 1 ? "" : "s"}`;
+  };
+
+  const getYandexMapUrl = (faculty) => {
+    const coordsRaw = faculty?.locationYmaps;
+    const coords = Array.isArray(coordsRaw)
+      ? coordsRaw
+      : Array.isArray(coordsRaw?.coords)
+        ? coordsRaw.coords
+        : null;
+
+    if (Array.isArray(coords) && coords.length === 2) {
+      const lat = Number(coords[0]);
+      const lng = Number(coords[1]);
+      if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
+        return `https://yandex.com/maps/?pt=${lng},${lat}&z=15&l=map`;
+      }
+    }
+
+    const locationText = (faculty?.location || "").trim();
+    if (!locationText) return null;
+    return `https://yandex.com/maps/?text=${encodeURIComponent(locationText)}`;
+  };
+
+  const getShortProgress = (faculty) => {
+    const fromDays = calculateProgressFromDays(faculty?.days);
+    if (fromDays != null) return fromDays;
+
+    const fromStored = parseProgressValue(faculty?.progressAll);
+    if (fromStored != null) return fromStored;
+
+    return 0;
+  };
 
   // Filter faculties based on search term
-  const filteredFaculties = faculties.filter(faculty => {
+  const filteredFaculties = faculties.filter((faculty) => {
     const searchLower = search.toLowerCase();
     return (
       faculty.name?.toLowerCase().includes(searchLower) ||
@@ -24,33 +229,53 @@ export default function Dashboard({ onNewFaculty, onView, search = '' }) {
   const fetchFaculties = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/faculty`, {
-        headers: buildAuthHeaders(),
-      });
-      if (!response.ok) throw new Error('Failed to fetch faculties');
-      const data = await response.json();
-      setFaculties(data);
-      setError('');
+      const canReadUsers = String(user?.role || '').toLowerCase() === 'admin';
+
+      const [facultyResponse, usersResponse] = await Promise.allSettled([
+        get("/faculty"),
+        canReadUsers ? get("/usersInternship") : Promise.resolve([]),
+      ]);
+
+      if (facultyResponse.status === "fulfilled") {
+        setFaculties(
+          Array.isArray(facultyResponse.value) ? facultyResponse.value : [],
+        );
+      } else {
+        throw facultyResponse.reason;
+      }
+
+      if (usersResponse.status === "fulfilled") {
+        const usersRaw = usersResponse.value;
+        const users = Array.isArray(usersRaw) ? usersRaw : usersRaw?.data || [];
+        const mappedUsers = users.reduce((acc, user) => {
+          const userId = String(user?._id ?? user?.id ?? "");
+          if (userId) acc[userId] = user;
+          return acc;
+        }, {});
+        setUsersById(mappedUsers);
+      } else {
+        setUsersById({});
+      }
     } catch (err) {
-      setError(err.message);
-      console.error('Error fetching faculties:', err);
+      toast.error(err?.message || "Failed to load internships.");
+      console.error("Error fetching faculties:", err);
     } finally {
       setLoading(false);
     }
   };
 
   const removeFaculty = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this internship?')) return;
+    if (!window.confirm("Are you sure you want to delete this internship?"))
+      return;
     try {
-      const response = await fetch(`${API_URL}/faculty/${id}`, {
-        method: 'DELETE',
-        headers: buildAuthHeaders(),
-      });
-      if (!response.ok) throw new Error('Failed to delete');
-      setFaculties(prevFaculties => prevFaculties.filter(f => f._id !== id));
+      await del(`/faculty/${id}`);
+      setFaculties((prevFaculties) =>
+        prevFaculties.filter((f) => String(getFacultyId(f)) !== String(id)),
+      );
+      toast.success("Internship deleted.");
     } catch (err) {
-      setError('Failed to delete internship');
-      console.error('Delete error:', err);
+      toast.error("Failed to delete internship.");
+      console.error("Delete error:", err);
     }
   };
 
@@ -269,8 +494,58 @@ export default function Dashboard({ onNewFaculty, onView, search = '' }) {
           display: flex;
           align-items: center;
           gap: 4px;
+          flex-wrap: wrap;
         }
         .dw-card-row:last-of-type { margin-bottom: 12px; }
+        .dw-progress {
+          margin: 10px 0 12px;
+          display: grid;
+          gap: 7px;
+        }
+        .dw-progress-top {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+        }
+        .dw-progress-label {
+          font-size: 11px;
+          font-weight: 800;
+          letter-spacing: .06em;
+          text-transform: uppercase;
+          color: var(--t3, #9ba3bb);
+        }
+        .dw-progress-value {
+          font-size: 11px;
+          font-weight: 800;
+          padding: 3px 9px;
+          border-radius: 999px;
+          border: 1px solid rgba(0,0,0,.12);
+        }
+        .dw-progress-track {
+          width: 100%;
+          height: 8px;
+          border-radius: 999px;
+          background: rgba(15,23,42,.08);
+          border: 1px solid rgba(15,23,42,.08);
+          overflow: hidden;
+        }
+        .dw-progress-fill {
+          height: 100%;
+          border-radius: 999px;
+          min-width: 0;
+          transition: width .3s ease, background .3s ease;
+        }
+        .dw-map-link {
+          color: var(--a1, #635bff);
+          font-weight: 700;
+          text-decoration: underline;
+          text-decoration-thickness: 1.5px;
+          text-underline-offset: 2px;
+        }
+        .dw-map-link:hover {
+          color: var(--a2, #06c9a0);
+        }
         .dw-card-plan {
           font-size: 12px;
           color: var(--t3, #9ba3bb);
@@ -301,13 +576,6 @@ export default function Dashboard({ onNewFaculty, onView, search = '' }) {
           border-radius: 50%;
           display: inline-block;
         }
-        .dw-card-badge--active {
-          background: rgba(6,201,160,.15);
-          color: #0d7a5c;
-        }
-        .dw-card-badge--active::before {
-          background: #06c9a0;
-        }
         .dw-card-badge--pending {
           background: rgba(245,166,35,.15);
           color: #92400e;
@@ -315,12 +583,19 @@ export default function Dashboard({ onNewFaculty, onView, search = '' }) {
         .dw-card-badge--pending::before {
           background: #f5a623;
         }
+        .dw-card-badge--progress {
+          background: rgba(59,130,246,.15);
+          color: #1d4ed8;
+        }
+        .dw-card-badge--progress::before {
+          background: #3b82f6;
+        }
         .dw-card-badge--completed {
-          background: rgba(99,91,255,.15);
-          color: #4c1d95;
+          background: rgba(34,197,94,.15);
+          color: #166534;
         }
         .dw-card-badge--completed::before {
-          background: #635bff;
+          background: #22c55e;
         }
         .dw-card-footer {
           display: flex;
@@ -342,6 +617,10 @@ export default function Dashboard({ onNewFaculty, onView, search = '' }) {
           gap: 6px;
           text-transform: uppercase;
           letter-spacing: .04em;
+          border: none;
+          background: none;
+          padding: 0;
+          cursor: pointer;
         }
         .dw-card-actions { flex-shrink: 0; }
         .dw-btn-icon {
@@ -374,77 +653,148 @@ export default function Dashboard({ onNewFaculty, onView, search = '' }) {
       <div className="dw-shell">
         <div className="dw-head">
           <div className="dw-head-group">
-            <div className="dw-eyebrow">Active Programs</div>
+            <div className="dw-eyebrow">Internship Overview</div>
             <h1 className="dw-title">Internships</h1>
             <p className="dw-sub">Manage and open internship records</p>
           </div>
-          <button type="button" className="dw-btn-primary" onClick={onNewFaculty}>
+          <button
+            type="button"
+            className="dw-btn-primary"
+            onClick={onNewFaculty}
+          >
             <span aria-hidden="true">+</span>
             New Internship
           </button>
         </div>
 
-        {error && (
-          <div className="dw-alert" role="alert">
-            <span aria-hidden="true">⚠</span>
-            <span>{error}</span>
-          </div>
-        )}
-
         {loading ? (
           <div className="dw-loading">✦ Loading internships…</div>
         ) : faculties.length === 0 ? (
-          <div className="dw-empty">✨ No internships yet. Create one to get started.</div>
+          <div className="dw-empty">
+            ✨ No internships yet. Create one to get started.
+          </div>
         ) : filteredFaculties.length === 0 ? (
           <div className="dw-empty">🔍 No internships match your search.</div>
         ) : (
           <ul className="dw-list" aria-label="Internship list">
-            {filteredFaculties.map((faculty) => {
-              const statusClass = faculty.status === 'Active' ? 'dw-card-badge--active' : faculty.status === 'Pending' ? 'dw-card-badge--pending' : 'dw-card-badge--completed';
+            {filteredFaculties.map((faculty, index) => {
+              const facultyId = getFacultyId(faculty) ?? `row-${index}`;
+              const shortProgress = getShortProgress(faculty);
+              const progressHue = Math.round((shortProgress / 100) * 120);
+              const normalizedStatus = normalizeStatus(faculty.status);
+              const statusClass =
+                normalizedStatus === "Pending"
+                    ? "dw-card-badge--pending"
+                    : normalizedStatus === "In Progress"
+                      ? "dw-card-badge--progress"
+                    : "dw-card-badge--completed";
               return (
-                <li key={faculty._id}>
+                <li key={facultyId}>
                   <article className="dw-card">
-                    <button
-                      type="button"
+                    <div
+                      role="button"
+                      tabIndex={0}
                       className="dw-card-click"
-                      onClick={() => onView(faculty._id)}
+                      onClick={() => {
+                        if (facultyId) onView(facultyId);
+                      }}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
+                        if (e.key === "Enter" || e.key === " ") {
                           e.preventDefault();
-                          onView(faculty._id);
+                          if (facultyId) onView(facultyId);
                         }
                       }}
                     >
                       <div className="dw-card-body">
                         <h3 className="dw-card-title">{faculty.name}</h3>
-                        {faculty.status && (
-                          <span className={`dw-card-badge ${statusClass}`}>{faculty.status}</span>
+                        {normalizedStatus && (
+                          <span className={`dw-card-badge ${statusClass}`}>
+                            {normalizedStatus}
+                          </span>
                         )}
                         <div className="dw-card-meta">
-                          <span>{faculty.company}</span>
-                          <div className="dw-card-meta-divider"></div>
-                          <span>{faculty.location}</span>
-                          {faculty.duration && (
+                          <span>{faculty.company || "No company"}</span>
+                          {normalizedStatus && (
                             <>
                               <div className="dw-card-meta-divider"></div>
-                              <span>{faculty.duration}</span>
+                              <span>{normalizedStatus}</span>
                             </>
                           )}
                         </div>
-                        {faculty.plan && (
-                          <p className="dw-card-plan">{faculty.plan}</p>
-                        )}
+                        <p className="dw-card-row">
+                          Who: <strong>{getSupervisorLabel(faculty)}</strong>
+                        </p>
+                        <p className="dw-card-row">
+                          Where:
+                          {getYandexMapUrl(faculty) && (
+                            <a
+                              href={getYandexMapUrl(faculty)}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="dw-map-link"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              Link
+                            </a>
+                          )}
+                        </p>
+                        <p className="dw-card-row">
+                          When: <strong>{getWhenLabel(faculty)}</strong>
+                        </p>
+                        <p className="dw-card-row">
+                          How long: <strong>{getDurationLabel(faculty)}</strong>
+                        </p>
+
+                        <p className="dw-card-row">
+                          Contact:{" "}
+                          <strong>{getSupervisorContact(faculty)}</strong>
+                        </p>
+                        <div
+                          className="dw-progress"
+                          aria-label={`Progress ${shortProgress}%`}
+                        >
+                          <div className="dw-progress-top">
+                            <span className="dw-progress-label">Progress:</span>
+                            <span
+                              className="dw-progress-value"
+                              style={{
+                                color: `hsl(${progressHue} 76% 30%)`,
+                                borderColor: `hsla(${progressHue}, 75%, 45%, .35)`,
+                                background: `linear-gradient(135deg, hsla(${Math.max(0, progressHue - 25)}, 95%, 92%, .95), hsla(${Math.min(120, progressHue + 20)}, 95%, 88%, .95))`,
+                              }}
+                            >
+                              {shortProgress}%
+                            </span>
+                          </div>
+                          <div className="dw-progress-track">
+                            <div
+                              className="dw-progress-fill"
+                              style={{
+                                width: `${shortProgress}%`,
+                                background: `linear-gradient(90deg, hsl(${Math.max(0, progressHue - 24)} 82% 56%), hsl(${Math.min(120, progressHue + 12)} 80% 44%))`,
+                              }}
+                            ></div>
+                          </div>
+                        </div>
                       </div>
-                    </button>
+                    </div>
                     <div className="dw-card-footer">
-                      <span className="dw-card-open">View Details</span>
+                      <button
+                        type="button"
+                        className="dw-card-open"
+                        onClick={() => {
+                          if (facultyId) onView(facultyId);
+                        }}
+                      >
+                        View Details
+                      </button>
                       <button
                         type="button"
                         className="dw-btn-icon"
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          removeFaculty(faculty._id);
+                          if (facultyId) removeFaculty(facultyId);
                         }}
                         title="Delete internship"
                         aria-label="Delete internship"

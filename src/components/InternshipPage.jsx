@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { get, patch, post } from '../utils/apiClient';
 import { toast } from '../utils/toast';
 
@@ -247,9 +248,7 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
   const currentDay = days[dayIndex];
   const currentDayImageUrls = useMemo(() => extractImageUrls(currentDay), [extractImageUrls, currentDay]);
   const currentDayCommentsCount = currentDay?.comments?.length || 0;
-  const currentDayStatusLabel = currentDay
-    ? (currentDay.shortReport ? (currentDay.approved ? 'Reported and approved' : 'Reported, pending review') : 'No report yet')
-    : 'No day selected';
+ 
   const canWriteReport = user?.role === 'Tutor' || user?.role === 'Admin';
   const canEditInternship = user?.role === 'Tutor' || user?.role === 'Admin';
   const canApprove = user?.role === 'Admin';
@@ -620,6 +619,30 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
   }, [facultyId]);
 
   useEffect(() => {
+    if (!activeImageSrc) return undefined;
+
+    const { body } = document;
+    const { scrollY } = window;
+    const prevOverflow = body.style.overflow;
+    const prevPosition = body.style.position;
+    const prevTop = body.style.top;
+    const prevWidth = body.style.width;
+
+    body.style.overflow = 'hidden';
+    body.style.position = 'fixed';
+    body.style.top = `-${scrollY}px`;
+    body.style.width = '100%';
+
+    return () => {
+      body.style.overflow = prevOverflow;
+      body.style.position = prevPosition;
+      body.style.top = prevTop;
+      body.style.width = prevWidth;
+      window.scrollTo(0, scrollY);
+    };
+  }, [activeImageSrc]);
+
+  useEffect(() => {
     const item = dayItemRefs.current[dayIndex];
     if (!item) return;
     item.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
@@ -811,6 +834,7 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                   </div>
                   <span className="ip-progress-meta">{reportedDaysCount}/{days.length || 0} days reported</span>
                 </div>
+
               </div>
             </div>
 
@@ -840,21 +864,6 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                     dangerouslySetInnerHTML={{ __html: renderSimpleMarkdown(baseInfoPlan) }}
                   ></div>
                 )}
-              </div>
-            </div>
-
-            <div className="ip-hero-summary" aria-label="Current day summary">
-              <div className="ip-summary-card">
-                <span className="ip-summary-label">Current day</span>
-                <strong className="ip-summary-value">{currentDay ? `Day ${currentDay.dayNumber}` : 'None selected'}</strong>
-              </div>
-              <div className="ip-summary-card">
-                <span className="ip-summary-label">Comments</span>
-                <strong className="ip-summary-value">{currentDayCommentsCount}</strong>
-              </div>
-              <div className="ip-summary-card ip-summary-card--wide">
-                <span className="ip-summary-label">Review state</span>
-                <strong className="ip-summary-value">{currentDayStatusLabel}</strong>
               </div>
             </div>
 
@@ -1194,7 +1203,10 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                   {currentDay.shortReport && (
                     <div className="ip-report">
                       <h4 className="ip-report-title">{currentDay.shortReport.title || 'Untitled'}</h4>
-                      <p className="ip-report-desc">{currentDay.shortReport.description}</p>
+                      <div
+                        className="ip-report-desc"
+                        dangerouslySetInnerHTML={{ __html: renderSimpleMarkdown(currentDay.shortReport.description || '') }}
+                      ></div>
                       {currentDayImageUrls.length > 0 && (
                         <div className="ip-report-images">
                           {currentDayImageUrls.map((img, idx) => (
@@ -1319,7 +1331,7 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
             </div>
           )}
 
-          {activeImageSrc && (
+          {activeImageSrc && typeof document !== 'undefined' && createPortal(
             <div className="ip-image-modal" onClick={() => setActiveImageSrc('')}>
               <button
                 type="button"
@@ -1335,10 +1347,11 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                 className="ip-image-modal-content"
                 onClick={(e) => e.stopPropagation()}
               />
-            </div>
+            </div>,
+            document.body,
           )}
 
-          {showAddDayModal && (
+          {showAddDayModal && typeof document !== 'undefined' && createPortal(
             <div className="ip-modal-overlay" onClick={() => setShowAddDayModal(false)}>
               <div className="ip-modal-content" onClick={(e) => e.stopPropagation()}>
                 <div className="ip-modal-header">
@@ -1382,7 +1395,8 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                   </button>
                 </div>
               </div>
-            </div>
+            </div>,
+            document.body,
           )}
 
         </div>
@@ -2105,7 +2119,37 @@ const ipStyles = `
     color: var(--t1, #0c0e18);
     margin: 0 0 8px 0;
   }
-  .ip-report-desc { font-size: 14px; color: var(--t2, #5a6278); margin: 0; line-height: 1.5; }
+  .ip-report-desc {
+    font-size: 14px;
+    color: var(--t2, #5a6278);
+    margin: 0;
+    line-height: 1.6;
+  }
+  .ip-report-desc p {
+    margin: 0 0 10px;
+  }
+  .ip-report-desc p:last-child {
+    margin-bottom: 0;
+  }
+  .ip-report-desc h3 {
+    margin: 0 0 8px;
+    font-size: 17px;
+    line-height: 1.3;
+    color: var(--t1, #0c0e18);
+  }
+  .ip-report-desc ul {
+    margin: 0 0 10px 18px;
+    padding: 0;
+  }
+  .ip-report-desc li {
+    margin-bottom: 6px;
+  }
+  .ip-report-desc code {
+    background: rgba(15,23,42,.08);
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: 13px;
+  }
   .ip-report-images {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -2300,19 +2344,26 @@ const ipStyles = `
   }
   .ip-image-modal {
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background: rgba(0,0,0,.82);
-    z-index: 1200;
+    z-index: 1110;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: clamp(16px, 3vw, 36px);
+    overflow: hidden;
+    touch-action: none;
   }
   .ip-image-modal-content {
-    max-width: min(1200px, 95vw);
-    max-height: 90vh;
+    max-width: calc(100vw - (2 * clamp(16px, 3vw, 36px)));
+    max-height: calc(100vh - (2 * clamp(16px, 3vw, 36px)));
+    width: auto;
+    height: auto;
     object-fit: contain;
-    border-radius: 12px;
+    border-radius: clamp(0px, 1.2vw, 12px);
     box-shadow: 0 24px 80px rgba(0,0,0,.45);
   }
   .ip-image-modal-close {
@@ -2634,7 +2685,7 @@ const ipStyles = `
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: 1100;
     animation: fadeIn .2s ease;
   }
   @keyframes fadeIn {

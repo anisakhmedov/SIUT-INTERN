@@ -132,6 +132,7 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
   const [showAddDayModal, setShowAddDayModal] = useState(false);
   const [newDayDate, setNewDayDate] = useState(new Date().toISOString().slice(0, 10));
   const [highlightedCommentKey, setHighlightedCommentKey] = useState('');
+  const [showStudents, setShowStudents] = useState(false);
   const commentsSectionRef = useRef(null);
   const reportDescriptionRef = useRef(null);
   const planEditorRef = useRef(null);
@@ -238,6 +239,11 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
   }, []);
 
   const days = useMemo(() => faculty?.days || [], [faculty]);
+  const attachedStudents = useMemo(() => {
+    if (Array.isArray(faculty?.numberOfStudents)) return faculty.numberOfStudents;
+    if (Array.isArray(faculty?.students)) return faculty.students;
+    return [];
+  }, [faculty]);
   const reportedDaysCount = useMemo(() => days.filter((day) => hasReportContent(day)).length, [days]);
   const progressPercent = useMemo(() => calculateProgressPercent(days), [days]);
   const computedProgressLabel = useMemo(() => `${progressPercent}%`, [progressPercent]);
@@ -617,6 +623,10 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
   }, [days, dayIndex]);
 
   useEffect(() => {
+    setShowStudents(false);
+  }, [facultyId]);
+
+  useEffect(() => {
     const item = dayItemRefs.current[dayIndex];
     if (!item) return;
     item.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
@@ -853,6 +863,48 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                 <span className="ip-summary-label">Review state</span>
                 <strong className="ip-summary-value">{currentDayStatusLabel}</strong>
               </div>
+            </div>
+
+            <div className="ip-students-card" aria-label="Attached students">
+              <div className="ip-students-head">
+                <div>
+                  <span className="ip-summary-label">Students</span>
+                  <strong className="ip-summary-value">{attachedStudents.length} attached</strong>
+                </div>
+                <button
+                  type="button"
+                  className="ip-eye-btn"
+                  onClick={() => setShowStudents((prev) => !prev)}
+                  aria-label={showStudents ? 'Hide attached students' : 'Show attached students'}
+                  aria-expanded={showStudents}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+              </div>
+
+              {showStudents && (
+                <div className="ip-students-list-wrap">
+                  {attachedStudents.length === 0 ? (
+                    <p className="ip-students-empty">No students attached to this internship.</p>
+                  ) : (
+                    <ul className="ip-students-list">
+                      {attachedStudents.map((student, index) => {
+                        const studentId = student?._id || student?.id || `student-${index}`;
+                        const studentName = [student?.name, student?.surname, student?.lastname].filter(Boolean).join(' ').trim() || 'Unnamed student';
+                        return (
+                          <li key={studentId} className="ip-student-item">
+                            <span className="ip-student-name">{studentName}</span>
+                            {student?.nameFaculty && <span className="ip-student-faculty">{student.nameFaculty}</span>}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+              )}
             </div>
           </header>
 
@@ -1833,6 +1885,72 @@ const ipStyles = `
     color: var(--t1, #0c0e18);
     font-size: 14px;
     line-height: 1.35;
+  }
+  .ip-students-card {
+    margin-top: 14px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: rgba(248,250,255,.95);
+    border: 1px solid rgba(99,91,255,.08);
+  }
+  .ip-students-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .ip-eye-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid rgba(99,91,255,.22);
+    background: rgba(99,91,255,.08);
+    color: var(--a1, #635bff);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all .2s ease;
+  }
+  .ip-eye-btn:hover {
+    background: rgba(99,91,255,.16);
+    border-color: rgba(99,91,255,.35);
+  }
+  .ip-students-list-wrap {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(99,91,255,.2);
+  }
+  .ip-students-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+  }
+  .ip-student-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(255,255,255,.82);
+    border: 1px solid rgba(0,0,0,.06);
+  }
+  .ip-student-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--t1, #0c0e18);
+  }
+  .ip-student-faculty {
+    font-size: 12px;
+    color: var(--t2, #5a6278);
+  }
+  .ip-students-empty {
+    margin: 0;
+    font-size: 13px;
+    color: var(--t2, #5a6278);
   }
   .ip-actions {
     display: flex;

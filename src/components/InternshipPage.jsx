@@ -112,9 +112,7 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
   const [showReportForm, setShowReportForm] = useState(false);
   const [reportTitle, setReportTitle] = useState('');
   const [reportDescription, setReportDescription] = useState('');
-  const [reportDayNumber, setReportDayNumber] = useState('');
   const [reportDayDate, setReportDayDate] = useState('');
-  const [reportDayApproved, setReportDayApproved] = useState(false);
   const [reportImages, setReportImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [isInternshipEditMode, setIsInternshipEditMode] = useState(false);
@@ -189,9 +187,7 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
     setShowReportForm(false);
     setReportTitle('');
     setReportDescription('');
-    setReportDayNumber('');
     setReportDayDate('');
-    setReportDayApproved(false);
     setReportImages([]);
     setImagePreviews([]);
     setUploadProgress(0);
@@ -362,9 +358,7 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
   }, [faculty, initBaseInfoFields]);
 
   const handleWriteReportOpen = useCallback(() => {
-    setReportDayNumber(currentDay?.dayNumber ? String(currentDay.dayNumber) : '');
     setReportDayDate(currentDay?.date ? String(currentDay.date).slice(0, 10) : '');
-    setReportDayApproved(Boolean(currentDay?.approved));
     if (currentDay?.shortReport) {
       setReportTitle(currentDay.shortReport.title || '');
       setReportDescription(currentDay.shortReport.description || '');
@@ -453,14 +447,13 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
       
       const normalizedTitle = reportTitle.trim();
       const normalizedDescription = reportDescription.trim();
-      const normalizedDayNumber = reportDayNumber.trim();
       const normalizedDayDate = reportDayDate || currentDay.date || '';
 
       const reportPayload = {
         ...currentDay,
-        dayNumber: normalizedDayNumber || currentDay.dayNumber,
+        dayNumber: currentDay.dayNumber,
         date: normalizedDayDate,
-        approved: canApprove ? reportDayApproved : currentDay.approved,
+        approved: currentDay.approved,
         images: finalImageUrls,
       };
 
@@ -499,7 +492,7 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
       setSubmitting(false);
       setUploadProgress(0);
     }
-  }, [currentDay, reportTitle, reportDescription, reportDayNumber, reportDayDate, reportDayApproved, reportImages, facultyId, getDayId, fetchFaculty, extractImageUrls, canApprove, resetDayForm, syncFacultyProgress]);
+  }, [currentDay, reportTitle, reportDescription, reportDayDate, reportImages, facultyId, getDayId, fetchFaculty, extractImageUrls, resetDayForm, syncFacultyProgress]);
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
@@ -909,16 +902,6 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
           </header>
 
           <div className="ip-actions">
-            {canWriteReport && (
-              <button
-                type="button"
-                className="ip-btn ip-btn--primary"
-                disabled={!currentDay || submitting}
-                onClick={handleWriteReportOpen}
-              >
-                Write report
-              </button>
-            )}
             {canApprove && (
               <button
                 type="button"
@@ -956,50 +939,15 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
               
               <form onSubmit={handleReportSubmit} className="ip-report-form ip-report-form-wrapper">
                 <div className="ip-form-section">
-                  <div className="ip-form-grid">
-                    <div className="ip-field">
-                      <label className="ip-label" htmlFor="ip-day-number">Day number</label>
-                      <input
-                        id="ip-day-number"
-                        type="text"
-                        value={reportDayNumber}
-                        onChange={(e) => setReportDayNumber(e.target.value)}
-                        className="ip-input"
-                        placeholder="Day number"
-                      />
-                    </div>
-                    <div className="ip-field">
-                      <label className="ip-label" htmlFor="ip-day-date">Date</label>
-                      <input
-                        id="ip-day-date"
-                        type="date"
-                        value={reportDayDate}
-                        onChange={(e) => setReportDayDate(e.target.value)}
-                        className="ip-input"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="ip-form-divider"></div>
-
-                <div className="ip-form-section">
                   <div className="ip-field">
-                    <label className="ip-label" htmlFor="ip-day-approved">Approval</label>
-                    <label className={`ip-checkbox-row ${canApprove ? '' : 'ip-checkbox-row--disabled'}`} htmlFor="ip-day-approved">
-                      <input
-                        id="ip-day-approved"
-                        type="checkbox"
-                        checked={reportDayApproved}
-                        onChange={(e) => setReportDayApproved(e.target.checked)}
-                        className="ip-checkbox"
-                        disabled={!canApprove}
-                      />
-                      <span>
-                        Mark this day as approved
-                        {!canApprove && <span className="ip-helper-text">Only Admin can change approval state.</span>}
-                      </span>
-                    </label>
+                    <label className="ip-label" htmlFor="ip-day-date">Date</label>
+                    <input
+                      id="ip-day-date"
+                      type="date"
+                      value={reportDayDate}
+                      onChange={(e) => setReportDayDate(e.target.value)}
+                      className="ip-input"
+                    />
                   </div>
                 </div>
 
@@ -1206,25 +1154,41 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                       <span className="ip-day-title">Day {currentDay.dayNumber}</span>
                       <div className="ip-day-subtitle">{currentDay.date || 'No date'}</div>
                     </div>
-                    <span className={`ip-day-badge ${currentDay.approved ? 'ip-day-badge--ok' : 'ip-day-badge--pending'}`}>
-                      {currentDay.approved ? (
-                        <>
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    <div className="ip-day-header-actions">
+                      <span className={`ip-day-badge ${currentDay.approved ? 'ip-day-badge--ok' : 'ip-day-badge--pending'}`}>
+                        {currentDay.approved ? (
+                          <>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                            </svg>
+                            Approved
+                          </>
+                        ) : (
+                          <>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <circle cx="12" cy="12" r="10"/>
+                              <line x1="12" y1="8" x2="12" y2="12"/>
+                              <line x1="12" y1="16" x2="12.01" y2="16"/>
+                            </svg>
+                            Pending
+                          </>
+                        )}
+                      </span>
+                      {canWriteReport && (
+                        <button
+                          type="button"
+                          className="ip-day-edit-btn"
+                          onClick={handleWriteReportOpen}
+                          disabled={submitting}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 20h9"/>
+                            <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
                           </svg>
-                          Approved
-                        </>
-                      ) : (
-                        <>
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <line x1="12" y1="8" x2="12" y2="12"/>
-                            <line x1="12" y1="16" x2="12.01" y2="16"/>
-                          </svg>
-                          Pending
-                        </>
+                          Edit
+                        </button>
                       )}
-                    </span>
+                    </div>
                   </div>
 
                   {currentDay.shortReport && (
@@ -2054,6 +2018,11 @@ const ipStyles = `
     font-size: 12px;
     color: var(--t3, #9ba3bb);
   }
+  .ip-day-header-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
   .ip-day-badge {
     display: inline-flex;
     align-items: center;
@@ -2094,6 +2063,30 @@ const ipStyles = `
   }
   .ip-day-badge--pending svg {
     animation: pulse-info 2s ease-in-out infinite;
+  }
+  .ip-day-edit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 34px;
+    padding: 0 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(99,91,255,.24);
+    background: rgba(99,91,255,.08);
+    color: var(--a1, #635bff);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s ease;
+    white-space: nowrap;
+  }
+  .ip-day-edit-btn:hover:not(:disabled) {
+    background: rgba(99,91,255,.16);
+    border-color: rgba(99,91,255,.36);
+  }
+  .ip-day-edit-btn:disabled {
+    opacity: .5;
+    cursor: not-allowed;
   }
   @keyframes pulse-info {
     0%, 100% { opacity: 1; }

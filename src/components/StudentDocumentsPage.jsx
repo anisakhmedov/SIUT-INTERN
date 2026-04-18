@@ -1177,8 +1177,8 @@ export default function StudentDocumentsPage({ students = [], search = '', onStu
                 <article className="upload-card">
                   <div className="upload-card-head">
                     <div>
-                      <h3 className="upload-card-title">Passport photo</h3>
-                      <p className="upload-card-subtitle">Upload a single passport image in JPEG, PNG, GIF, or WebP format.</p>
+                      <h3 className="upload-card-title">Front side</h3>
+                      <p className="upload-card-subtitle">Upload passport front side image in JPEG, PNG, GIF, or WebP format.</p>
                     </div>
                     <div>
                       {selectedPassportUrl ? <Eye size={22} color="var(--a1, #635bff)" /> : <Upload size={22} color="var(--a1, #635bff)" />}
@@ -1187,12 +1187,12 @@ export default function StudentDocumentsPage({ students = [], search = '', onStu
 
                   <div className="upload-preview">
                     {selectedPassportUrl ? (
-                      <img src={selectedPassportUrl} alt="Passport preview" />
+                      <img src={selectedPassportUrl} alt="Passport front side preview" />
                     ) : (
                       <div className="upload-preview-empty">
                         <Upload size={38} strokeWidth={1.8} />
                         <div>
-                          <div style={{ fontWeight: 800, color: 'var(--t1, #0c0e18)' }}>No passport image yet</div>
+                          <div style={{ fontWeight: 800, color: 'var(--t1, #0c0e18)' }}>No front side image yet</div>
                           <div style={{ marginTop: 4, fontSize: 12 }}>Choose one image to upload</div>
                         </div>
                       </div>
@@ -1214,11 +1214,11 @@ export default function StudentDocumentsPage({ students = [], search = '', onStu
                     />
                     <label className="upload-btn" htmlFor="passport-image-input" style={{ pointerEvents: uploadState.passport.loading ? 'none' : 'auto' }}>
                       {uploadState.passport.loading ? <LoaderCircle size={16} className="spin" /> : selectedPassportUrl ? <Eye size={16} /> : <Upload size={16} />}
-                      {uploadState.passport.loading ? 'Uploading...' : selectedPassportUrl ? 'Replace passport' : 'Upload passport'}
+                      {uploadState.passport.loading ? 'Uploading...' : selectedPassportUrl ? 'Replace front side' : 'Upload front side'}
                     </label>
                     {selectedPassportUrl && (
                       <button type="button" className="upload-btn-secondary" onClick={() => openImage(selectedPassportUrl)} disabled={uploadState.passport.loading}>
-                        <Eye size={16} /> View passport
+                        <Eye size={16} /> View front side
                       </button>
                     )}
                   </div>
@@ -1228,7 +1228,7 @@ export default function StudentDocumentsPage({ students = [], search = '', onStu
                       <div className="upload-progress">
                         <div className="upload-progress-fill" style={{ width: `${uploadState.passport.progress}%` }} />
                       </div>
-                      <div className="upload-progress-text">Uploading passport image: {uploadState.passport.progress}%</div>
+                      <div className="upload-progress-text">Uploading front side image: {uploadState.passport.progress}%</div>
                     </div>
                   )}
                 </article>
@@ -1236,8 +1236,8 @@ export default function StudentDocumentsPage({ students = [], search = '', onStu
                 <article className="upload-card">
                   <div className="upload-card-head">
                     <div>
-                      <h3 className="upload-card-title">Medicine photo</h3>
-                      <p className="upload-card-subtitle">Upload a single medicine image in JPEG, PNG, GIF, or WebP format.</p>
+                      <h3 className="upload-card-title">Back side</h3>
+                      <p className="upload-card-subtitle">Upload passport back side image in JPEG, PNG, GIF, or WebP format.</p>
                     </div>
                     <div>
                       {selectedMedicineUrl ? <FileImage size={22} color="var(--a1, #635bff)" /> : <Upload size={22} color="var(--a1, #635bff)" />}
@@ -1246,12 +1246,12 @@ export default function StudentDocumentsPage({ students = [], search = '', onStu
 
                   <div className="upload-preview">
                     {selectedMedicineUrl ? (
-                      <img src={selectedMedicineUrl} alt="Medicine preview" />
+                      <img src={selectedMedicineUrl} alt="Passport back side preview" />
                     ) : (
                       <div className="upload-preview-empty">
                         <FileImage size={38} strokeWidth={1.8} />
                         <div>
-                          <div style={{ fontWeight: 800, color: 'var(--t1, #0c0e18)' }}>No medicine image yet</div>
+                          <div style={{ fontWeight: 800, color: 'var(--t1, #0c0e18)' }}>No back side image yet</div>
                           <div style={{ marginTop: 4, fontSize: 12 }}>Choose one image to upload</div>
                         </div>
                       </div>
@@ -1273,11 +1273,11 @@ export default function StudentDocumentsPage({ students = [], search = '', onStu
                     />
                     <label className="upload-btn" htmlFor="medicine-image-input" style={{ pointerEvents: uploadState.medicine.loading ? 'none' : 'auto' }}>
                       {uploadState.medicine.loading ? <LoaderCircle size={16} className="spin" /> : selectedMedicineUrl ? <FileImage size={16} /> : <Upload size={16} />}
-                      {uploadState.medicine.loading ? 'Uploading...' : selectedMedicineUrl ? 'Replace medicine' : 'Upload medicine'}
+                      {uploadState.medicine.loading ? 'Uploading...' : selectedMedicineUrl ? 'Replace back side' : 'Upload back side'}
                     </label>
                     {selectedMedicineUrl && (
                       <button type="button" className="upload-btn-secondary" onClick={() => openImage(selectedMedicineUrl)} disabled={uploadState.medicine.loading}>
-                        <FileImage size={16} /> View medicine
+                        <FileImage size={16} /> View back side
                       </button>
                     )}
                   </div>
@@ -1287,7 +1287,7 @@ export default function StudentDocumentsPage({ students = [], search = '', onStu
                       <div className="upload-progress">
                         <div className="upload-progress-fill" style={{ width: `${uploadState.medicine.progress}%` }} />
                       </div>
-                      <div className="upload-progress-text">Uploading medicine image: {uploadState.medicine.progress}%</div>
+                      <div className="upload-progress-text">Uploading back side image: {uploadState.medicine.progress}%</div>
                     </div>
                   )}
                 </article>

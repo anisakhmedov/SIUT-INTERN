@@ -293,6 +293,22 @@ const normalizeStatus = (status) => {
   return "Pending";
 };
 
+const getUserInitials = (user) => {
+  const fullName = [user?.name, user?.surname, user?.lastname]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+
+  if (!fullName) return "U";
+
+  return fullName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("") || "U";
+};
+
 const ALL_APP_ROLES = ["admin", "tutor", "professor", "rector", "student"];
 const NAV_PERMISSIONS = {
   Dashboard: ALL_APP_ROLES,
@@ -2688,6 +2704,7 @@ export default function App() {
   const [students, setStudents] = useState([]); // Add students state
   const [openCommentTarget, setOpenCommentTarget] = useState(null);
   const [sessionMessage, setSessionMessage] = useState("");
+  const userInitials = useMemo(() => user?.initials || getUserInitials(user), [user]);
 
   // Convenience wrapper functions for state updates
   const handleCloseSidebar = () => setSbOpen(false);
@@ -3163,7 +3180,7 @@ export default function App() {
         ></div>
       )}
       <div className="shell">
-        <div className="sb">
+        <div className={`sb ${sbOpen ? 'open' : ''}`}>
           <div className="sb-top">
             <div className="sb-icon">
               <GraduationCap size={20} color="white" />
@@ -3189,7 +3206,7 @@ export default function App() {
           
           <div className="spf" onClick={handleToggleDd}>
             <div className="av" style={{ background: user?.avatarBg || "linear-gradient(135deg,#635bff,#06c9a0)" }}>
-              {user?.initials || "U"}
+              {userInitials}
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ color: "#fff", fontSize: 13, fontWeight: 600 }}>
@@ -3234,7 +3251,7 @@ export default function App() {
                 <Menu size={16} />
               </button>
               <div className="av" style={{ background: "linear-gradient(135deg,#635bff,#06c9a0)" }}>
-                {user?.initials || "U"}
+                {userInitials}
               </div>
             </div>
           </div>

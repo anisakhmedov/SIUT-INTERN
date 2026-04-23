@@ -582,6 +582,17 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
       || faculty?.supervisorName
       || (typeof tutorSource === 'string' ? tutorSource.trim() : '');
 
+    // Calculate initials from name and surname
+    const getInitials = (name) => {
+      if (!name) return 'U';
+      return name
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0]?.toUpperCase())
+        .join('') || 'U';
+    };
+
     const tutorContact =
       (typeof tutorSource === 'object'
         ? tutorSource?.phone || tutorSource?.email || tutorSource?.login
@@ -593,12 +604,27 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
     return {
       name: tutorName,
       contact: tutorContact,
+      initials: getInitials(tutorName),
       hasInfo: Boolean(tutorName || tutorContact),
     };
   }, [faculty]);
  
-  const canWriteReport = true; // Allow anyone to write comments
-  const canEditInternship = user?.role === 'Tutor' || user?.role === 'Admin';
+  // Check if current tutor is assigned to this faculty
+  const isAssignedTutor = useMemo(() => {
+    if (user?.role !== 'Tutor' || !faculty) return false;
+    const tutorSource = faculty?.tutorID || faculty?.tutor || faculty?.supervisor;
+    if (!tutorSource) return false;
+    
+    // Check if tutorSource matches current user
+    const tutorId = typeof tutorSource === 'object' ? tutorSource?._id || tutorSource?.id : tutorSource;
+    const userId = user?.id || user?._id;
+    
+    return tutorId && userId && tutorId === userId;
+  }, [user, faculty]);
+ 
+  const canWriteReport = user?.role === 'Admin' || isAssignedTutor; // Only Admin or assigned Tutor can write reports
+  const canWriteComments = true; // Allow anyone to write comments
+  const canEditInternship = user?.role === 'Admin' || isAssignedTutor;
   const canApprove = user?.role === 'Admin';
   const canExport = user?.role === 'Admin';
 
@@ -1098,16 +1124,41 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
     const text = newComment.trim();
     if (!text || !currentDay) return;
     
-    const newCommentObj = {
-      text: text,
-      date: new Date().toISOString(),
-      userID: user?.id || user?._id || 'anonymous'
-    };
-    
-    const comments = [...(currentDay.comments || []), newCommentObj];
-    await updateDay(currentDay, { ...currentDay, comments }, dayIndex);
-    setNewComment('');
-  }, [currentDay, newComment, updateDay, dayIndex, user]);
+    setSubmitting(true);
+    try {
+      const dayId = getDayId(currentDay) ?? (dayIndex != null ? String(dayIndex) : null);
+      if (!dayId) throw new Error('Day could not be identified.');
+      
+      // Try to post comment via POST endpoint
+      const newCommentObj = {
+        text: text,
+        date: new Date().toISOString(),
+        userID: user?.id || user?._id || 'anonymous'
+      };
+      
+      await post(`/faculty/${facultyId}/days/${dayId}/comments`, newCommentObj);
+      await fetchFaculty();
+      setNewComment('');
+      toast.success('Comment added.');
+    } catch (err) {
+      // Fallback: try PATCH approach
+      try {
+        const newCommentObj = {
+          text: text,
+          date: new Date().toISOString(),
+          userID: user?.id || user?._id || 'anonymous'
+        };
+        
+        const comments = [...(currentDay.comments || []), newCommentObj];
+        await updateDay(currentDay, { ...currentDay, comments }, dayIndex);
+        setNewComment('');
+      } catch (fallbackErr) {
+        toast.error(fallbackErr.message || 'Failed to add comment.');
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  }, [currentDay, newComment, updateDay, dayIndex, user, facultyId, fetchFaculty, getDayId]);
 
   const handleAddDayClick = useCallback(() => {
     setNewDayDate(new Date().toISOString().slice(0, 10));
@@ -1464,8 +1515,30 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
               </div>
               {tutorInfo.hasInfo ? (
                 <div className="ip-tutor-body">
-                  <strong className="ip-tutor-name">{tutorInfo.name || 'No information'}</strong>
-                  <span className="ip-tutor-contact">{tutorInfo.contact || 'No contact information'}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 8,
+                        background: 'linear-gradient(135deg,#635bff,#06c9a0)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontFamily: 'Syne',
+                        fontWeight: 700,
+                        color: '#fff',
+                        fontSize: 13,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {tutorInfo.initials}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <strong className="ip-tutor-name">{tutorInfo.name || 'No information'}</strong>
+                      <span className="ip-tutor-contact">{tutorInfo.contact || 'No contact information'}</span>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <p className="ip-tutor-empty">No information available.</p>
@@ -1566,34 +1639,36 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
             </div>
           </header>
 
-          <div className="ip-actions">
-            {canApprove && (
-              <button
-                type="button"
-                className="ip-btn ip-btn--primary"
-                disabled={!currentDay || submitting || currentDay?.approved}
-                onClick={handleApprove}
-              >
-                Approve report
-              </button>
-            )}
-            {canExport && (
-              <button type="button" className="ip-btn ip-btn--primary" onClick={() => window.print()}>
-                Export PDF
-              </button>
-            )}
-            {canExport && (
-              <button
-                type="button"
-                className="ip-btn ip-btn--primary"
-                onClick={handleFinalReport}
-                disabled={submitting || finalReportLoading}
-                title="Generate final AI report"
-              >
-                {finalReportLoading ? 'Generating…' : 'Final report'}
-              </button>
-            )}
-          </div>
+          {(canApprove || canExport) && (
+            <div className="ip-actions">
+              {canApprove && (
+                <button
+                  type="button"
+                  className="ip-btn ip-btn--primary"
+                  disabled={!currentDay || submitting || currentDay?.approved}
+                  onClick={handleApprove}
+                >
+                  Approve report
+                </button>
+              )}
+              {canExport && (
+                <button type="button" className="ip-btn ip-btn--primary" onClick={() => window.print()}>
+                  Export PDF
+                </button>
+              )}
+              {canExport && (
+                <button
+                  type="button"
+                  className="ip-btn ip-btn--primary"
+                  onClick={handleFinalReport}
+                  disabled={submitting || finalReportLoading}
+                  title="Generate final AI report"
+                >
+                  {finalReportLoading ? 'Generating…' : 'Final report'}
+                </button>
+              )}
+            </div>
+          )}
 
           {showReportForm && currentDay && (
             <div className="ip-report-form-card">
@@ -1891,7 +1966,7 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                     </div>
                   )}
 
-                  {(currentDay.comments?.length > 0 || canWriteReport) && (
+                  {(currentDay.comments?.length > 0 || canWriteComments) && (
                     <div className="ip-comments" ref={commentsSectionRef}>
                       <h4 className="ip-comments-title">Comments ({currentDay.comments?.length || 0})</h4>
                       {currentDay.comments && currentDay.comments.length > 0 && (
@@ -1918,7 +1993,7 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                           })}
                         </ul>
                       )}
-                      {canWriteReport && (
+                      {canWriteComments && (
                         <form className="ip-comment-form" onSubmit={handlePostComment}>
                           <input
                             type="text"

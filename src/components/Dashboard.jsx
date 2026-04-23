@@ -131,6 +131,18 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
     return faculty?.tutorContact || faculty?.supervisorContact || "N/A";
   };
 
+  const getSupervisorInitials = (faculty) => {
+    const supervisorLabel = getSupervisorLabel(faculty);
+    if (!supervisorLabel || supervisorLabel === "Not assigned") return "U";
+    
+    return supervisorLabel
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join("") || "U";
+  };
+
   const getWhenLabel = (faculty) => {
     const formatDate = (value) => {
       if (!value) return "";
@@ -739,7 +751,27 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
                           )}
                         </div>
                         <p className="dw-card-row">
-                          Who: <strong>{getSupervisorLabel(faculty)}</strong>
+                          Who: <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                            <div
+                              style={{
+                                width: 28,
+                                height: 28,
+                                borderRadius: 6,
+                                background: 'linear-gradient(135deg,#635bff,#06c9a0)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontFamily: 'Syne',
+                                fontWeight: 700,
+                                color: '#fff',
+                                fontSize: 11,
+                                flexShrink: 0,
+                              }}
+                            >
+                              {getSupervisorInitials(faculty)}
+                            </div>
+                            <strong>{getSupervisorLabel(faculty)}</strong>
+                          </div>
                         </p>
                         <p className="dw-card-row">
                           Where:

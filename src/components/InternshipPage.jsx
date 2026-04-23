@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { createPortal } from 'react-dom';
 import { get, patch, post } from '../utils/apiClient';
 import { toast } from '../utils/toast';
+import { generateFinalReport } from '../utils/finalReportApi';
+import { getAuthTokenFromStorage } from '../utils/storageUtils';
 
 const INTERNSHIP_STATUS_OPTIONS = ['Pending', 'In Progress', 'Completed'];
 
@@ -104,7 +106,81 @@ function renderSimpleMarkdown(text) {
   return chunks.join('');
 }
 
-export default function InternshipPage({ facultyId, onBack, user, initialDayIndex, focusCommentKey }) {
+function CustomFilterSelect({ id, value, onChange, options = [] }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const rootRef = useRef(null);
+
+  const selectedOption = useMemo(
+    () => options.find((option) => option.value === value) || options[0] || null,
+    [options, value],
+  );
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const handlePointerDown = (event) => {
+      if (!rootRef.current?.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen]);
+
+  return (
+    <div className="ip-custom-select" ref={rootRef}>
+      <button
+        id={id}
+        type="button"
+        className={`ip-custom-trigger ${isOpen ? 'ip-custom-trigger--open' : ''}`}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((current) => !current)}
+      >
+        <span className="ip-custom-trigger-text">{selectedOption?.label || 'Select option'}</span>
+        <span className={`ip-custom-chevron ${isOpen ? 'ip-custom-chevron--open' : ''}`}></span>
+      </button>
+
+      {isOpen && (
+        <div className="ip-custom-menu" role="listbox" aria-labelledby={id}>
+          {options.map((option) => {
+            const isSelected = option.value === value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                role="option"
+                aria-selected={isSelected}
+                className={`ip-custom-option ${isSelected ? 'ip-custom-option--selected' : ''}`}
+                onClick={() => {
+                  onChange(option.value);
+                  setIsOpen(false);
+                }}
+              >
+                <span>{option.label}</span>
+                {isSelected && <span className="ip-custom-option-mark">✓</span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function InternshipPage({ facultyId, onBack, user, initialDayIndex, focusCommentKey, students = [] }) {
   const [faculty, setFaculty] = useState(null);
   const [dayIndex, setDayIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -132,6 +208,16 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
   const [newDayDate, setNewDayDate] = useState(new Date().toISOString().slice(0, 10));
   const [highlightedCommentKey, setHighlightedCommentKey] = useState('');
   const [showStudents, setShowStudents] = useState(false);
+  const [showStudentManager, setShowStudentManager] = useState(false);
+  const [studentSearchTerm, setStudentSearchTerm] = useState('');
+  const [selectedStudentIds, setSelectedStudentIds] = useState([]);
+  const [selectedStudentFaculty, setSelectedStudentFaculty] = useState('all');
+  const [selectedStudentYear, setSelectedStudentYear] = useState('all');
+  const [showPlan, setShowPlan] = useState(true);
+  const [showFinalReportModal, setShowFinalReportModal] = useState(false);
+  const [finalReportLoading, setFinalReportLoading] = useState(false);
+  const [finalReportMarkdown, setFinalReportMarkdown] = useState('');
+  const [finalReportError, setFinalReportError] = useState('');
   const commentsSectionRef = useRef(null);
   const reportDescriptionRef = useRef(null);
   const planEditorRef = useRef(null);
@@ -167,6 +253,60 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
     if (!comment) return `idx-${index}`;
     return String(comment._id || `${comment.date || ''}-${comment.text || ''}-${index}`);
   }, []);
+
+  const getStudentId = useCallback((student) => {
+    if (!student) return '';
+    return String(student._id ?? student.id ?? student.studentId ?? '').trim();
+  }, []);
+
+  const getStudentName = useCallback((student) => {
+    if (!student) return 'Unnamed student';
+    return [student.name, student.surname, student.lastname].filter(Boolean).join(' ').trim() || 'Unnamed student';
+  }, []);
+
+  const getStudentFacultyName = useCallback((student) => {
+    if (!student) return '';
+    if (typeof student.nameFaculty === 'string' && student.nameFaculty.trim()) return student.nameFaculty.trim();
+    if (typeof student?.faculty === 'object' && student.faculty) {
+      return String(student.faculty.name || student.faculty.title || '').trim();
+    }
+    return '';
+  }, []);
+
+  const getStudentYear = useCallback((student) => {
+    if (!student) return '';
+
+    const rawYear = student.year ?? student.faculty?.year ?? student.facultyYear ?? student.courseYear;
+    if (rawYear == null || rawYear === '') return '';
+
+    return String(rawYear).trim();
+  }, []);
+
+  const normalizeStudentRecord = useCallback((student) => {
+    if (!student) return null;
+
+    if (typeof student === 'string' || typeof student === 'number') {
+      const studentId = String(student).trim();
+      return studentId ? { _id: studentId } : null;
+    }
+
+    const studentId = getStudentId(student);
+    const normalized = {
+      name: typeof student.name === 'string' ? student.name : '',
+      surname: typeof student.surname === 'string' ? student.surname : '',
+      lastname: typeof student.lastname === 'string' ? student.lastname : '',
+      nameFaculty: getStudentFacultyName(student),
+      year: getStudentYear(student),
+    };
+
+    if (studentId) {
+      normalized._id = studentId;
+    } else if (typeof student.id === 'string' && student.id.trim()) {
+      normalized.id = student.id.trim();
+    }
+
+    return normalized;
+  }, [getStudentFacultyName, getStudentId, getStudentYear]);
 
   const extractImageUrls = useCallback((day) => {
     if (!day) return [];
@@ -241,17 +381,387 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
     if (Array.isArray(faculty?.students)) return faculty.students;
     return [];
   }, [faculty]);
+  const attachedStudentIds = useMemo(() => {
+    return new Set(attachedStudents.map((student) => getStudentId(student)).filter(Boolean));
+  }, [attachedStudents, getStudentId]);
+  const getOwnershipTokens = useCallback((value) => {
+    const tokens = new Set();
+    const pushValue = (item) => {
+      if (item == null) return;
+      const token = String(item).trim();
+      if (token) tokens.add(token.toLowerCase());
+    };
+
+    if (Array.isArray(value)) {
+      value.forEach(pushValue);
+      return tokens;
+    }
+
+    if (value && typeof value === 'object') {
+      [value._id, value.id, value.login, value.username, value.email].forEach(pushValue);
+      return tokens;
+    }
+
+    pushValue(value);
+    return tokens;
+  }, []);
+  const canManageStudents = useMemo(() => {
+    const role = String(user?.role || '').trim().toLowerCase();
+    if (role === 'admin') return true;
+    if (role !== 'tutor') return false;
+
+    const currentUserTokens = getOwnershipTokens([
+      user?._id,
+      user?.id,
+      user?.login,
+      user?.username,
+      user?.email,
+    ]);
+    if (currentUserTokens.size === 0) return false;
+
+    const facultyTutorTokens = getOwnershipTokens([
+      faculty?.tutorID,
+      faculty?.tutor,
+      faculty?.supervisor,
+      faculty?.tutorID?._id,
+      faculty?.tutorID?.id,
+      faculty?.tutorID?.login,
+      faculty?.tutorID?.username,
+      faculty?.tutorID?.email,
+      faculty?.tutor?._id,
+      faculty?.tutor?.id,
+      faculty?.tutor?.login,
+      faculty?.tutor?.username,
+      faculty?.tutor?.email,
+    ]);
+
+    for (const token of facultyTutorTokens) {
+      if (currentUserTokens.has(token)) return true;
+    }
+
+    return false;
+  }, [faculty, getOwnershipTokens, user]);
+  const openStudentManager = useCallback(() => {
+    setStudentSearchTerm('');
+    setSelectedStudentIds([]);
+    setSelectedStudentFaculty('all');
+    setSelectedStudentYear('all');
+    setShowStudentManager(true);
+  }, []);
+  const studentDirectory = useMemo(() => {
+    const term = studentSearchTerm.trim().toLowerCase();
+    const sourceStudents = Array.isArray(students) ? students : [];
+    const selectedFacultyValue = String(selectedStudentFaculty || 'all').trim().toLowerCase();
+    const selectedYearValue = String(selectedStudentYear || 'all').trim().toLowerCase();
+
+    return sourceStudents
+      .filter((student) => {
+        if (!term) return true;
+
+        const searchable = [
+          getStudentId(student),
+          getStudentName(student),
+          getStudentFacultyName(student),
+        ].join(' ').toLowerCase();
+
+        return searchable.includes(term);
+      })
+      .filter((student) => {
+        if (selectedFacultyValue === 'all') return true;
+        return String(getStudentFacultyName(student)).trim().toLowerCase() === selectedFacultyValue;
+      })
+      .filter((student) => {
+        if (selectedYearValue === 'all') return true;
+        return String(getStudentYear(student)).trim().toLowerCase() === selectedYearValue;
+      })
+      .map((student) => {
+        const studentId = getStudentId(student);
+        const studentYear = getStudentYear(student);
+        return {
+          student,
+          studentId,
+          studentName: getStudentName(student),
+          studentFacultyName: getStudentFacultyName(student),
+          studentYear,
+          isAttached: studentId ? attachedStudentIds.has(studentId) : false,
+        };
+      })
+      .sort((a, b) => {
+        const facultyA = String(a.studentFacultyName || '').trim().toLowerCase();
+        const facultyB = String(b.studentFacultyName || '').trim().toLowerCase();
+        if (facultyA !== facultyB) {
+          if (!facultyA) return 1;
+          if (!facultyB) return -1;
+          return facultyA.localeCompare(facultyB);
+        }
+
+        const yearA = Number.parseInt(a.studentYear, 10);
+        const yearB = Number.parseInt(b.studentYear, 10);
+        const hasYearA = Number.isFinite(yearA);
+        const hasYearB = Number.isFinite(yearB);
+
+        if (hasYearA && hasYearB && yearA !== yearB) return yearA - yearB;
+        if (hasYearA !== hasYearB) return hasYearA ? -1 : 1;
+        return a.studentName.localeCompare(b.studentName);
+      });
+  }, [attachedStudentIds, getStudentFacultyName, getStudentId, getStudentName, getStudentYear, selectedStudentFaculty, selectedStudentYear, studentSearchTerm, students]);
+  const availableStudentFaculties = useMemo(() => {
+    const faculties = new Set();
+    (Array.isArray(students) ? students : []).forEach((student) => {
+      const facultyName = getStudentFacultyName(student);
+      if (facultyName) faculties.add(facultyName);
+    });
+
+    return Array.from(faculties).sort((a, b) => a.localeCompare(b));
+  }, [getStudentFacultyName, students]);
+  const availableStudentYears = useMemo(() => {
+    const years = new Set();
+    (Array.isArray(students) ? students : []).forEach((student) => {
+      const year = getStudentYear(student);
+      if (year) years.add(year);
+    });
+
+    return Array.from(years).sort((a, b) => {
+      const yearA = Number.parseInt(a, 10);
+      const yearB = Number.parseInt(b, 10);
+      if (Number.isFinite(yearA) && Number.isFinite(yearB) && yearA !== yearB) return yearA - yearB;
+      return a.localeCompare(b);
+    });
+  }, [getStudentYear, students]);
+  const facultyFilterOptions = useMemo(
+    () => [
+      { value: 'all', label: 'All faculties' },
+      ...availableStudentFaculties.map((facultyName) => ({ value: facultyName, label: facultyName })),
+    ],
+    [availableStudentFaculties],
+  );
+  const yearFilterOptions = useMemo(
+    () => [
+      { value: 'all', label: 'All years' },
+      ...availableStudentYears.map((year) => ({ value: year, label: year })),
+    ],
+    [availableStudentYears],
+  );
   const reportedDaysCount = useMemo(() => days.filter((day) => hasReportContent(day)).length, [days]);
   const progressPercent = useMemo(() => calculateProgressPercent(days), [days]);
   const computedProgressLabel = useMemo(() => `${progressPercent}%`, [progressPercent]);
   const progressHue = useMemo(() => Math.round((progressPercent / 100) * 120), [progressPercent]);
   const currentDay = days[dayIndex];
   const currentDayImageUrls = useMemo(() => extractImageUrls(currentDay), [extractImageUrls, currentDay]);
+  const tutorInfo = useMemo(() => {
+    const tutorSource = faculty?.tutorID || faculty?.tutor || faculty?.supervisor || null;
+
+    const tutorName = [
+      typeof tutorSource === 'object' ? tutorSource?.name : '',
+      typeof tutorSource === 'object' ? tutorSource?.surname : '',
+      typeof tutorSource === 'object' ? tutorSource?.lastname : '',
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .trim()
+      || faculty?.tutorName
+      || faculty?.supervisorName
+      || (typeof tutorSource === 'string' ? tutorSource.trim() : '');
+
+    const tutorContact =
+      (typeof tutorSource === 'object'
+        ? tutorSource?.phone || tutorSource?.email || tutorSource?.login
+        : '')
+      || faculty?.tutorContact
+      || faculty?.supervisorContact
+      || '';
+
+    return {
+      name: tutorName,
+      contact: tutorContact,
+      hasInfo: Boolean(tutorName || tutorContact),
+    };
+  }, [faculty]);
  
   const canWriteReport = user?.role === 'Tutor' || user?.role === 'Admin';
   const canEditInternship = user?.role === 'Tutor' || user?.role === 'Admin';
   const canApprove = user?.role === 'Admin';
   const canExport = user?.role === 'Admin';
+
+  const handleFinalReport = useCallback(async () => {
+    if (!faculty) {
+      toast.error('Internship data is not ready yet. Please try again.');
+      return;
+    }
+
+    const normalizeImageUrls = (rawImages) => {
+      if (!Array.isArray(rawImages)) return [];
+      return rawImages
+        .map((item) => {
+          if (typeof item === 'string') return item;
+          if (item && typeof item.url === 'string') return item.url;
+          return null;
+        })
+        .filter(Boolean);
+    };
+
+    const reportDays = days.slice(0, 30).map((day, index) => {
+      const shortReportImages = normalizeImageUrls(day?.shortReport?.images);
+      const dayImages = normalizeImageUrls(day?.images);
+      const photoUrls = Array.from(new Set([...shortReportImages, ...dayImages]));
+
+      const comments = Array.isArray(day?.comments)
+        ? day.comments.map((comment) => ({
+          text: typeof comment?.text === 'string' ? comment.text : String(comment || ''),
+          date: comment?.date || null,
+          userID: typeof comment?.userID === 'object'
+            ? (comment.userID?._id || comment.userID?.id || null)
+            : (comment?.userID || null),
+        }))
+        : [];
+
+      return {
+        dayNumber: day?.dayNumber || index + 1,
+        date: day?.date || null,
+        approved: Boolean(day?.approved),
+        shortReport: {
+          title: typeof day?.shortReport?.title === 'string' ? day.shortReport.title : '',
+          description: typeof day?.shortReport?.description === 'string' ? day.shortReport.description : '',
+        },
+        comments,
+        photoUrls,
+      };
+    });
+
+    const payload = {
+      internship: {
+        id: faculty?._id || faculty?.id || facultyId,
+        name: faculty?.name || '',
+        company: faculty?.company || '',
+        location: faculty?.location || '',
+        status: faculty?.status || '',
+        duration: faculty?.duration || null,
+        plan: faculty?.plan || '',
+        progressAll: faculty?.progressAll || '',
+        students: attachedStudents.map((student) => ({
+          id: student?._id || student?.id || student?.studentId || null,
+          name: [student?.name, student?.surname, student?.lastname].filter(Boolean).join(' ').trim(),
+          faculty: student?.nameFaculty || null,
+        })),
+      },
+      days: reportDays,
+      reportType: 'final-30-day-report',
+    };
+
+    setFinalReportLoading(true);
+    setFinalReportError('');
+    setFinalReportMarkdown('');
+    setShowFinalReportModal(true);
+
+    try {
+      const token = getAuthTokenFromStorage();
+      const response = await generateFinalReport(payload, token);
+
+      setFinalReportMarkdown(response.report);
+      toast.success('Final report generated successfully.');
+    } catch (error) {
+      const message = error?.message || 'Failed to generate AI final report.';
+      setFinalReportError(message);
+      toast.error(message);
+    } finally {
+      setFinalReportLoading(false);
+    }
+  }, [attachedStudents, days, faculty, facultyId]);
+
+  const updateStudentAssignments = useCallback(async (nextStudents, successMessage) => {
+    if (!faculty) return false;
+    if (!canManageStudents) {
+      toast.error('You do not have permission to manage students for this internship.');
+      return false;
+    }
+
+    const normalizedStudents = [];
+    const seenStudentKeys = new Set();
+
+    (Array.isArray(nextStudents) ? nextStudents : []).forEach((student) => {
+      const normalizedStudent = normalizeStudentRecord(student);
+      if (!normalizedStudent) return;
+
+      const studentKey = normalizedStudent._id || normalizedStudent.id || [normalizedStudent.name, normalizedStudent.surname, normalizedStudent.lastname].filter(Boolean).join('|');
+      if (!studentKey || seenStudentKeys.has(studentKey)) return;
+
+      seenStudentKeys.add(studentKey);
+      normalizedStudents.push(normalizedStudent);
+    });
+
+    setSubmitting(true);
+    try {
+      await patch(`/faculty/${facultyId}`, { numberOfStudents: normalizedStudents });
+      await fetchFaculty();
+      toast.success(successMessage);
+      return true;
+    } catch (err) {
+      toast.error(err.message || 'Something went wrong.');
+      return false;
+    } finally {
+      setSubmitting(false);
+    }
+  }, [canManageStudents, faculty, facultyId, fetchFaculty, normalizeStudentRecord]);
+
+  const handleAttachStudent = useCallback(async (student) => {
+    const studentId = getStudentId(student);
+    if (!studentId) {
+      toast.error('Student could not be identified.');
+      return;
+    }
+
+    const nextStudents = [...attachedStudents, student];
+    await updateStudentAssignments(nextStudents, 'Student attached to the internship.');
+  }, [attachedStudents, getStudentId, updateStudentAssignments]);
+
+  const handleDetachStudent = useCallback(async (student) => {
+    const studentId = getStudentId(student);
+    if (!studentId) {
+      toast.error('Student could not be identified.');
+      return;
+    }
+
+    const nextStudents = attachedStudents.filter((item) => getStudentId(item) !== studentId);
+    await updateStudentAssignments(nextStudents, 'Student detached from the internship.');
+  }, [attachedStudents, getStudentId, updateStudentAssignments]);
+
+  const handleToggleStudentSelection = useCallback((studentId) => {
+    if (!studentId) return;
+    setSelectedStudentIds((current) => {
+      if (current.includes(studentId)) {
+        return current.filter((id) => id !== studentId);
+      }
+
+      return [...current, studentId];
+    });
+  }, []);
+
+  const handleAttachSelectedStudents = useCallback(async () => {
+    if (selectedStudentIds.length === 0) {
+      toast.warning('Select at least one student first.');
+      return;
+    }
+
+    const selectedLookup = new Set(selectedStudentIds);
+    const studentsToAttach = studentDirectory
+      .filter(({ studentId, isAttached }) => studentId && selectedLookup.has(studentId) && !isAttached)
+      .map(({ student }) => student);
+
+    if (studentsToAttach.length === 0) {
+      toast.warning('Selected students are already attached or could not be found.');
+      return;
+    }
+
+    const nextStudents = [...attachedStudents, ...studentsToAttach];
+    const didSave = await updateStudentAssignments(
+      nextStudents,
+      `Added ${studentsToAttach.length} student(s) to the internship.`,
+    );
+
+    if (didSave) {
+      setSelectedStudentIds([]);
+    }
+  }, [attachedStudents, selectedStudentIds, studentDirectory, updateStudentAssignments]);
 
   useEffect(() => {
     if (!faculty || isInternshipEditMode) return;
@@ -615,6 +1125,12 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
 
   useEffect(() => {
     setShowStudents(false);
+    setShowStudentManager(false);
+    setStudentSearchTerm('');
+    setSelectedStudentIds([]);
+    setSelectedStudentFaculty('all');
+    setSelectedStudentYear('all');
+    setShowPlan(true);
   }, [facultyId]);
 
   useEffect(() => {
@@ -840,30 +1356,56 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
             <div className="ip-plan-card" aria-label="Internship plan">
               <div className="ip-plan-header">
                 <span className="ip-hero-label">Plan</span>
+                <button
+                  type="button"
+                  className="ip-student-action-btn"
+                  onClick={() => setShowPlan((prev) => !prev)}
+                >
+                  {showPlan ? 'Close plan' : 'Open plan'}
+                </button>
               </div>
-              <div className="ip-format-toolbar" role="toolbar" aria-label="Plan text formatting">
-                <button type="button" className="ip-format-btn" disabled={!isInternshipEditMode} onClick={() => applyFormatting(planEditorRef, setBaseInfoPlan, '**', '**', 'bold')}>Bold</button>
-                <button type="button" className="ip-format-btn" disabled={!isInternshipEditMode} onClick={() => applyFormatting(planEditorRef, setBaseInfoPlan, '_', '_', 'italic')}>Italic</button>
-                <button type="button" className="ip-format-btn" disabled={!isInternshipEditMode} onClick={() => applyFormatting(planEditorRef, setBaseInfoPlan, '## ', '', 'Heading')}>H2</button>
-                <button type="button" className="ip-format-btn" disabled={!isInternshipEditMode} onClick={() => applyFormatting(planEditorRef, setBaseInfoPlan, '- ', '', 'List item')}>List</button>
+              {showPlan && (
+                <>
+                  <div className="ip-format-toolbar" role="toolbar" aria-label="Plan text formatting">
+                    <button type="button" className="ip-format-btn" disabled={!isInternshipEditMode} onClick={() => applyFormatting(planEditorRef, setBaseInfoPlan, '**', '**', 'bold')}>Bold</button>
+                    <button type="button" className="ip-format-btn" disabled={!isInternshipEditMode} onClick={() => applyFormatting(planEditorRef, setBaseInfoPlan, '_', '_', 'italic')}>Italic</button>
+                    <button type="button" className="ip-format-btn" disabled={!isInternshipEditMode} onClick={() => applyFormatting(planEditorRef, setBaseInfoPlan, '## ', '', 'Heading')}>H2</button>
+                    <button type="button" className="ip-format-btn" disabled={!isInternshipEditMode} onClick={() => applyFormatting(planEditorRef, setBaseInfoPlan, '- ', '', 'List item')}>List</button>
+                  </div>
+                  <div className="ip-plan-text">
+                    {isInternshipEditMode ? (
+                      <textarea
+                        ref={planEditorRef}
+                        className="ip-input ip-plan-editor"
+                        value={baseInfoPlan}
+                        onChange={(e) => setBaseInfoPlan(e.target.value)}
+                        rows={10}
+                        placeholder="Internship plan"
+                      />
+                    ) : (
+                      <div
+                        className="ip-plan-rendered"
+                        dangerouslySetInnerHTML={{ __html: renderSimpleMarkdown(baseInfoPlan) }}
+                      ></div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="ip-tutor-card" aria-label="Internship tutor">
+              <div className="ip-tutor-head">
+                <span className="ip-summary-label">Tutor</span>
+                <span className="ip-tutor-badge">Assigned</span>
               </div>
-              <div className="ip-plan-text">
-                {isInternshipEditMode ? (
-                  <textarea
-                    ref={planEditorRef}
-                    className="ip-input ip-plan-editor"
-                    value={baseInfoPlan}
-                    onChange={(e) => setBaseInfoPlan(e.target.value)}
-                    rows={10}
-                    placeholder="Internship plan"
-                  />
-                ) : (
-                  <div
-                    className="ip-plan-rendered"
-                    dangerouslySetInnerHTML={{ __html: renderSimpleMarkdown(baseInfoPlan) }}
-                  ></div>
-                )}
-              </div>
+              {tutorInfo.hasInfo ? (
+                <div className="ip-tutor-body">
+                  <strong className="ip-tutor-name">{tutorInfo.name || 'No information'}</strong>
+                  <span className="ip-tutor-contact">{tutorInfo.contact || 'No contact information'}</span>
+                </div>
+              ) : (
+                <p className="ip-tutor-empty">No information available.</p>
+              )}
             </div>
 
             <div className="ip-students-card" aria-label="Attached students">
@@ -872,33 +1414,84 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                   <span className="ip-summary-label">Students</span>
                   <strong className="ip-summary-value">{attachedStudents.length} attached</strong>
                 </div>
-                <button
-                  type="button"
-                  className="ip-eye-btn"
-                  onClick={() => setShowStudents((prev) => !prev)}
-                  aria-label={showStudents ? 'Hide attached students' : 'Show attached students'}
-                  aria-expanded={showStudents}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
-                  </svg>
-                </button>
+                <div className="ip-students-head-actions">
+                  {canManageStudents && (
+                    <button
+                      type="button"
+                      className="ip-student-action-btn"
+                      onClick={openStudentManager}
+                      disabled={submitting || !Array.isArray(students) || students.length === 0}
+                    >
+                      Manage students
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="ip-eye-btn"
+                    onClick={() => setShowStudents((prev) => !prev)}
+                    aria-label={showStudents ? 'Hide attached students' : 'Show attached students'}
+                    aria-expanded={showStudents}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                      className={`ip-eye-chevron ${showStudents ? 'ip-eye-chevron--open' : ''}`}
+                    >
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </button>
+                </div>
               </div>
 
               {showStudents && (
                 <div className="ip-students-list-wrap">
                   {attachedStudents.length === 0 ? (
-                    <p className="ip-students-empty">No students attached to this internship.</p>
+                    <div className="ip-students-empty-state">
+                      <p className="ip-students-empty">No students attached to this internship.</p>
+                      {canManageStudents && (
+                        <button
+                          type="button"
+                          className="ip-student-action-btn"
+                          onClick={openStudentManager}
+                          disabled={submitting || !Array.isArray(students) || students.length === 0}
+                        >
+                          Attach students
+                        </button>
+                      )}
+                    </div>
                   ) : (
                     <ul className="ip-students-list">
                       {attachedStudents.map((student, index) => {
-                        const studentId = student?._id || student?.id || `student-${index}`;
-                        const studentName = [student?.name, student?.surname, student?.lastname].filter(Boolean).join(' ').trim() || 'Unnamed student';
+                        const studentId = getStudentId(student) || `student-${index}`;
+                        const studentName = getStudentName(student);
                         return (
                           <li key={studentId} className="ip-student-item">
-                            <span className="ip-student-name">{studentName}</span>
-                            {student?.nameFaculty && <span className="ip-student-faculty">{student.nameFaculty}</span>}
+                            <div className="ip-student-copy">
+                              <span className="ip-student-name">{studentName}</span>
+                              {getStudentFacultyName(student) && <span className="ip-student-faculty">{getStudentFacultyName(student)}</span>}
+                            </div>
+                            {canManageStudents && (
+                              <button
+                                type="button"
+                                className="ip-student-action-btn ip-student-action-btn--ghost"
+                                onClick={() => handleDetachStudent(student)}
+                                disabled={submitting}
+                              >
+                                Detach
+                              </button>
+                            )}
                           </li>
                         );
                       })}
@@ -923,6 +1516,17 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
             {canExport && (
               <button type="button" className="ip-btn ip-btn--primary" onClick={() => window.print()}>
                 Export PDF
+              </button>
+            )}
+            {canExport && (
+              <button
+                type="button"
+                className="ip-btn ip-btn--primary"
+                onClick={handleFinalReport}
+                disabled={submitting || finalReportLoading}
+                title="Generate final AI report"
+              >
+                {finalReportLoading ? 'Generating…' : 'Final report'}
               </button>
             )}
           </div>
@@ -1391,6 +1995,194 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                     disabled={submitting}
                   >
                     {submitting ? 'Adding…' : 'Add Day'}
+                  </button>
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )}
+
+          {showStudentManager && typeof document !== 'undefined' && createPortal(
+            <div className="ip-modal-overlay" onClick={() => setShowStudentManager(false)}>
+              <div className="ip-modal-content ip-modal-content--wide" onClick={(e) => e.stopPropagation()}>
+                <div className="ip-modal-header">
+                  <h3 className="ip-modal-title">Manage students</h3>
+                  <button
+                    type="button"
+                    className="ip-close-btn"
+                    onClick={() => setShowStudentManager(false)}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                </div>
+
+                <div className="ip-modal-body">
+                  <label className="ip-label" htmlFor="student-search">Search students</label>
+                  <input
+                    id="student-search"
+                    type="text"
+                    value={studentSearchTerm}
+                    onChange={(e) => setStudentSearchTerm(e.target.value)}
+                    className="ip-input"
+                    placeholder="Search by name or faculty"
+                  />
+
+                  <div className="ip-student-filter-row">
+                    <div className="ip-filter-card">
+                      <label className="ip-label" htmlFor="student-faculty-filter">Faculty</label>
+                      <CustomFilterSelect
+                        id="student-faculty-filter"
+                        value={selectedStudentFaculty}
+                        onChange={setSelectedStudentFaculty}
+                        options={facultyFilterOptions}
+                      />
+                    </div>
+
+                    <div className="ip-filter-card">
+                      <label className="ip-label" htmlFor="student-year-filter">Faculty year</label>
+                      <CustomFilterSelect
+                        id="student-year-filter"
+                        value={selectedStudentYear}
+                        onChange={setSelectedStudentYear}
+                        options={yearFilterOptions}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="ip-student-manager-meta">
+                    <span>{attachedStudents.length} attached</span>
+                    <span>{studentDirectory.length} matching students</span>
+                    <span>{selectedStudentIds.length} selected</span>
+                  </div>
+
+                  {studentDirectory.length === 0 ? (
+                    <div className="ip-student-manager-empty">No students found.</div>
+                  ) : (
+                    <div className="ip-student-manager-list">
+                      {studentDirectory.map(({ student, studentId, studentName, studentFacultyName, studentYear, isAttached }) => (
+                        <label key={studentId || studentName} className="ip-student-manager-row">
+                          <input
+                            type="checkbox"
+                            className="ip-student-check"
+                            checked={Boolean(studentId && selectedStudentIds.includes(studentId))}
+                            onChange={() => handleToggleStudentSelection(studentId)}
+                            disabled={submitting || isAttached || !studentId}
+                            aria-label={`Select ${studentName}`}
+                          />
+                          <div className="ip-student-copy">
+                            <strong className="ip-student-name">{studentName}</strong>
+                            {studentFacultyName && <span className="ip-student-faculty">{studentFacultyName}</span>}
+                            {studentYear && <span className="ip-student-faculty">Year {studentYear}</span>}
+                          </div>
+                          <div className="ip-student-manager-actions">
+                            <span className={`ip-student-badge ${isAttached ? 'ip-student-badge--attached' : 'ip-student-badge--free'}`}>
+                              {isAttached ? 'Attached' : 'Available'}
+                            </span>
+                            {isAttached && (
+                              <button
+                                type="button"
+                                className="ip-student-action-btn"
+                                onClick={(event) => {
+                                  event.preventDefault();
+                                  handleDetachStudent(student);
+                                }}
+                                disabled={submitting}
+                              >
+                                Detach
+                              </button>
+                            )}
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="ip-modal-footer">
+                  <button
+                    type="button"
+                    className="ip-btn ip-btn--secondary"
+                    onClick={() => setShowStudentManager(false)}
+                  >
+                    Done
+                  </button>
+                  <button
+                    type="button"
+                    className="ip-btn ip-btn--primary"
+                    onClick={handleAttachSelectedStudents}
+                    disabled={submitting || selectedStudentIds.length === 0}
+                  >
+                    {submitting ? 'Adding…' : `Add selected (${selectedStudentIds.length})`}
+                  </button>
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )}
+
+          {showFinalReportModal && typeof document !== 'undefined' && createPortal(
+            <div className="ip-modal-overlay" onClick={() => setShowFinalReportModal(false)}>
+              <div className="ip-modal-content ip-modal-content--wide" onClick={(e) => e.stopPropagation()}>
+                <div className="ip-modal-header">
+                  <h3 className="ip-modal-title">AI Final Report (30 Days)</h3>
+                  <button
+                    type="button"
+                    className="ip-close-btn"
+                    onClick={() => setShowFinalReportModal(false)}
+                    aria-label="Close final report"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                </div>
+
+                <div className="ip-modal-body">
+                  {finalReportLoading && (
+                    <div className="ip-final-report-state">Generating report from internship data, daily texts, and photos…</div>
+                  )}
+
+                  {!finalReportLoading && finalReportError && (
+                    <div className="ip-final-report-state ip-final-report-state--error">{finalReportError}</div>
+                  )}
+
+                  {!finalReportLoading && !finalReportError && finalReportMarkdown && (
+                    <div
+                      className="ip-final-report-body"
+                      dangerouslySetInnerHTML={{ __html: renderSimpleMarkdown(finalReportMarkdown) }}
+                    ></div>
+                  )}
+                </div>
+
+                <div className="ip-modal-footer">
+                  <button
+                    type="button"
+                    className="ip-btn ip-btn--secondary"
+                    onClick={() => setShowFinalReportModal(false)}
+                  >
+                    Close
+                  </button>
+                  {finalReportError && (
+                    <button
+                      type="button"
+                      className="ip-btn ip-btn--primary"
+                      onClick={handleFinalReport}
+                      disabled={finalReportLoading}
+                    >
+                      Retry
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="ip-btn ip-btn--primary"
+                    onClick={() => window.print()}
+                    disabled={finalReportLoading || !finalReportMarkdown}
+                  >
+                    Print final report
                   </button>
                 </div>
               </div>
@@ -1870,15 +2662,66 @@ const ipStyles = `
     background: rgba(248,250,255,.95);
     border: 1px solid rgba(99,91,255,.08);
   }
+  .ip-tutor-card {
+    margin-top: 14px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: rgba(248,250,255,.95);
+    border: 1px solid rgba(99,91,255,.08);
+  }
+  .ip-tutor-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .ip-tutor-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: #116c52;
+    background: rgba(6,201,160,.12);
+  }
+  .ip-tutor-body {
+    display: grid;
+    gap: 4px;
+  }
+  .ip-tutor-name {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--t1, #0c0e18);
+  }
+  .ip-tutor-contact {
+    font-size: 12px;
+    color: var(--t2, #5a6278);
+  }
+  .ip-tutor-empty {
+    margin: 0;
+    font-size: 13px;
+    color: var(--t2, #5a6278);
+  }
   .ip-students-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
   }
+  .ip-students-head-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
   .ip-eye-btn {
-    width: 34px;
+    min-width: 34px;
     height: 34px;
+    padding: 0 8px;
     border-radius: 10px;
     border: 1px solid rgba(99,91,255,.22);
     background: rgba(99,91,255,.08);
@@ -1886,12 +2729,55 @@ const ipStyles = `
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 4px;
     cursor: pointer;
     transition: all .2s ease;
   }
   .ip-eye-btn:hover {
     background: rgba(99,91,255,.16);
     border-color: rgba(99,91,255,.35);
+  }
+  .ip-student-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid rgba(99,91,255,.18);
+    background: rgba(99,91,255,.08);
+    color: var(--a1, #635bff);
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease, transform .15s ease;
+  }
+  .ip-student-action-btn svg {
+    flex-shrink: 0;
+  }
+  .ip-eye-chevron {
+    transition: transform .2s ease;
+  }
+  .ip-eye-chevron--open {
+    transform: rotate(180deg);
+  }
+  .ip-student-action-btn:hover:not(:disabled) {
+    background: rgba(99,91,255,.14);
+    border-color: rgba(99,91,255,.34);
+    transform: translateY(-1px);
+  }
+  .ip-student-action-btn:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .ip-student-action-btn--ghost {
+    background: rgba(255,255,255,.84);
+    color: var(--t1, #0c0e18);
+    border-color: rgba(0,0,0,.12);
+  }
+  .ip-student-action-btn--ghost:hover:not(:disabled) {
+    background: rgba(0,0,0,.03);
+    border-color: rgba(0,0,0,.18);
   }
   .ip-students-list-wrap {
     margin-top: 12px;
@@ -1915,6 +2801,11 @@ const ipStyles = `
     background: rgba(255,255,255,.82);
     border: 1px solid rgba(0,0,0,.06);
   }
+  .ip-student-copy {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+  }
   .ip-student-name {
     font-size: 13px;
     font-weight: 700;
@@ -1928,6 +2819,233 @@ const ipStyles = `
     margin: 0;
     font-size: 13px;
     color: var(--t2, #5a6278);
+  }
+  .ip-students-empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .ip-modal-content--wide {
+    width: min(920px, calc(100vw - 32px));
+  }
+  .ip-final-report-state {
+    padding: 14px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(99,91,255,.16);
+    background: rgba(99,91,255,.06);
+    color: var(--t2, #5a6278);
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  .ip-final-report-state--error {
+    border-color: rgba(239,68,68,.22);
+    background: rgba(239,68,68,.08);
+    color: #991b1b;
+  }
+  .ip-final-report-body {
+    max-height: min(64vh, 760px);
+    overflow: auto;
+    padding: 14px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(0,0,0,.08);
+    background: rgba(255,255,255,.95);
+    color: var(--t1, #0c0e18);
+    line-height: 1.7;
+    font-size: 14px;
+  }
+  .ip-final-report-body p {
+    margin: 0 0 10px;
+  }
+  .ip-final-report-body p:last-child {
+    margin-bottom: 0;
+  }
+  .ip-final-report-body h3 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    line-height: 1.35;
+  }
+  .ip-final-report-body ul {
+    margin: 0 0 10px 18px;
+    padding: 0;
+  }
+  .ip-final-report-body li {
+    margin-bottom: 6px;
+  }
+  .ip-student-manager-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 12px 0 8px;
+    font-size: 12px;
+    color: var(--t3, #9ba3bb);
+  }
+  .ip-student-filter-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .ip-filter-card {
+    display: grid;
+    gap: 8px;
+    padding: 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(99,91,255,.14);
+    background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(248,250,255,.92));
+  }
+  .ip-custom-select {
+    position: relative;
+  }
+  .ip-custom-trigger {
+    width: 100%;
+    min-height: 44px;
+    border-radius: 12px;
+    border: 1.5px solid rgba(99,91,255,.2);
+    background: rgba(255,255,255,.95);
+    color: var(--t1, #0c0e18);
+    font-family: 'Epilogue', system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    cursor: pointer;
+    transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+  }
+  .ip-custom-trigger:hover {
+    border-color: rgba(99,91,255,.42);
+    background: rgba(255,255,255,.98);
+  }
+  .ip-custom-trigger--open {
+    border-color: rgba(99,91,255,.58);
+    box-shadow: 0 0 0 4px rgba(99,91,255,.14);
+  }
+  .ip-custom-trigger-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ip-custom-chevron {
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid rgba(76,86,122,.85);
+    border-bottom: 2px solid rgba(76,86,122,.85);
+    transform: rotate(45deg);
+    transition: transform .2s ease;
+    flex-shrink: 0;
+    margin-top: -2px;
+  }
+  .ip-custom-chevron--open {
+    transform: rotate(-135deg);
+    margin-top: 3px;
+  }
+  .ip-custom-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 20;
+    border-radius: 12px;
+    border: 1px solid rgba(99,91,255,.2);
+    background: rgba(255,255,255,.98);
+    box-shadow: 0 18px 40px rgba(12,14,24,.12);
+    max-height: 240px;
+    overflow: auto;
+    padding: 6px;
+  }
+  .ip-custom-option {
+    width: 100%;
+    border: none;
+    background: transparent;
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    color: var(--t1, #0c0e18);
+    font-family: 'Epilogue', system-ui, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .ip-custom-option:hover {
+    background: rgba(99,91,255,.08);
+  }
+  .ip-custom-option--selected {
+    background: linear-gradient(135deg, rgba(99,91,255,.12), rgba(6,201,160,.12));
+    color: #4338ca;
+  }
+  .ip-custom-option-mark {
+    font-size: 12px;
+    font-weight: 800;
+    color: #4338ca;
+  }
+  .ip-student-manager-list {
+    display: grid;
+    gap: 10px;
+    margin-top: 14px;
+    max-height: min(54vh, 520px);
+    overflow: auto;
+    padding-right: 4px;
+  }
+  .ip-student-manager-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(0,0,0,.08);
+    background: rgba(248,250,255,.9);
+  }
+  .ip-student-manager-row:has(.ip-student-check:checked) {
+    border-color: rgba(99,91,255,.34);
+    box-shadow: 0 0 0 3px rgba(99,91,255,.08);
+  }
+  .ip-student-check {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--a1, #635bff);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .ip-student-manager-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .ip-student-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  .ip-student-badge--attached {
+    color: #116c52;
+    background: rgba(6,201,160,.12);
+  }
+  .ip-student-badge--free {
+    color: #7a5417;
+    background: rgba(255,193,7,.16);
+  }
+  .ip-student-manager-empty {
+    margin-top: 14px;
+    padding: 16px;
+    border-radius: 14px;
+    background: rgba(248,250,255,.9);
+    border: 1px dashed rgba(99,91,255,.24);
+    color: var(--t2, #5a6278);
+    font-size: 13px;
   }
   .ip-actions {
     display: flex;
@@ -2000,6 +3118,11 @@ const ipStyles = `
   .ip-select:focus {
     border-color: rgba(99,91,255,.55);
     box-shadow: 0 0 0 4px rgba(99,91,255,.14);
+  }
+  @media (max-width: 820px) {
+    .ip-student-filter-row {
+      grid-template-columns: 1fr;
+    }
   }
   .ip-day-btns { display: flex; gap: 8px; }
   .ip-day-card {

@@ -999,13 +999,13 @@ export default function CreatePage({ onSubmit, onCancel, students = [], user = n
         }
         .form-input {
           width: 100%;
-          padding: 12px 16px;
+          padding: clamp(10px,2vw,12px) clamp(12px,2vw,16px);
           border-radius: 12px;
           border: 1.5px solid rgba(0,0,0,.10);
           background: rgba(0,0,0,.03);
           color: var(--t1, #0c0e18);
           font-family: 'Epilogue', system-ui, sans-serif;
-          font-size: 14px;
+          font-size: clamp(13px,2vw,14px);
           outline: none;
           transition: border-color .2s ease, box-shadow .2s ease;
           box-sizing: border-box;
@@ -1016,22 +1016,28 @@ export default function CreatePage({ onSubmit, onCancel, students = [], user = n
         }
         .form-row {
           display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 16px;
+          grid-template-columns: repeat(auto-fit, minmax(clamp(140px,40vw,1fr), 1fr));
+          gap: clamp(12px,2vw,16px);
+        }
+        @media(max-width:640px){
+          .form-row {
+            grid-template-columns: 1fr;
+          }
         }
         .btn {
           display: inline-flex;
           align-items: center;
           justify-content: center;
           gap: 8px;
-          padding: 10px 16px;
+          padding: clamp(8px,1.5vw,10px) clamp(12px,2vw,16px);
           border-radius: 12px;
           font-family: 'Epilogue', system-ui, sans-serif;
-          font-size: 13px;
+          font-size: clamp(12px,2vw,13px);
           font-weight: 700;
           cursor: pointer;
           transition: transform .15s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
           border: none;
+          white-space: nowrap;
         }
         .btn-primary {
           border: 1px solid rgba(99,91,255,.18);

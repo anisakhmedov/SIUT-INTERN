@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { subscribeToasts } from '../utils/toast';
 
 const TYPE_META = {
@@ -30,24 +31,55 @@ const TYPE_META = {
 
 export default function ToastViewport() {
   const [toasts, setToasts] = useState([]);
+  const timersRef = useRef(new Map());
 
   useEffect(() => {
     return subscribeToasts((incomingToast) => {
-      setToasts((current) => [...current, incomingToast]);
+      setToasts((current) => {
+        const next = [...current, incomingToast];
+        return next.slice(-5);
+      });
     });
   }, []);
 
   useEffect(() => {
-    if (!toasts.length) return undefined;
+    toasts.forEach((item) => {
+      if (timersRef.current.has(item.id)) return;
 
-    const timers = toasts.map((item) => setTimeout(() => {
-      setToasts((current) => current.filter((toastItem) => toastItem.id !== item.id));
-    }, item.duration));
+      const timerId = setTimeout(() => {
+        setToasts((current) => current.filter((toastItem) => toastItem.id !== item.id));
+        timersRef.current.delete(item.id);
+      }, item.duration);
 
+      timersRef.current.set(item.id, timerId);
+    });
+
+    const ids = new Set(toasts.map((item) => item.id));
+    Array.from(timersRef.current.keys()).forEach((id) => {
+      if (ids.has(id)) return;
+      clearTimeout(timersRef.current.get(id));
+      timersRef.current.delete(id);
+    });
+
+    return undefined;
+  }, [toasts]);
+
+  useEffect(() => {
+    const timers = timersRef.current;
     return () => {
       timers.forEach((timerId) => clearTimeout(timerId));
+      timers.clear();
     };
-  }, [toasts]);
+  }, []);
+
+  const removeToast = (id) => {
+    const timerId = timersRef.current.get(id);
+    if (timerId) {
+      clearTimeout(timerId);
+      timersRef.current.delete(id);
+    }
+    setToasts((current) => current.filter((item) => item.id !== id));
+  };
 
   const renderedToasts = useMemo(
     () => toasts.map((item) => {
@@ -55,95 +87,142 @@ export default function ToastViewport() {
       return (
         <div
           key={item.id}
-          style={{
-            width: 'min(340px, calc(100vw - 32px))',
-            borderRadius: 14,
-            border: `1px solid ${meta.border}`,
-            background: meta.bg,
-            color: meta.color,
-            boxShadow: '0 12px 26px rgba(15,23,42,.14)',
-            backdropFilter: 'blur(6px)',
-            padding: '10px 12px',
-            display: 'grid',
-            gridTemplateColumns: '24px 1fr auto',
-            alignItems: 'start',
-            gap: 10,
-            animation: 'toast-slide-in .24s ease-out',
-          }}
+          className="tv-toast"
+          style={{ borderColor: meta.border, background: meta.bg, color: meta.color }}
           role="status"
           aria-live="polite"
         >
-          <span
-            aria-hidden="true"
-            style={{
-              width: 24,
-              height: 24,
-              borderRadius: 999,
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontWeight: 700,
-              border: `1px solid ${meta.border}`,
-              background: 'rgba(255,255,255,.55)',
-            }}
-          >
+          <span aria-hidden="true" className="tv-icon" style={{ borderColor: meta.border }}>
             {meta.icon}
           </span>
-          <span style={{ fontSize: 13, lineHeight: 1.45, paddingTop: 2 }}>{item.message}</span>
+          <span className="tv-message">{item.message}</span>
           <button
             type="button"
             aria-label="Dismiss notification"
-            onClick={() => setToasts((current) => current.filter((toastItem) => toastItem.id !== item.id))}
-            style={{
-              width: 22,
-              height: 22,
-              borderRadius: 8,
-              border: `1px solid ${meta.border}`,
-              background: 'rgba(255,255,255,.55)',
-              color: meta.color,
-              cursor: 'pointer',
-              fontSize: 14,
-              lineHeight: 1,
-              marginTop: 1,
-            }}
+            onClick={() => removeToast(item.id)}
+            className="tv-close"
+            style={{ borderColor: meta.border, color: meta.color }}
           >
             ×
           </button>
+          <div className="tv-progress" style={{ animationDuration: `${item.duration}ms` }}></div>
         </div>
       );
     }),
     [toasts],
   );
 
-  if (!toasts.length) return null;
+  if (!toasts.length || typeof document === 'undefined') return null;
 
-  return (
+  return createPortal(
     <>
       <style>{`
-        @keyframes toast-slide-in {
+        .tv-root {
+          position: fixed;
+          right: 16px;
+          bottom: 16px;
+          z-index: 1500;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 10px;
+          pointer-events: none;
+        }
+        .tv-item { pointer-events: auto; }
+        .tv-toast {
+          position: relative;
+          overflow: hidden;
+          width: min(360px, calc(100vw - 24px));
+          border-radius: 14px;
+          border: 1px solid;
+          box-shadow: 0 12px 26px rgba(15,23,42,.14);
+          backdrop-filter: blur(6px);
+          padding: 12px 12px;
+          display: grid;
+          grid-template-columns: 24px 1fr auto;
+          align-items: start;
+          gap: 10px;
+          animation: tv-slide-in .24s ease-out;
+        }
+        .tv-icon {
+          width: 24px;
+          height: 24px;
+          border-radius: 999px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 700;
+          border: 1px solid;
+          background: rgba(255,255,255,.55);
+        }
+        .tv-message {
+          font-size: 13px;
+          line-height: 1.45;
+          padding-top: 2px;
+          color: #0f172a;
+          text-wrap: pretty;
+        }
+        .tv-close {
+          width: 30px;
+          height: 30px;
+          border-radius: 10px;
+          border: 1px solid;
+          background: rgba(255,255,255,.55);
+          cursor: pointer;
+          font-size: 20px;
+          font-weight: 500;
+          line-height: 1;
+          margin-top: -2px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          transition: transform .16s ease, background-color .16s ease;
+          padding: 0;
+        }
+        .tv-close:hover {
+          transform: scale(1.04);
+          background: rgba(255,255,255,.8);
+        }
+        .tv-progress {
+          position: absolute;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          height: 3px;
+          background: linear-gradient(90deg, rgba(99,91,255,.9), rgba(6,201,160,.9));
+          transform-origin: left;
+          animation-name: tv-progress;
+          animation-timing-function: linear;
+          animation-fill-mode: forwards;
+        }
+        @keyframes tv-slide-in {
           from { opacity: 0; transform: translateX(26px) scale(.98); }
           to { opacity: 1; transform: translateX(0) scale(1); }
         }
+        @keyframes tv-progress {
+          from { transform: scaleX(1); }
+          to { transform: scaleX(0); }
+        }
+        @media (max-width: 600px) {
+          .tv-root {
+            right: 12px;
+            left: 12px;
+            bottom: 12px;
+            align-items: stretch;
+          }
+          .tv-toast {
+            width: 100%;
+          }
+        }
       `}</style>
-      <div
-        style={{
-          position: 'fixed',
-          right: 16,
-          bottom: 16,
-          zIndex: 1200,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-end',
-          gap: 10,
-          pointerEvents: 'none',
-        }}
-      >
+      <div className="tv-root">
         {renderedToasts.map((node, index) => (
-          <div key={toasts[index].id} style={{ pointerEvents: 'auto' }}>
+          <div key={toasts[index].id} className="tv-item">
             {node}
           </div>
         ))}
       </div>
-    </>
+    </>,
+    document.body,
   );
 }

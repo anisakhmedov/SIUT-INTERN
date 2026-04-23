@@ -170,29 +170,6 @@ export default function LoginPage({ onLogin, onUserSet, sessionMessage = '' }) {
           onChange={(ev) => setF((p) => ({ ...p, password: ev.target.value }))}
           onKeyDown={(ev) => ev.key === 'Enter' && go()}
         />
-        <div
-          style={{
-            display: 'flex',
-            gap: 8,
-            justifyContent: 'flex-end',
-            marginBottom: 16,
-          }}
-        >
-          <button
-            className="bg"
-            onClick={() =>
-              setF((p) => ({
-                ...p,
-                login: 'admin',
-                password: 'admin123',
-              }))
-            }
-            style={{ fontSize: 12 }}
-            type="button"
-          >
-            Demo Login
-          </button>
-        </div>
           <button className="lbtn" onClick={go} type="button">
           {loading && (
             <div

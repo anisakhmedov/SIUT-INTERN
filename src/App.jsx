@@ -64,6 +64,7 @@ import CreateTutorPage from "./components/CreateTutorPage";
 import StudentDocumentsPage from "./components/StudentDocumentsPage";
 import UserEducationPage from "./components/UserEducationPage";
 import ToastViewport from "./components/ToastViewport";
+import PageState from "./components/PageState";
 
 /* ═══════════════════════════════════════════════
    STYLES
@@ -98,7 +99,7 @@ html,body{height:100%;font-family:'Epilogue',sans-serif;background:var(--bg);}
 /* LOGIN */
 .lw{min-height:100vh;width:100vw;background:linear-gradient(140deg,#090b14 0%,#131728 60%,#090b14 100%);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
 .lblob{position:absolute;border-radius:50%;filter:blur(88px);pointer-events:none;}
-.lcard{position:relative;z-index:2;width:100%;max-width:438px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);border-radius:28px;padding:46px 42px;backdrop-filter:blur(28px);animation:fadeUp .68s cubic-bezier(.22,1,.36,1) both;}
+.lcard{position:relative;z-index:2;width:100%;max-width:clamp(280px,90vw,438px);background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);border-radius:clamp(20px,3vw,28px);padding:clamp(28px,6vw,46px) clamp(20px,5vw,42px);backdrop-filter:blur(28px);animation:fadeUp .68s cubic-bezier(.22,1,.36,1) both;}
 .linput{width:100%;padding:13px 16px;margin-bottom:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:11px;color:#fff;font-family:'Epilogue',sans-serif;font-size:14px;outline:none;transition:all .24s;}
 .linput::placeholder{color:rgba(255,255,255,.3);}
 .linput:focus{border-color:var(--a1);box-shadow:0 0 0 3px rgba(99,91,255,.18);background:rgba(99,91,255,.08);}
@@ -123,7 +124,7 @@ html,body{height:100%;font-family:'Epilogue',sans-serif;background:var(--bg);}
 .ii{padding:8px 9px;border-radius:8px;transition:all .18s;cursor:pointer;margin-bottom:2px;}
 .ii:hover{background:rgba(255,255,255,.054);}
 .ii.sel{background:rgba(99,91,255,.16);}
-.spf{margin:auto 12px 0;padding:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.055);border-radius:12px;display:flex;align-items:center;gap:8px;cursor:pointer;transition:all .18s;position:relative;}
+.spf{margin:auto 12px 12px;padding:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.055);border-radius:12px;display:flex;align-items:center;gap:8px;cursor:pointer;transition:all .18s;position:relative;}
 .spf:hover{background:rgba(255,255,255,.07);}
 .av{width:35px;height:35px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;flex-shrink:0;}
 .sdd{position:absolute;bottom:50px;left:0;right:0;background:#171b2e;border:1px solid rgba(255,255,255,.085);border-radius:10px;overflow:hidden;animation:scaleIn .17s ease;z-index:100;}
@@ -133,11 +134,11 @@ html,body{height:100%;font-family:'Epilogue',sans-serif;background:var(--bg);}
 /* MAIN */
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .tbar{position:sticky;top:0;z-index:9;background:rgba(240,241,247,.88);backdrop-filter:blur(20px);border-bottom:1px solid rgba(0,0,0,.06);padding:12px 26px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
-.sbox{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:10px;padding:8px 14px;width:252px;transition:all .24s;}
-.sbox input{border:none;outline:none;background:transparent;font-family:'Epilogue',sans-serif;font-size:13px;flex:1;color:var(--t1);}
+.sbox{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:10px;padding:8px 14px;width:clamp(140px,25vw,252px);transition:all .24s;font-size:clamp(12px,2vw,13px);}
+.sbox input{border:none;outline:none;background:transparent;font-family:'Epilogue',sans-serif;font-size:inherit;flex:1;color:var(--t1);}
 .sbox:focus-within{border-color:var(--a1);box-shadow:0 0 0 3px rgba(99,91,255,.1);}
 .sa{flex:1;overflow-y:auto;overflow-x:hidden;}
-.pp{padding:26px 26px 40px;}
+.pp{padding:clamp(12px,3vw,26px) clamp(12px,3vw,26px) clamp(24px,4vw,40px);}
 
 /* CARDS */
 .mc{background:var(--card);border:1px solid rgba(255,255,255,.88);border-radius:var(--r);padding:21px;backdrop-filter:blur(20px);box-shadow:var(--sh);transition:all .27s;cursor:pointer;position:relative;overflow:hidden;}
@@ -168,17 +169,40 @@ html,body{height:100%;font-family:'Epilogue',sans-serif;background:var(--bg);}
 .fi:focus{border-color:var(--a1);background:rgba(99,91,255,.04);box-shadow:0 0 0 3px rgba(99,91,255,.1);}
 .fl{font-size:11.5px;font-weight:600;color:var(--t2);margin-bottom:4px;display:block;}
 textarea.fi{resize:vertical;min-height:80px;}
-.mo{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:50;animation:fadeIn .18s ease;}
-.mb{background:#fff;border-radius:22px;padding:28px;width:100%;max-width:498px;animation:scaleIn .26s cubic-bezier(.22,1,.36,1);max-height:90vh;overflow-y:auto;}
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:50;animation:fadeIn .18s ease;padding:clamp(16px,3vw,32px);}
+.mb{background:#fff;border-radius:clamp(16px,3vw,22px);padding:clamp(18px,4vw,28px);width:100%;max-width:clamp(300px,85vw,498px);animation:scaleIn .26s cubic-bezier(.22,1,.36,1);max-height:90vh;overflow-y:auto;}
 .ndot{width:7px;height:7px;background:var(--a3);border-radius:50%;position:absolute;top:-2px;right:-2px;animation:dotP 2s ease infinite;}
 .hmb{display:none;}
-@media(max-width:900px){
+
+/* ════════════════════════════════
+   MOBILE & TABLET BREAKPOINTS
+════════════════════════════════ */
+@media(max-width:640px){
+  /* SIDEBAR: мобиль — скрыто */
+  .sb{position:fixed;top:0;left:0;bottom:0;width:75vw;max-width:280px;transform:translateX(-100%);z-index:100;}
+  .sb.open{transform:translateX(0);}
+  .hmb{display:flex;}
+  .tbar{padding:10px 12px;gap:8px;}
+  .sbox{width:100%;max-width:140px;font-size:12px;}
+  .pp{padding:12px 12px 28px;}
+  .lcard{padding:32px 20px;border-radius:20px;max-width:calc(100vw - 24px);}
+  .linput{font-size:13px;padding:11px 14px;}
+  .lbtn{padding:12px;font-size:14px;}
+  .mb{padding:20px;border-radius:18px;max-width:calc(100vw - 20px);}
+  .mo{padding:16px;}
+}
+@media(min-width:641px) and (max-width:1024px){
+  /* TABLET: средний вид */
+  .sbox{width:180px;font-size:12px;}
+  .pp{padding:18px 16px 32px;}
+  .tbar{padding:10px 16px;}
+}
+@media(max-width:1024px){
+  /* до 1024px */
   .sb{position:fixed;top:0;left:0;bottom:0;transform:translateX(-100%);z-index:100;}
   .sb.open{transform:translateX(0);}
   .hmb{display:flex;}
-  .sbox{width:170px;}
-  .pp{padding:14px 12px 30px;}
-  .tbar{padding:9px 13px;}
+  .da{font-size:11px;padding:7px 12px;gap:5px;}
 }
 
 /* ════════════════════════════════
@@ -187,28 +211,33 @@ textarea.fi{resize:vertical;min-height:80px;}
 .dp{display:flex;flex-direction:column;height:100%;animation:slideR .42s cubic-bezier(.22,1,.36,1) both;}
 
 /* hero header */
-.dh{background:linear-gradient(135deg,#0c0e18 0%,#1a1d30 100%);padding:26px 30px 22px;position:relative;overflow:hidden;flex-shrink:0;}
+.dh{background:linear-gradient(135deg,#0c0e18 0%,#1a1d30 100%);padding:clamp(16px,3vw,30px) clamp(14px,4vw,30px) clamp(14px,3vw,22px);position:relative;overflow:hidden;flex-shrink:0;}
 .dhb{position:absolute;border-radius:50%;filter:blur(72px);pointer-events:none;}
 
 /* breadcrumb back btn */
-.bk{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.13);border-radius:9px;padding:6px 12px;cursor:pointer;color:rgba(255,255,255,.68);font-family:'Epilogue',sans-serif;font-size:12px;font-weight:600;transition:all .2s;}
+.bk{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.13);border-radius:9px;padding:6px 12px;cursor:pointer;color:rgba(255,255,255,.68);font-family:'Epilogue',sans-serif;font-size:clamp(11px,2vw,12px);font-weight:600;transition:all .2s;}
 .bk:hover{background:rgba(255,255,255,.16);}
 
 /* action buttons in hero */
-.da{display:inline-flex;align-items:center;gap:7px;padding:8px 15px;border-radius:10px;border:none;font-family:'Epilogue',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.da{display:inline-flex;align-items:center;gap:7px;padding:8px 15px;border-radius:10px;border:none;font-family:'Epilogue',sans-serif;font-size:clamp(11px,2vw,12px);font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;}
 .da:hover{transform:translateY(-1px);}
 
 /* day rail */
-.dr{display:flex;gap:6px;overflow-x:auto;padding:13px 26px;background:#fff;border-bottom:1px solid rgba(0,0,0,.07);flex-shrink:0;scrollbar-width:none;}
+.dr{display:flex;gap:6px;overflow-x:auto;padding:clamp(8px,2vw,13px) clamp(12px,3vw,26px);background:#fff;border-bottom:1px solid rgba(0,0,0,.07);flex-shrink:0;scrollbar-width:none;}
 .dr::-webkit-scrollbar{display:none;}
-.dp-pill{padding:5px 14px;border-radius:999px;font-size:12px;font-weight:600;cursor:pointer;transition:all .19s;white-space:nowrap;border:none;font-family:'Epilogue',sans-serif;}
+.dp-pill{padding:5px 14px;border-radius:999px;font-size:clamp(11px,2vw,12px);font-weight:600;cursor:pointer;transition:all .19s;white-space:nowrap;border:none;font-family:'Epilogue',sans-serif;}
 .dp-pill.on{background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;box-shadow:0 4px 12px rgba(99,91,255,.34);}
 .dp-pill:not(.on){background:rgba(0,0,0,.06);color:var(--t2);}
 .dp-pill:not(.on):hover{background:rgba(99,91,255,.1);color:var(--a1);}
 
 /* detail body scroll */
-.db{flex:1;overflow-y:auto;overflow-x:hidden;padding:26px 30px 48px;scroll-behavior:smooth;}
-@media(max-width:900px){.db{padding:14px 13px 32px;}.dh{padding:18px 14px 16px;}.dr{padding:10px 13px;}}
+.db{flex:1;overflow-y:auto;overflow-x:hidden;padding:clamp(12px,3vw,30px) clamp(12px,3vw,30px) clamp(24px,4vw,48px);scroll-behavior:smooth;}
+@media(max-width:640px){
+  .db{padding:12px 12px 32px;}
+  .dh{padding:14px 12px 12px;}
+  .dr{padding:8px 12px;}
+  .da{padding:6px 10px;font-size:10px;}
+}
 
 /* tutor card */
 .tc{display:flex;align-items:center;gap:15px;background:rgba(255,255,255,.72);border:1px solid rgba(255,255,255,.9);border-radius:15px;padding:17px 19px;backdrop-filter:blur(20px);box-shadow:var(--sh);margin-bottom:20px;}
@@ -228,14 +257,14 @@ textarea.fi{resize:vertical;min-height:80px;}
 .ab{display:flex;align-items:center;gap:11px;padding:11px 18px;background:rgba(6,201,160,.08);border-bottom:1px solid rgba(6,201,160,.15);animation:fadeUp .28s ease;flex-shrink:0;}
 
 /* comments panel */
-.cp{position:fixed;top:0;right:0;bottom:0;width:388px;background:#fff;box-shadow:-6px 0 38px rgba(0,0,0,.13);z-index:200;display:flex;flex-direction:column;animation:panelIn .33s cubic-bezier(.22,1,.36,1) both;}
-@media(max-width:600px){.cp{width:100%;}}
-.cph{padding:17px 19px 14px;border-bottom:1px solid rgba(0,0,0,.07);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.cpl{flex:1;overflow-y:auto;padding:4px 19px;}
-.cpf{padding:13px 17px 17px;border-top:1px solid rgba(0,0,0,.07);flex-shrink:0;}
-.ci{display:flex;gap:10px;padding:13px 0;border-bottom:1px solid rgba(0,0,0,.05);animation:fadeUp .3s ease both;}
+.cp{position:fixed;top:0;right:0;bottom:0;width:clamp(280px,75vw,388px);background:#fff;box-shadow:-6px 0 38px rgba(0,0,0,.13);z-index:200;display:flex;flex-direction:column;animation:panelIn .33s cubic-bezier(.22,1,.36,1) both;}
+@media(max-width:640px){.cp{width:100%;}}
+.cph{padding:clamp(12px,2vw,17px) clamp(14px,3vw,19px) clamp(10px,2vw,14px);border-bottom:1px solid rgba(0,0,0,.07);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;font-size:clamp(13px,2vw,15px);}
+.cpl{flex:1;overflow-y:auto;padding:4px clamp(12px,3vw,19px);}
+.cpf{padding:clamp(10px,2vw,13px) clamp(12px,3vw,17px) clamp(12px,2vw,17px);border-top:1px solid rgba(0,0,0,.07);flex-shrink:0;}
+.ci{display:flex;gap:clamp(6px,2vw,10px);padding:clamp(10px,2vw,13px) 0;border-bottom:1px solid rgba(0,0,0,.05);animation:fadeUp .3s ease both;font-size:clamp(12px,2vw,13px);}
 .ci:last-child{border-bottom:none;}
-.ca{width:33px;height:33px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;color:#fff;font-size:10.5px;flex-shrink:0;}
+.ca{width:clamp(28px,6vw,33px);height:clamp(28px,6vw,33px);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;color:#fff;font-size:clamp(9px,1.8vw,10.5px);flex-shrink:0;}
 
 /* lightbox */
 .lb{position:fixed;inset:0;background:rgba(0,0,0,.93);backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center;z-index:300;animation:fadeIn .18s ease;cursor:zoom-out;}
@@ -263,6 +292,25 @@ const normalizeStatus = (status) => {
   if (raw === "in progress" || raw === "active") return "In Progress";
   return "Pending";
 };
+
+const ALL_APP_ROLES = ["admin", "tutor", "professor", "rector", "student"];
+const NAV_PERMISSIONS = {
+  Dashboard: ALL_APP_ROLES,
+  Students: ["admin", "tutor", "professor", "rector"],
+  Feedback: ["admin", "tutor", "professor", "rector"],
+  "User Education": ALL_APP_ROLES,
+  "Create Tutors": ["admin"],
+  Settings: ["admin"],
+};
+
+function normalizeRole(role) {
+  return String(role || "").trim().toLowerCase();
+}
+
+function canAccessNav(role, label) {
+  const allowedRoles = NAV_PERMISSIONS[label] || [];
+  return allowedRoles.includes(normalizeRole(role));
+}
 
 const DAY_TEXTS = [];
 const PALETTES = [
@@ -2645,6 +2693,7 @@ export default function App() {
   const handleCloseSidebar = () => setSbOpen(false);
 
   const handleNavigate = (label) => {
+    if (!canAccessNav(user?.role, label)) return;
     setNav(label);
     setOpenIntern(null);
     setShowCreatePage(false);
@@ -2655,7 +2704,7 @@ export default function App() {
 
   const handleOpenSidebar = () => setSbOpen(true);
 
-  const openFeedback = () => setNav("Feedback");
+  const openFeedback = () => handleNavigate("Feedback");
 
   // Fetch data from API on mount
   useEffect(() => {
@@ -2800,8 +2849,22 @@ export default function App() {
     { I: Users, label: "Students" },
     { I: MessageSquare, label: "Feedback" },
     { I: BookOpen, label: "User Education" },
-    ...(user?.role === "Admin" ? [{ I: UserCheck, label: "Create Tutors" }] : []),
-  ];
+    { I: UserCheck, label: "Create Tutors" },
+  ].filter((item) => canAccessNav(user?.role, item.label));
+
+  const fallbackNav = navItems[0]?.label || "Dashboard";
+
+  useEffect(() => {
+    if (openIntern) return;
+    if (canAccessNav(user?.role, nav)) return;
+    setNav(fallbackNav);
+  }, [fallbackNav, nav, openIntern, user?.role]);
+
+  useEffect(() => {
+    if (!showCreatePage) return;
+    if (canAccessNav(user?.role, "Dashboard")) return;
+    setShowCreatePage(false);
+  }, [showCreatePage, user?.role]);
 
   const handleStudentUpdated = useCallback((updatedStudent) => {
     if (!updatedStudent) return;
@@ -2909,14 +2972,24 @@ export default function App() {
     if (loading) {
       return (
         <div className="pp">
-          <div style={{ textAlign: "center", padding: "40px" }}>
-            <div>Loading...</div>
-          </div>
+          <PageState variant="loading" title="Loading workspace" message="Fetching internships, students, and your session..." />
         </div>
       );
     }
 
     if (showCreatePage) {
+      if (!canAccessNav(user?.role, "Dashboard")) {
+        return (
+          <div className="pp">
+            <PageState
+              variant="forbidden"
+              title="You cannot create internships"
+              message="Your role does not have permission to open this page."
+            />
+          </div>
+        );
+      }
+
       return (
         <CreatePage
           students={students}
@@ -2981,6 +3054,14 @@ export default function App() {
     }
 
     if (nav === "Students") {
+      if (!canAccessNav(user?.role, "Students")) {
+        return (
+          <div className="pp">
+            <PageState variant="forbidden" title="Students page is restricted" message="Only permitted roles can access student documents." />
+          </div>
+        );
+      }
+
       return (
         <StudentDocumentsPage
           students={students}
@@ -2991,10 +3072,26 @@ export default function App() {
     }
 
     if (nav === "Create Tutors") {
+      if (!canAccessNav(user?.role, "Create Tutors")) {
+        return (
+          <div className="pp">
+            <PageState variant="forbidden" title="Admin access required" message="Only administrators can manage staff accounts." />
+          </div>
+        );
+      }
+
       return <CreateTutorPage />;
     }
 
     if (nav === "Feedback") {
+      if (!canAccessNav(user?.role, "Feedback")) {
+        return (
+          <div className="pp">
+            <PageState variant="forbidden" title="Feedback page is restricted" message="Your role cannot access centralized feedback." />
+          </div>
+        );
+      }
+
       return <FeedView feedbacks={commentFeedbacks} onOpenFeedback={handleOpenCommentFromFeedback} />;
     }
 
@@ -3002,8 +3099,22 @@ export default function App() {
       return <UserEducationPage user={user} />;
     }
 
-    if (nav === "Settings") return <SetView />;
-    return null;
+    if (nav === "Settings") {
+      if (!canAccessNav(user?.role, "Settings")) {
+        return (
+          <div className="pp">
+            <PageState variant="forbidden" title="Settings are restricted" message="Your role cannot access this section." />
+          </div>
+        );
+      }
+      return <SetView />;
+    }
+
+    return (
+      <div className="pp">
+        <PageState variant="empty" title="Page not found" message="This section is unavailable for your account." />
+      </div>
+    );
   }, [
     loading,
     showCreatePage,
@@ -3016,6 +3127,8 @@ export default function App() {
     handleStudentUpdated,
     commentFeedbacks,
     handleOpenCommentFromFeedback,
+    navItems,
+    fallbackNav,
   ]);
 
   if (page === "login")
@@ -3056,7 +3169,7 @@ export default function App() {
               <GraduationCap size={20} color="white" />
             </div>
             <h1 style={{ color: "#fff", fontFamily: "Syne", fontSize: 18, fontWeight: 800 }}>
-              SIUT
+              KaBoViZal
             </h1>
           </div>
           

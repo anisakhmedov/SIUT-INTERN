@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { del, get } from "../utils/apiClient";
 import { toast } from "../utils/toast";
+import PageState from './PageState';
 
 const clampProgress = (value) =>
   Math.max(0, Math.min(100, Number.isFinite(value) ? value : 0));
@@ -305,21 +306,22 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
           flex-wrap: wrap;
           align-items: flex-end;
           justify-content: space-between;
-          gap: 24px;
-          margin-bottom: 44px;
-          padding-bottom: 24px;
+          gap: clamp(12px,3vw,24px);
+          margin-bottom: clamp(24px,5vw,44px);
+          padding-bottom: clamp(16px,3vw,24px);
           border-bottom: 1px solid rgba(0,0,0,.06);
         }
         .dw-head-group {
           flex: 1;
+          min-width: 0;
         }
         .dw-eyebrow {
-          font-size: 12px;
+          font-size: clamp(11px,1.8vw,12px);
           font-weight: 700;
           letter-spacing: .08em;
           text-transform: uppercase;
           color: var(--a1, #635bff);
-          margin: 0 0 8px 0;
+          margin: 0 0 clamp(4px,1vw,8px) 0;
           display: flex;
           align-items: center;
           gap: 6px;
@@ -333,7 +335,7 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
         }
         .dw-title {
           font-family: 'Syne', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-          font-size: clamp(28px, 5vw, 42px);
+          font-size: clamp(24px, 5vw, 42px);
           line-height: 1.15;
           letter-spacing: -0.02em;
           color: var(--t1, #0c0e18);
@@ -341,9 +343,9 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
           font-weight: 700;
         }
         .dw-sub {
-          margin-top: 6px;
+          margin-top: clamp(4px,1vw,6px);
           color: var(--t2, #5a6278);
-          font-size: 15px;
+          font-size: clamp(13px,2vw,15px);
           font-weight: 400;
         }
         .dw-btn-primary {
@@ -351,18 +353,19 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
           align-items: center;
           justify-content: center;
           gap: 8px;
-          padding: 13px 26px;
+          padding: clamp(10px,2vw,13px) clamp(16px,4vw,26px);
           border-radius: 13px;
           border: 1px solid rgba(99,91,255,.2);
           background: linear-gradient(135deg, var(--a1, #635bff), var(--a2, #06c9a0));
           color: #fff;
           font-family: 'Syne', system-ui, sans-serif;
-          font-size: 14px;
+          font-size: clamp(13px,2vw,14px);
           font-weight: 700;
           cursor: pointer;
           transition: all .25s cubic-bezier(.22,1,.36,1);
           box-shadow: 0 12px 36px rgba(99,91,255,.28);
           position: relative;
+          white-space: nowrap;
         }
         .dw-btn-primary:hover {
           transform: translateY(-2px);
@@ -387,24 +390,24 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
         .dw-loading, .dw-empty {
           background: rgba(255,255,255,.65);
           border: 1px solid rgba(0,0,0,.08);
-          border-radius: 20px;
-          padding: 64px 32px;
+          border-radius: clamp(16px,2vw,20px);
+          padding: clamp(32px,5vw,64px) clamp(16px,4vw,32px);
           text-align: center;
           color: var(--t2, #5a6278);
-          font-size: 16px;
+          font-size: clamp(14px,2vw,16px);
           box-shadow: 0 16px 48px rgba(99,91,255,.12);
           backdrop-filter: blur(20px);
         }
         .dw-list {
           display: grid;
           grid-template-columns: 1fr;
-          gap: 32px;
+          gap: clamp(16px,3vw,32px);
           list-style: none;
           margin: 0;
           padding: 0;
         }
-        @media (min-width: 640px) { .dw-list { grid-template-columns: repeat(2, 1fr); gap: 28px; } }
-        @media (min-width: 1024px) { .dw-list { grid-template-columns: repeat(3, 1fr); gap: 28px; } }
+        @media (min-width: 640px) { .dw-list { grid-template-columns: repeat(2, 1fr); gap: clamp(20px,3vw,28px); } }
+        @media (min-width: 1024px) { .dw-list { grid-template-columns: repeat(3, 1fr); gap: clamp(20px,2.5vw,28px); } }
         .dw-list li {
           margin: 0;
           padding: 0;
@@ -415,7 +418,7 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
           padding: 0;
           background: rgba(255,255,255,.72);
           border: 1px solid rgba(0,0,0,.08);
-          border-radius: 16px;
+          border-radius: clamp(12px,2vw,16px);
           box-shadow: 0 8px 32px rgba(99,91,255,.08);
           backdrop-filter: blur(20px);
           cursor: pointer;
@@ -452,19 +455,19 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
           flex: 1;
           display: flex;
           flex-direction: column;
-          padding: 28px;
+          padding: clamp(16px,3vw,28px);
           text-align: left;
           border: none;
           background: none;
           cursor: pointer;
           font: inherit;
           color: inherit;
-          gap: 12px;
+          gap: clamp(8px,2vw,12px);
         }
         .dw-card-body { flex: 1; min-width: 0; }
         .dw-card-title {
           font-family: 'Syne', system-ui, sans-serif;
-          font-size: 18px;
+          font-size: clamp(16px,3vw,18px);
           font-weight: 700;
           color: var(--t1, #0c0e18);
           margin: 0 0 8px 0;
@@ -477,10 +480,11 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
         .dw-card-meta {
           display: flex;
           align-items: center;
-          gap: 8px;
-          margin-bottom: 12px;
-          font-size: 13px;
+          gap: clamp(6px,2vw,8px);
+          margin-bottom: clamp(8px,2vw,12px);
+          font-size: clamp(12px,1.8vw,13px);
           color: var(--t2, #5a6278);
+          flex-wrap: wrap;
         }
         .dw-card-meta-divider {
           width: 1px;
@@ -488,7 +492,7 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
           background: rgba(0,0,0,.1);
         }
         .dw-card-row {
-          font-size: 13px;
+          font-size: clamp(12px,1.8vw,13px);
           color: var(--t2, #5a6278);
           margin: 0 0 4px 0;
           display: flex;
@@ -496,7 +500,7 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
           gap: 4px;
           flex-wrap: wrap;
         }
-        .dw-card-row:last-of-type { margin-bottom: 12px; }
+        .dw-card-row:last-of-type { margin-bottom: clamp(8px,2vw,12px); }
         .dw-progress {
           margin: 10px 0 12px;
           display: grid;
@@ -668,13 +672,26 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
         </div>
 
         {loading ? (
-          <div className="dw-loading">✦ Loading internships…</div>
+          <PageState
+            variant="loading"
+            title="Loading internships"
+            message="Fetching internship cards and progress data..."
+            className="dw-loading"
+          />
         ) : faculties.length === 0 ? (
-          <div className="dw-empty">
-            ✨ No internships yet. Create one to get started.
-          </div>
+          <PageState
+            variant="empty"
+            title="No internships yet"
+            message="Create your first internship to get started."
+            className="dw-empty"
+          />
         ) : filteredFaculties.length === 0 ? (
-          <div className="dw-empty">🔍 No internships match your search.</div>
+          <PageState
+            variant="empty"
+            title="No matching internships"
+            message="Try another search query or clear the filters."
+            className="dw-empty"
+          />
         ) : (
           <ul className="dw-list" aria-label="Internship list">
             {filteredFaculties.map((faculty, index) => {

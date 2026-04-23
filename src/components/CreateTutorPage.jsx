@@ -325,14 +325,19 @@ export default function CreateTutorPage() {
           max-width: 1320px;
           margin: 0 auto;
           display: grid;
-          grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
-          gap: 18px;
+          grid-template-columns: minmax(clamp(280px,30vw,420px), 420px) minmax(0, 1fr);
+          gap: clamp(12px,2vw,18px);
+        }
+        @media(max-width:1024px){
+          .ctp-shell {
+            grid-template-columns: 1fr;
+          }
         }
         .ctp-card {
           background: rgba(255, 255, 255, .95);
           border: 1px solid rgba(0, 0, 0, .08);
-          border-radius: 20px;
-          padding: clamp(18px, 2.2vw, 28px);
+          border-radius: clamp(16px,2vw,20px);
+          padding: clamp(16px, 2.2vw, 28px);
           box-shadow: 0 18px 50px rgba(14, 116, 144, .12);
           backdrop-filter: blur(12px);
         }
@@ -340,19 +345,19 @@ export default function CreateTutorPage() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 12px;
-          margin-bottom: 16px;
+          gap: clamp(8px,2vw,12px);
+          margin-bottom: clamp(12px,2vw,16px);
         }
         .ctp-title {
           margin: 0;
           font-family: 'Syne', system-ui, sans-serif;
-          font-size: clamp(20px, 3.5vw, 28px);
+          font-size: clamp(18px, 3.5vw, 28px);
           color: #0f172a;
           letter-spacing: -.01em;
         }
         .ctp-sub {
-          margin: 8px 0 0;
-          font-size: 13px;
+          margin: clamp(4px,1vw,8px) 0 0;
+          font-size: clamp(12px,1.8vw,13px);
           color: #475569;
           line-height: 1.55;
         }
@@ -360,24 +365,29 @@ export default function CreateTutorPage() {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          padding: 8px 12px;
+          padding: clamp(6px,1vw,8px) clamp(8px,2vw,12px);
           border-radius: 999px;
           background: rgba(8, 145, 178, .10);
           border: 1px solid rgba(8, 145, 178, .20);
           color: #0e7490;
-          font-size: 12px;
+          font-size: clamp(11px,1.8vw,12px);
           font-weight: 700;
           white-space: nowrap;
         }
         .ctp-grid {
           display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 12px;
+          grid-template-columns: repeat(auto-fit, minmax(clamp(120px,40vw,1fr), 1fr));
+          gap: clamp(10px,1.5vw,12px);
+        }
+        @media(max-width:640px){
+          .ctp-grid {
+            grid-template-columns: 1fr;
+          }
         }
         .ctp-field {
           display: flex;
           flex-direction: column;
-          gap: 6px;
+          gap: clamp(4px,1vw,6px);
         }
         .ctp-field--full {
           grid-column: 1 / -1;

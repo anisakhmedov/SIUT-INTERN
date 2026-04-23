@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  AlertCircle,
   ChevronDown,
   Eye,
   FileImage,
@@ -15,6 +14,7 @@ import {
   uploadStudentPassportImage,
   validateStudentImageFile,
 } from '../utils/studentApi';
+import { toast } from '../utils/toast';
 
 function getStudentId(student, fallbackIndex = 0) {
   return student?._id || student?.id || student?.studentId || `${student?.name || 'student'}-${fallbackIndex}`;
@@ -38,12 +38,10 @@ export default function StudentDocumentsPage({ students = [], search = '', onStu
   const [passportFilter, setPassportFilter] = useState('all');
   const [medicineFilter, setMedicineFilter] = useState('all');
   const [selectedStudentId, setSelectedStudentId] = useState(() => getStudentId(students[0]));
-  const [toasts, setToasts] = useState([]);
   const [uploadState, setUploadState] = useState({
     passport: { loading: false, progress: 0 },
     medicine: { loading: false, progress: 0 },
   });
-  const toastTimerRef = useRef(new Map());
 
   useEffect(() => {
     setLocalStudents(students);
@@ -58,21 +56,17 @@ export default function StudentDocumentsPage({ students = [], search = '', onStu
     }
   }, [students, selectedStudentId]);
 
-  useEffect(() => () => {
-    toastTimerRef.current.forEach((timerId) => clearTimeout(timerId));
-    toastTimerRef.current.clear();
-  }, []);
-
   const pushToast = useCallback((type, title, message) => {
-    const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    setToasts((current) => [...current, { id, type, title, message }]);
-
-    const timerId = setTimeout(() => {
-      setToasts((current) => current.filter((toast) => toast.id !== id));
-      toastTimerRef.current.delete(id);
-    }, 3500);
-
-    toastTimerRef.current.set(id, timerId);
+    const fullMessage = [title, message].filter(Boolean).join(': ');
+    if (type === 'success') {
+      toast.success(fullMessage, { duration: 3600 });
+      return;
+    }
+    if (type === 'warning') {
+      toast.warning(fullMessage, { duration: 4200 });
+      return;
+    }
+    toast.error(fullMessage, { duration: 4600 });
   }, []);
 
   const hasImage = useCallback((student, field) => Boolean(getStudentImageValue(student, field)), []);
@@ -268,16 +262,21 @@ export default function StudentDocumentsPage({ students = [], search = '', onStu
           max-width: 1420px;
           margin: 0 auto;
           display: grid;
-          grid-template-columns: minmax(300px, 410px) minmax(0, 1fr);
-          gap: 24px;
+          grid-template-columns: minmax(clamp(260px,28vw,410px), 410px) minmax(0, 1fr);
+          gap: clamp(16px,2vw,24px);
           align-items: start;
+        }
+        @media(max-width:1024px){
+          .student-docs-shell {
+            grid-template-columns: 1fr;
+          }
         }
         .student-docs-aside,
         .student-docs-main,
         .student-docs-panel {
           background: rgba(255,255,255,.82);
           border: 1px solid rgba(0,0,0,.08);
-          border-radius: 22px;
+          border-radius: clamp(18px,2vw,22px);
           box-shadow: 0 18px 56px rgba(99,91,255,.10);
           backdrop-filter: blur(20px);
         }
@@ -285,28 +284,28 @@ export default function StudentDocumentsPage({ students = [], search = '', onStu
           overflow: hidden;
         }
         .student-docs-main {
-          padding: 24px;
+          padding: clamp(16px,3vw,24px);
         }
         .student-docs-head {
           display: flex;
           flex-wrap: wrap;
           align-items: flex-end;
           justify-content: space-between;
-          gap: 16px;
-          margin-bottom: 18px;
-          padding-bottom: 18px;
+          gap: clamp(12px,2vw,16px);
+          margin-bottom: clamp(12px,2vw,18px);
+          padding-bottom: clamp(12px,2vw,18px);
           border-bottom: 1px solid rgba(0,0,0,.06);
         }
         .student-docs-eyebrow {
-          margin: 0 0 8px 0;
-          font-size: 12px;
+          margin: 0 0 clamp(4px,1vw,8px) 0;
+          font-size: clamp(11px,1.8vw,12px);
           font-weight: 800;
           letter-spacing: .08em;
           text-transform: uppercase;
           color: var(--a1, #635bff);
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: clamp(4px,1vw,8px);
         }
         .student-docs-eyebrow::before {
           content: '';
@@ -862,45 +861,6 @@ export default function StudentDocumentsPage({ students = [], search = '', onStu
           font-size: 12px;
           color: var(--t2, #5a6278);
         }
-        .toast-stack {
-          position: fixed;
-          top: 18px;
-          right: 18px;
-          z-index: 300;
-          display: grid;
-          gap: 10px;
-          width: min(360px, calc(100vw - 24px));
-        }
-        .toast {
-          display: grid;
-          grid-template-columns: 18px 1fr;
-          gap: 12px;
-          align-items: start;
-          padding: 14px 16px;
-          border-radius: 16px;
-          border: 1px solid rgba(0,0,0,.08);
-          box-shadow: 0 18px 50px rgba(0,0,0,.10);
-          background: rgba(255,255,255,.94);
-          backdrop-filter: blur(16px);
-          animation: toastIn .2s ease;
-        }
-        .toast.success { border-color: rgba(6,201,160,.18); }
-        .toast.error { border-color: rgba(220,38,38,.18); }
-        .toast-icon {
-          margin-top: 2px;
-        }
-        .toast-title {
-          margin: 0;
-          font-size: 13px;
-          font-weight: 800;
-          color: var(--t1, #0c0e18);
-        }
-        .toast-message {
-          margin: 4px 0 0 0;
-          font-size: 12px;
-          line-height: 1.5;
-          color: var(--t2, #5a6278);
-        }
         .docs-empty {
           padding: 32px 20px;
           border-radius: 18px;
@@ -925,10 +885,6 @@ export default function StudentDocumentsPage({ students = [], search = '', onStu
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
-        }
-        @keyframes toastIn {
-          from { opacity: 0; transform: translateY(-8px) scale(.98); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
         }
         @media (max-width: 1100px) {
           .student-docs-shell {
@@ -967,20 +923,6 @@ export default function StudentDocumentsPage({ students = [], search = '', onStu
           }
         }
       `}</style>
-
-      <div className="toast-stack" aria-live="polite" aria-atomic="true">
-        {toasts.map((toast) => (
-          <div key={toast.id} className={`toast ${toast.type}`}>
-            <div className="toast-icon">
-              {toast.type === 'success' ? <Eye size={16} color="#06c9a0" /> : <AlertCircle size={16} color="#dc2626" />}
-            </div>
-            <div>
-              <p className="toast-title">{toast.title}</p>
-              <p className="toast-message">{toast.message}</p>
-            </div>
-          </div>
-        ))}
-      </div>
 
       <div className="student-docs-shell">
         <aside className="student-docs-aside student-list-wrap">

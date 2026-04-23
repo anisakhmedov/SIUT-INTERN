@@ -4,6 +4,7 @@ import { get, patch, post } from '../utils/apiClient';
 import { toast } from '../utils/toast';
 import { generateFinalReport } from '../utils/finalReportApi';
 import { getAuthTokenFromStorage } from '../utils/storageUtils';
+import PageState from './PageState';
 
 const INTERNSHIP_STATUS_OPTIONS = ['Pending', 'In Progress', 'Completed'];
 
@@ -218,6 +219,7 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
   const [finalReportLoading, setFinalReportLoading] = useState(false);
   const [finalReportMarkdown, setFinalReportMarkdown] = useState('');
   const [finalReportError, setFinalReportError] = useState('');
+  const [reportFormSnapshot, setReportFormSnapshot] = useState(null);
   const commentsSectionRef = useRef(null);
   const reportDescriptionRef = useRef(null);
   const planEditorRef = useRef(null);
@@ -323,6 +325,13 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
       })
       .filter(Boolean);
   }, []);
+
+  const createReportFormSnapshot = useCallback((day) => ({
+    date: day?.date ? String(day.date).slice(0, 10) : '',
+    title: day?.shortReport?.title || '',
+    description: day?.shortReport?.description || '',
+    imageUrls: extractImageUrls(day),
+  }), [extractImageUrls]);
 
   const resetDayForm = useCallback(() => {
     setShowReportForm(false);
@@ -548,6 +557,16 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
   const progressHue = useMemo(() => Math.round((progressPercent / 100) * 120), [progressPercent]);
   const currentDay = days[dayIndex];
   const currentDayImageUrls = useMemo(() => extractImageUrls(currentDay), [extractImageUrls, currentDay]);
+  const reportFormDirty = useMemo(() => {
+    if (!showReportForm || !reportFormSnapshot) return false;
+
+    return (
+      reportDayDate !== reportFormSnapshot.date
+      || reportTitle !== reportFormSnapshot.title
+      || reportDescription !== reportFormSnapshot.description
+      || reportImages.length > 0
+    );
+  }, [reportDayDate, reportDescription, reportFormSnapshot, reportImages.length, reportTitle, showReportForm]);
   const tutorInfo = useMemo(() => {
     const tutorSource = faculty?.tutorID || faculty?.tutor || faculty?.supervisor || null;
 
@@ -578,10 +597,41 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
     };
   }, [faculty]);
  
-  const canWriteReport = user?.role === 'Tutor' || user?.role === 'Admin';
+  const canWriteReport = true; // Allow anyone to write comments
   const canEditInternship = user?.role === 'Tutor' || user?.role === 'Admin';
   const canApprove = user?.role === 'Admin';
   const canExport = user?.role === 'Admin';
+
+  const confirmDiscardReportChanges = useCallback(() => {
+    if (!reportFormDirty) return true;
+    return window.confirm('You have unsaved report changes. Discard them?');
+  }, [reportFormDirty]);
+
+  const guardedResetDayForm = useCallback(() => {
+    if (!confirmDiscardReportChanges()) return false;
+    setReportFormSnapshot(null);
+    resetDayForm();
+    return true;
+  }, [confirmDiscardReportChanges, resetDayForm]);
+
+  const handleBackToDashboard = useCallback(() => {
+    if (!confirmDiscardReportChanges()) return;
+    setReportFormSnapshot(null);
+    onBack();
+  }, [confirmDiscardReportChanges, onBack]);
+
+  const attemptDayChange = useCallback((nextIndex) => {
+    const boundedNext = Math.max(0, Math.min(days.length - 1, nextIndex));
+    if (boundedNext === dayIndex) return;
+
+    if (showReportForm) {
+      if (!confirmDiscardReportChanges()) return;
+      setReportFormSnapshot(null);
+      resetDayForm();
+    }
+
+    setDayIndex(boundedNext);
+  }, [confirmDiscardReportChanges, dayIndex, days.length, resetDayForm, showReportForm]);
 
   const handleFinalReport = useCallback(async () => {
     if (!faculty) {
@@ -866,7 +916,8 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
   }, [faculty, initBaseInfoFields]);
 
   const handleWriteReportOpen = useCallback(() => {
-    setReportDayDate(currentDay?.date ? String(currentDay.date).slice(0, 10) : '');
+    const snapshot = createReportFormSnapshot(currentDay);
+    setReportDayDate(snapshot.date);
     if (currentDay?.shortReport) {
       setReportTitle(currentDay.shortReport.title || '');
       setReportDescription(currentDay.shortReport.description || '');
@@ -876,8 +927,9 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
     }
     setReportImages([]);
     setImagePreviews([]);
+    setReportFormSnapshot(snapshot);
     setShowReportForm(true);
-  }, [currentDay]);
+  }, [createReportFormSnapshot, currentDay]);
 
   const handleReportSubmit = useCallback(async (e) => {
     e.preventDefault();
@@ -993,6 +1045,7 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
       const refreshedFaculty = await fetchFaculty(); // Refresh the data
       await syncFacultyProgress(refreshedFaculty);
       toast.success(`Day saved with ${finalImageUrls.length} image(s).`);
+      setReportFormSnapshot(null);
       resetDayForm();
     } catch (err) {
       toast.error(err.message || 'Something went wrong.');
@@ -1043,12 +1096,12 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
   const handlePostComment = useCallback(async (e) => {
     e.preventDefault();
     const text = newComment.trim();
-    if (!text || !currentDay || !user) return;
+    if (!text || !currentDay) return;
     
     const newCommentObj = {
       text: text,
       date: new Date().toISOString(),
-      userID: user.id || user._id || 'unknown'
+      userID: user?.id || user?._id || 'anonymous'
     };
     
     const comments = [...(currentDay.comments || []), newCommentObj];
@@ -1100,9 +1153,9 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
   }, [faculty]);
 
   const navigateToDay = useCallback((dayIndex) => {
-    setDayIndex(dayIndex);
+    attemptDayChange(dayIndex);
     setShowFeedbackView(false);
-  }, []);
+  }, [attemptDayChange]);
 
   useEffect(() => {
     if (!Array.isArray(days) || days.length === 0) return;
@@ -1158,6 +1211,20 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
   }, [activeImageSrc]);
 
   useEffect(() => {
+    if (!reportFormDirty) return undefined;
+
+    const beforeUnload = (event) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', beforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', beforeUnload);
+    };
+  }, [reportFormDirty]);
+
+  useEffect(() => {
     const item = dayItemRefs.current[dayIndex];
     if (!item) return;
     item.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
@@ -1195,8 +1262,8 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
         <div className="ip-page">
           <style>{ipStyles}</style>
           <div className="ip-shell">
-            <button type="button" className="ip-back" onClick={onBack}>← Back to dashboard</button>
-            <div className="ip-loading">Loading internship details…</div>
+            <button type="button" className="ip-back" onClick={handleBackToDashboard}>← Back to dashboard</button>
+            <PageState variant="loading" title="Loading internship details" message="Preparing days, comments, and attachments..." className="ip-loading" />
           </div>
         </div>
       );
@@ -1207,11 +1274,8 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
         <div className="ip-page">
           <style>{ipStyles}</style>
           <div className="ip-shell">
-            <button type="button" className="ip-back" onClick={onBack}>← Back to dashboard</button>
-            <div className="ip-alert" role="alert">
-              <span aria-hidden="true">⚠</span>
-              <span>{error}</span>
-            </div>
+            <button type="button" className="ip-back" onClick={handleBackToDashboard}>← Back to dashboard</button>
+            <PageState variant="error" title="Failed to load internship" message={error} className="ip-alert" />
           </div>
         </div>
       );
@@ -1222,8 +1286,8 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
         <div className="ip-page">
           <style>{ipStyles}</style>
           <div className="ip-shell">
-            <button type="button" className="ip-back" onClick={onBack}>← Back to dashboard</button>
-            <div className="ip-empty">Internship not found.</div>
+            <button type="button" className="ip-back" onClick={handleBackToDashboard}>← Back to dashboard</button>
+            <PageState variant="empty" title="Internship not found" message="This internship does not exist or is no longer accessible." className="ip-empty" />
           </div>
         </div>
       );
@@ -1233,7 +1297,7 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
       <div className="ip-page">
         <style>{ipStyles}</style>
         <div className="ip-shell">
-          <button type="button" className="ip-back" onClick={onBack}>
+          <button type="button" className="ip-back" onClick={handleBackToDashboard}>
             ← Back to dashboard
           </button>
 
@@ -1539,7 +1603,7 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                   type="button" 
                   className="ip-close-btn"
                   onClick={() => {
-                    resetDayForm();
+                    guardedResetDayForm();
                   }}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1666,7 +1730,7 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                     type="button" 
                     className="ip-btn ip-btn--secondary"
                     onClick={() => {
-                      resetDayForm();
+                      guardedResetDayForm();
                     }}
                   >
                     Cancel
@@ -1698,7 +1762,7 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                   type="button"
                   className="ip-carousel-btn ip-carousel-btn--prev"
                   disabled={dayIndex === 0}
-                  onClick={() => setDayIndex(Math.max(0, dayIndex - 1))}
+                  onClick={() => attemptDayChange(dayIndex - 1)}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="15 18 9 12 15 6"></polyline>
@@ -1713,7 +1777,7 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                         type="button"
                         ref={(el) => { dayItemRefs.current[idx] = el; }}
                         className={`ip-carousel-item ${dayIndex === idx ? 'ip-carousel-item--active' : ''}`}
-                        onClick={() => setDayIndex(idx)}
+                        onClick={() => attemptDayChange(idx)}
                       >
                         <span className="ip-carousel-day-number">Day {day.dayNumber}</span>
                         <span className="ip-carousel-day-date">{day.date || 'No date'}</span>
@@ -1751,7 +1815,7 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                   type="button"
                   className="ip-carousel-btn ip-carousel-btn--next"
                   disabled={dayIndex >= days.length - 1}
-                  onClick={() => setDayIndex(Math.min(days.length - 1, dayIndex + 1))}
+                  onClick={() => attemptDayChange(dayIndex + 1)}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="9 18 15 12 9 6"></polyline>
@@ -2207,7 +2271,7 @@ const ipStyles = `
       radial-gradient(900px 520px at 90% 10%, rgba(6,201,160,.10), transparent 55%),
       linear-gradient(180deg, rgba(241,244,250,.92), rgba(255,255,255,1));
   }
-  .ip-shell { width: 100%; max-width: 880px; margin: 0 auto; }
+  .ip-shell { width: 100%; max-width: 1240px; margin: 0 auto; }
   .ip-eyebrow {
     display: inline-flex;
     align-items: center;
@@ -2288,8 +2352,13 @@ const ipStyles = `
   .ip-field { margin-bottom: 14px; }
   .ip-form-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(clamp(140px,30vw,180px), 1fr));
+    gap: clamp(10px,2vw,14px);
+  }
+  @media(max-width:640px){
+    .ip-form-grid {
+      grid-template-columns: 1fr;
+    }
   }
   .ip-label {
     display: block;
@@ -2371,34 +2440,35 @@ const ipStyles = `
   }
   .ip-hero-top {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
-    gap: 20px;
+    gap: clamp(12px,3vw,20px);
     align-items: flex-start;
-    margin-bottom: 20px;
+    margin-bottom: clamp(12px,3vw,20px);
   }
   .ip-hero-copyblock { max-width: 560px; }
   .ip-hero-copy {
-    margin: 12px 0 0;
+    margin: clamp(8px,2vw,12px) 0 0;
     color: var(--t2, #5a6278);
-    font-size: 14px;
+    font-size: clamp(13px,2vw,14px);
     line-height: 1.6;
   }
   .ip-hero-statuslist {
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-end;
-    gap: 8px;
+    gap: clamp(6px,1vw,8px);
   }
   .ip-status-pill {
     display: inline-flex;
     align-items: center;
     min-height: 32px;
-    padding: 0 12px;
+    padding: 0 clamp(8px,2vw,12px);
     border-radius: 999px;
     background: rgba(99,91,255,.08);
     color: var(--a1, #635bff);
     border: 1px solid rgba(99,91,255,.12);
-    font-size: 12px;
+    font-size: clamp(11px,1.8vw,12px);
     font-weight: 700;
     white-space: nowrap;
   }
@@ -2461,15 +2531,20 @@ const ipStyles = `
   }
   .ip-hero-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px 18px;
+    grid-template-columns: repeat(auto-fit, minmax(clamp(120px,35vw,1fr), 1fr));
+    gap: clamp(10px,2vw,18px);
     position: relative;
     z-index: 1;
   }
+  @media(max-width:640px){
+    .ip-hero-grid {
+      grid-template-columns: 1fr;
+    }
+  }
   .ip-hero-item {
-    min-height: 76px;
-    padding: 16px;
-    border-radius: 16px;
+    min-height: clamp(64px,12vw,76px);
+    padding: clamp(12px,2vw,16px);
+    border-radius: clamp(12px,2vw,16px);
     background: rgba(248,250,255,.92);
     border: 1px solid rgba(99,91,255,.08);
     box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
@@ -2477,14 +2552,14 @@ const ipStyles = `
   .ip-hero-item--full { grid-column: 1 / -1; }
   .ip-hero-label {
     display: block;
-    font-size: 11px;
+    font-size: clamp(10px,1.8vw,11px);
     font-weight: 700;
     letter-spacing: .05em;
     color: var(--t3, #9ba3bb);
     text-transform: uppercase;
     margin-bottom: 4px;
   }
-  .ip-hero-value { font-size: 14px; color: var(--t1, #0c0e18); }
+  .ip-hero-value { font-size: clamp(12px,2vw,14px); color: var(--t1, #0c0e18); }
   .ip-progress-stack {
     display: flex;
     flex-direction: column;
@@ -2629,21 +2704,34 @@ const ipStyles = `
   }
   .ip-hero-summary {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 12px;
-    margin-top: 18px;
+    grid-template-columns: repeat(auto-fit, minmax(clamp(100px,22vw,1fr), 1fr));
+    gap: clamp(8px,2vw,12px);
+    margin-top: clamp(12px,2vw,18px);
+  }
+  @media(max-width:768px){
+    .ip-hero-summary {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media(max-width:640px){
+    .ip-hero-summary {
+      grid-template-columns: 1fr;
+    }
   }
   .ip-summary-card {
-    padding: 14px 16px;
-    border-radius: 16px;
+    padding: clamp(10px,2vw,14px) clamp(12px,2vw,16px);
+    border-radius: clamp(12px,2vw,16px);
     background: rgba(248,250,255,.95);
     border: 1px solid rgba(99,91,255,.08);
   }
   .ip-summary-card--wide { grid-column: span 2; }
+  @media(max-width:768px){
+    .ip-summary-card--wide { grid-column: span 1; }
+  }
   .ip-summary-label {
     display: block;
-    margin-bottom: 6px;
-    font-size: 11px;
+    margin-bottom: clamp(4px,1vw,6px);
+    font-size: clamp(10px,1.8vw,11px);
     font-weight: 800;
     letter-spacing: .06em;
     text-transform: uppercase;
@@ -2652,7 +2740,7 @@ const ipStyles = `
   .ip-summary-value {
     display: block;
     color: var(--t1, #0c0e18);
-    font-size: 14px;
+    font-size: clamp(12px,2vw,14px);
     line-height: 1.35;
   }
   .ip-students-card {
@@ -2875,21 +2963,26 @@ const ipStyles = `
   .ip-student-manager-meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
-    margin: 12px 0 8px;
-    font-size: 12px;
+    gap: clamp(6px,1vw,10px);
+    margin: clamp(8px,2vw,12px) 0 clamp(4px,1vw,8px);
+    font-size: clamp(11px,1.8vw,12px);
     color: var(--t3, #9ba3bb);
   }
   .ip-student-filter-row {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-    margin-top: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(clamp(140px,40vw,1fr), 1fr));
+    gap: clamp(10px,2vw,12px);
+    margin-top: clamp(8px,2vw,12px);
+  }
+  @media(max-width:820px){
+    .ip-student-filter-row {
+      grid-template-columns: 1fr;
+    }
   }
   .ip-filter-card {
     display: grid;
-    gap: 8px;
-    padding: 10px;
+    gap: clamp(6px,1vw,8px);
+    padding: clamp(8px,1.5vw,10px);
     border-radius: 12px;
     border: 1px solid rgba(99,91,255,.14);
     background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(248,250,255,.92));
@@ -3091,27 +3184,27 @@ const ipStyles = `
     color: var(--t1, #0c0e18);
   }
   .ip-btn--secondary:hover:not(:disabled) { background: rgba(0,0,0,.04); }
-  .ip-days { margin-bottom: 24px; }
+  .ip-days { margin-bottom: clamp(16px,3vw,24px); }
   .ip-day-nav {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 16px;
+    gap: clamp(8px,2vw,12px);
+    margin-bottom: clamp(12px,2vw,16px);
   }
   .ip-day-label {
-    font-size: 13px;
+    font-size: clamp(12px,1.8vw,13px);
     font-weight: 600;
     color: var(--t2, #5a6278);
   }
   .ip-select {
-    padding: 10px 14px;
+    padding: clamp(8px,1.5vw,10px) clamp(10px,2vw,14px);
     border-radius: 12px;
     border: 1.5px solid rgba(0,0,0,.10);
     background: rgba(0,0,0,.03);
     color: var(--t1, #0c0e18);
     font-family: 'Epilogue', system-ui, sans-serif;
-    font-size: 14px;
+    font-size: clamp(12px,1.8vw,14px);
     outline: none;
     transition: border-color .2s ease, box-shadow .2s ease;
   }
@@ -3119,17 +3212,12 @@ const ipStyles = `
     border-color: rgba(99,91,255,.55);
     box-shadow: 0 0 0 4px rgba(99,91,255,.14);
   }
-  @media (max-width: 820px) {
-    .ip-student-filter-row {
-      grid-template-columns: 1fr;
-    }
-  }
-  .ip-day-btns { display: flex; gap: 8px; }
+  .ip-day-btns { display: flex; gap: clamp(6px,1vw,8px); flex-wrap: wrap; }
   .ip-day-card {
     background: rgba(255,255,255,.94);
     border: 1px solid rgba(0,0,0,.08);
-    border-radius: 22px;
-    padding: 24px;
+    border-radius: clamp(16px,3vw,22px);
+    padding: clamp(16px,3vw,24px);
     box-shadow: 0 18px 50px rgba(99,91,255,.10);
     backdrop-filter: blur(18px);
   }
@@ -3138,32 +3226,32 @@ const ipStyles = `
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 20px;
-    padding-bottom: 16px;
+    gap: clamp(8px,2vw,12px);
+    margin-bottom: clamp(12px,2vw,20px);
+    padding-bottom: clamp(10px,2vw,16px);
     border-bottom: 1px solid rgba(0,0,0,.06);
   }
   .ip-day-title {
     font-family: 'Syne', system-ui, sans-serif;
-    font-size: 18px;
+    font-size: clamp(16px,3vw,18px);
     font-weight: 700;
     color: var(--t1, #0c0e18);
   }
   .ip-day-subtitle {
-    margin-top: 4px;
-    font-size: 12px;
+    margin-top: clamp(2px,1vw,4px);
+    font-size: clamp(11px,1.8vw,12px);
     color: var(--t3, #9ba3bb);
   }
   .ip-day-header-actions {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: clamp(6px,1vw,8px);
   }
   .ip-day-badge {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    font-size: 12px;
+    gap: clamp(4px,1vw,6px);
+    font-size: clamp(11px,1.8vw,12px);
     font-weight: 600;
     padding: 7px 14px;
     border-radius: 10px;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { del, get } from "../utils/apiClient";
 import { toast } from "../utils/toast";
 import PageState from './PageState';
@@ -52,7 +52,7 @@ const normalizeStatus = (status) => {
   return "Pending";
 };
 
-export default function Dashboard({ onNewFaculty, onView, search = "", user = null }) {
+export default function AllInternships({ onView, search = "", user = null }) {
   const [faculties, setFaculties] = useState([]);
   const [usersById, setUsersById] = useState({});
   const [loading, setLoading] = useState(true);
@@ -224,71 +224,8 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
     return 0;
   };
 
-  // Filter faculties based on role and search term
-  const filteredFaculties = faculties.filter((faculty, index) => {
-    // Role-based filtering
-    const userRole = String(user?.role || '').trim().toLowerCase();
-    
-    // Admin and rector can see all internships
-    if (userRole === 'admin' || userRole === 'rector') {
-      // Continue to search filtering
-    } 
-    // Tutors can only see internships they are assigned to
-    else if (userRole === 'tutor') {
-      // Get all possible user IDs
-      const userIds = [
-        user?._id,
-        user?.id,
-        user?.userId,
-      ].filter(Boolean).map(id => String(id).trim().toLowerCase());
-      
-      // Get tutor ID from faculty (could be string, object, or ID)
-      let facultyTutorIds = [];
-      const tutorId = faculty?.tutorID;
-      
-      if (tutorId) {
-        if (typeof tutorId === 'object' && tutorId._id) {
-          facultyTutorIds.push(String(tutorId._id).trim().toLowerCase());
-        } else if (typeof tutorId === 'object' && tutorId.id) {
-          facultyTutorIds.push(String(tutorId.id).trim().toLowerCase());
-        } else {
-          facultyTutorIds.push(String(tutorId).trim().toLowerCase());
-        }
-      }
-      
-      // Also check tutor field
-      const tutor = faculty?.tutor;
-      if (tutor) {
-        if (typeof tutor === 'object' && tutor._id) {
-          facultyTutorIds.push(String(tutor._id).trim().toLowerCase());
-        } else if (typeof tutor === 'object' && tutor.id) {
-          facultyTutorIds.push(String(tutor.id).trim().toLowerCase());
-        } else {
-          facultyTutorIds.push(String(tutor).trim().toLowerCase());
-        }
-      }
-      
-      // Check if any user ID matches any faculty tutor ID
-      const hasMatch = userIds.some(userId => facultyTutorIds.includes(userId));
-      
-      // Debug log
-      if (index === 0) {
-        console.log('[Dashboard] Tutor filter debug:', {
-          userIds,
-          facultyTutorIds,
-          hasMatch,
-          tutorId,
-          tutor,
-        });
-      }
-      
-      if (!hasMatch) {
-        return false;
-      }
-    }
-    // Other roles (student, professor) see all
-    
-    // Apply search filter
+  // Filter faculties based on search term (show all, no role-based filtering)
+  const filteredFaculties = faculties.filter((faculty) => {
     const searchLower = search.toLowerCase();
     return (
       faculty.name?.toLowerCase().includes(searchLower) ||
@@ -298,7 +235,11 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
     );
   });
 
-  const fetchFaculties = useCallback(async () => {
+  useEffect(() => {
+    fetchFaculties();
+  }, []);
+
+  const fetchFaculties = async () => {
     try {
       setLoading(true);
       const canReadUsers = String(user?.role || '').toLowerCase() === 'admin';
@@ -334,11 +275,7 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
     } finally {
       setLoading(false);
     }
-  }, [user?.role]);
-
-  useEffect(() => {
-    fetchFaculties();
-  }, [fetchFaculties]);
+  };
 
   const removeFaculty = async (id) => {
     if (!window.confirm("Are you sure you want to delete this internship?"))
@@ -422,45 +359,6 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
           color: var(--t2, #5a6278);
           font-size: clamp(13px,2vw,15px);
           font-weight: 400;
-        }
-        .dw-btn-primary {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          padding: clamp(10px,2vw,13px) clamp(16px,4vw,26px);
-          border-radius: 13px;
-          border: 1px solid rgba(99,91,255,.2);
-          background: linear-gradient(135deg, var(--a1, #635bff), var(--a2, #06c9a0));
-          color: #fff;
-          font-family: 'Syne', system-ui, sans-serif;
-          font-size: clamp(13px,2vw,14px);
-          font-weight: 700;
-          cursor: pointer;
-          transition: all .25s cubic-bezier(.22,1,.36,1);
-          box-shadow: 0 12px 36px rgba(99,91,255,.28);
-          position: relative;
-          white-space: nowrap;
-        }
-        .dw-btn-primary:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 18px 48px rgba(99,91,255,.35);
-        }
-        .dw-btn-primary:active {
-          transform: translateY(0);
-        }
-        .dw-alert {
-          border-radius: 14px;
-          border: 1px solid rgba(220,38,38,.2);
-          background: linear-gradient(135deg, rgba(254,226,226,.6), rgba(254,242,242,.8));
-          color: #7f1d1d;
-          padding: 14px 16px;
-          margin-bottom: 24px;
-          font-size: 13px;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          backdrop-filter: blur(10px);
         }
         .dw-loading, .dw-empty {
           background: rgba(255,255,255,.65);
@@ -732,20 +630,10 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
       <div className="dw-shell">
         <div className="dw-head">
           <div className="dw-head-group">
-            <div className="dw-eyebrow">Internship Overview</div>
-            <h1 className="dw-title">Internships</h1>
-            <p className="dw-sub">Manage and open internship records</p>
+            <div className="dw-eyebrow">All Internships</div>
+            <h1 className="dw-title">All Internships</h1>
+            <p className="dw-sub">View and manage all internship records</p>
           </div>
-          {String(user?.role || '').toLowerCase() === 'admin' && (
-            <button
-              type="button"
-              className="dw-btn-primary"
-              onClick={onNewFaculty}
-            >
-              <span aria-hidden="true">+</span>
-              New Internship
-            </button>
-          )}
         </div>
 
         {loading ? (
@@ -759,7 +647,7 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
           <PageState
             variant="empty"
             title="No internships yet"
-            message="Create your first internship to get started."
+            message="There are no internship records to display."
             className="dw-empty"
           />
         ) : filteredFaculties.length === 0 ? (
@@ -815,9 +703,8 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
                             </>
                           )}
                         </div>
-                        <div className="dw-card-row">
-                          Who:
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                        <p className="dw-card-row">
+                          Who: <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                             <div
                               style={{
                                 width: 28,
@@ -838,8 +725,8 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
                             </div>
                             <strong>{getSupervisorLabel(faculty)}</strong>
                           </div>
-                        </div>
-                        <div className="dw-card-row">
+                        </p>
+                        <p className="dw-card-row">
                           Where:
                           {getYandexMapUrl(faculty) && (
                             <a
@@ -852,18 +739,18 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
                               Link
                             </a>
                           )}
-                        </div>
-                        <div className="dw-card-row">
+                        </p>
+                        <p className="dw-card-row">
                           When: <strong>{getWhenLabel(faculty)}</strong>
-                        </div>
-                        <div className="dw-card-row">
+                        </p>
+                        <p className="dw-card-row">
                           How long: <strong>{getDurationLabel(faculty)}</strong>
-                        </div>
+                        </p>
 
-                        <div className="dw-card-row">
+                        <p className="dw-card-row">
                           Contact:{" "}
                           <strong>{getSupervisorContact(faculty)}</strong>
-                        </div>
+                        </p>
                         <div
                           className="dw-progress"
                           aria-label={`Progress ${shortProgress}%`}

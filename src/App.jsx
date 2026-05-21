@@ -58,6 +58,7 @@ import {
 // login page component lives in its own file now
 import LoginPage from "./components/LoginPage";
 import Dashboard from "./components/Dashboard";
+import AllInternships from "./components/AllInternships";
 import CreatePage from "./components/CreatePage";
 import InternshipPage from "./components/InternshipPage";
 import CreateTutorPage from "./components/CreateTutorPage";
@@ -70,7 +71,7 @@ import PageState from "./components/PageState";
    STYLES
 ═══════════════════════════════════════════════ */
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Epilogue:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
   --bg:#f0f1f7; --sidebar:#0c0e18; --card:rgba(255,255,255,.84);
@@ -79,7 +80,7 @@ const CSS = `
   --sh:0 4px 24px rgba(99,91,255,.1); --sh2:0 16px 48px rgba(99,91,255,.18);
   --r:20px; --rs:12px;
 }
-html,body{height:100%;font-family:'Epilogue',sans-serif;background:var(--bg);}
+html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);}
 @keyframes fadeUp{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes slideR{from{opacity:0;transform:translateX(42px)}to{opacity:1;transform:translateX(0)}}
@@ -100,10 +101,10 @@ html,body{height:100%;font-family:'Epilogue',sans-serif;background:var(--bg);}
 .lw{min-height:100vh;width:100vw;background:linear-gradient(140deg,#090b14 0%,#131728 60%,#090b14 100%);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
 .lblob{position:absolute;border-radius:50%;filter:blur(88px);pointer-events:none;}
 .lcard{position:relative;z-index:2;width:100%;max-width:clamp(280px,90vw,438px);background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);border-radius:clamp(20px,3vw,28px);padding:clamp(28px,6vw,46px) clamp(20px,5vw,42px);backdrop-filter:blur(28px);animation:fadeUp .68s cubic-bezier(.22,1,.36,1) both;}
-.linput{width:100%;padding:13px 16px;margin-bottom:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:11px;color:#fff;font-family:'Epilogue',sans-serif;font-size:14px;outline:none;transition:all .24s;}
+.linput{width:100%;padding:13px 16px;margin-bottom:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:11px;color:#fff;font-family:'Montserrat',sans-serif;font-size:14px;outline:none;transition:all .24s;}
 .linput::placeholder{color:rgba(255,255,255,.3);}
 .linput:focus{border-color:var(--a1);box-shadow:0 0 0 3px rgba(99,91,255,.18);background:rgba(99,91,255,.08);}
-.lbtn{width:100%;padding:14px;border:none;border-radius:11px;background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .24s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.lbtn{width:100%;padding:14px;border:none;border-radius:11px;background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;font-family:'Montserrat',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .24s;display:flex;align-items:center;justify-content:center;gap:8px;}
 .lbtn:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(99,91,255,.44);}
 
 /* SHELL */
@@ -126,7 +127,7 @@ html,body{height:100%;font-family:'Epilogue',sans-serif;background:var(--bg);}
 .ii.sel{background:rgba(99,91,255,.16);}
 .spf{margin:auto 12px 12px;padding:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.055);border-radius:12px;display:flex;align-items:center;gap:8px;cursor:pointer;transition:all .18s;position:relative;}
 .spf:hover{background:rgba(255,255,255,.07);}
-.av{width:35px;height:35px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;flex-shrink:0;}
+.av{width:35px;height:35px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;font-weight:700;font-size:12px;flex-shrink:0;}
 .sdd{position:absolute;bottom:50px;left:0;right:0;background:#171b2e;border:1px solid rgba(255,255,255,.085);border-radius:10px;overflow:hidden;animation:scaleIn .17s ease;z-index:100;}
 .sddi{display:flex;align-items:center;gap:9px;padding:10px 13px;color:rgba(255,255,255,.58);font-size:12.5px;cursor:pointer;transition:all .17s;}
 .sddi:hover{background:rgba(255,255,255,.06);color:#fff;}
@@ -135,7 +136,7 @@ html,body{height:100%;font-family:'Epilogue',sans-serif;background:var(--bg);}
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
 .tbar{position:sticky;top:0;z-index:9;background:rgba(240,241,247,.88);backdrop-filter:blur(20px);border-bottom:1px solid rgba(0,0,0,.06);padding:12px 26px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
 .sbox{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:10px;padding:8px 14px;width:clamp(140px,25vw,252px);transition:all .24s;font-size:clamp(12px,2vw,13px);}
-.sbox input{border:none;outline:none;background:transparent;font-family:'Epilogue',sans-serif;font-size:inherit;flex:1;color:var(--t1);}
+.sbox input{border:none;outline:none;background:transparent;font-family:'Montserrat',sans-serif;font-size:inherit;flex:1;color:var(--t1);}
 .sbox:focus-within{border-color:var(--a1);box-shadow:0 0 0 3px rgba(99,91,255,.1);}
 .sa{flex:1;overflow-y:auto;overflow-x:hidden;}
 .pp{padding:clamp(12px,3vw,26px) clamp(12px,3vw,26px) clamp(24px,4vw,40px);}
@@ -149,10 +150,10 @@ html,body{height:100%;font-family:'Epilogue',sans-serif;background:var(--bg);}
 .ic:hover{transform:translateY(-3px);box-shadow:var(--sh);}
 
 /* BUTTONS */
-.bp{background:linear-gradient(135deg,var(--a1),var(--a2));border:none;border-radius:10px;color:#fff;font-family:'Epilogue',sans-serif;font-size:13px;font-weight:600;padding:9px 17px;cursor:pointer;transition:all .24s;display:inline-flex;align-items:center;gap:7px;}
+.bp{background:linear-gradient(135deg,var(--a1),var(--a2));border:none;border-radius:10px;color:#fff;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;padding:9px 17px;cursor:pointer;transition:all .24s;display:inline-flex;align-items:center;gap:7px;}
 .bp:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(99,91,255,.38);}
 .bp:active{transform:scale(.97);}
-.bg{background:transparent;border:1px solid rgba(0,0,0,.1);border-radius:9px;color:var(--t2);font-family:'Epilogue',sans-serif;font-size:12px;font-weight:500;padding:7px 12px;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:5px;}
+.bg{background:transparent;border:1px solid rgba(0,0,0,.1);border-radius:9px;color:var(--t2);font-family:'Montserrat',sans-serif;font-size:12px;font-weight:500;padding:7px 12px;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:5px;}
 .bg:hover{background:rgba(0,0,0,.05);color:var(--t1);}
 .bi{background:#fff;border:1px solid rgba(0,0,0,.09);border-radius:9px;padding:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s;color:var(--t2);}
 .bi:hover{background:rgba(0,0,0,.04);color:var(--t1);}
@@ -164,8 +165,8 @@ html,body{height:100%;font-family:'Epilogue',sans-serif;background:var(--bg);}
 .fr{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(0,0,0,.05);transition:padding .17s;}
 .fr:last-child{border-bottom:none;}
 .fr:hover{padding-left:5px;}
-.fa{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;flex-shrink:0;}
-.fi{width:100%;padding:11px 14px;background:rgba(0,0,0,.03);border:1.5px solid rgba(0,0,0,.09);border-radius:10px;color:var(--t1);font-family:'Epilogue',sans-serif;font-size:13px;outline:none;transition:all .24s;}
+.fa{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;font-weight:700;font-size:12px;flex-shrink:0;}
+.fi{width:100%;padding:11px 14px;background:rgba(0,0,0,.03);border:1.5px solid rgba(0,0,0,.09);border-radius:10px;color:var(--t1);font-family:'Montserrat',sans-serif;font-size:13px;outline:none;transition:all .24s;}
 .fi:focus{border-color:var(--a1);background:rgba(99,91,255,.04);box-shadow:0 0 0 3px rgba(99,91,255,.1);}
 .fl{font-size:11.5px;font-weight:600;color:var(--t2);margin-bottom:4px;display:block;}
 textarea.fi{resize:vertical;min-height:80px;}
@@ -215,17 +216,17 @@ textarea.fi{resize:vertical;min-height:80px;}
 .dhb{position:absolute;border-radius:50%;filter:blur(72px);pointer-events:none;}
 
 /* breadcrumb back btn */
-.bk{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.13);border-radius:9px;padding:6px 12px;cursor:pointer;color:rgba(255,255,255,.68);font-family:'Epilogue',sans-serif;font-size:clamp(11px,2vw,12px);font-weight:600;transition:all .2s;}
+.bk{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.13);border-radius:9px;padding:6px 12px;cursor:pointer;color:rgba(255,255,255,.68);font-family:'Montserrat',sans-serif;font-size:clamp(11px,2vw,12px);font-weight:600;transition:all .2s;}
 .bk:hover{background:rgba(255,255,255,.16);}
 
 /* action buttons in hero */
-.da{display:inline-flex;align-items:center;gap:7px;padding:8px 15px;border-radius:10px;border:none;font-family:'Epilogue',sans-serif;font-size:clamp(11px,2vw,12px);font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.da{display:inline-flex;align-items:center;gap:7px;padding:8px 15px;border-radius:10px;border:none;font-family:'Montserrat',sans-serif;font-size:clamp(11px,2vw,12px);font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;}
 .da:hover{transform:translateY(-1px);}
 
 /* day rail */
 .dr{display:flex;gap:6px;overflow-x:auto;padding:clamp(8px,2vw,13px) clamp(12px,3vw,26px);background:#fff;border-bottom:1px solid rgba(0,0,0,.07);flex-shrink:0;scrollbar-width:none;}
 .dr::-webkit-scrollbar{display:none;}
-.dp-pill{padding:5px 14px;border-radius:999px;font-size:clamp(11px,2vw,12px);font-weight:600;cursor:pointer;transition:all .19s;white-space:nowrap;border:none;font-family:'Epilogue',sans-serif;}
+.dp-pill{padding:5px 14px;border-radius:999px;font-size:clamp(11px,2vw,12px);font-weight:600;cursor:pointer;transition:all .19s;white-space:nowrap;border:none;font-family:'Montserrat',sans-serif;}
 .dp-pill.on{background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;box-shadow:0 4px 12px rgba(99,91,255,.34);}
 .dp-pill:not(.on){background:rgba(0,0,0,.06);color:var(--t2);}
 .dp-pill:not(.on):hover{background:rgba(99,91,255,.1);color:var(--a1);}
@@ -264,7 +265,7 @@ textarea.fi{resize:vertical;min-height:80px;}
 .cpf{padding:clamp(10px,2vw,13px) clamp(12px,3vw,17px) clamp(12px,2vw,17px);border-top:1px solid rgba(0,0,0,.07);flex-shrink:0;}
 .ci{display:flex;gap:clamp(6px,2vw,10px);padding:clamp(10px,2vw,13px) 0;border-bottom:1px solid rgba(0,0,0,.05);animation:fadeUp .3s ease both;font-size:clamp(12px,2vw,13px);}
 .ci:last-child{border-bottom:none;}
-.ca{width:clamp(28px,6vw,33px);height:clamp(28px,6vw,33px);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;color:#fff;font-size:clamp(9px,1.8vw,10.5px);flex-shrink:0;}
+.ca{width:clamp(28px,6vw,33px);height:clamp(28px,6vw,33px);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;font-weight:700;color:#fff;font-size:clamp(9px,1.8vw,10.5px);flex-shrink:0;}
 
 /* lightbox */
 .lb{position:fixed;inset:0;background:rgba(0,0,0,.93);backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center;z-index:300;animation:fadeIn .18s ease;cursor:zoom-out;}
@@ -315,7 +316,9 @@ const NAV_PERMISSIONS = {
   Students: ["admin", "tutor", "professor", "rector"],
   Feedback: ["admin", "tutor", "professor", "rector"],
   "User Education": ALL_APP_ROLES,
+  "All Internships": ["admin", "rector"],
   "Create Tutors": ["admin"],
+  "Create Internship": ["admin"],
   Settings: ["admin"],
 };
 
@@ -542,7 +545,7 @@ function Donut({ v = 4.6 }) {
       <div style={{ position: "absolute", textAlign: "center" }}>
         <div
           style={{
-            fontFamily: "Syne",
+            fontFamily: "Montserrat",
             fontSize: 19,
             fontWeight: 800,
             color: "var(--t1)",
@@ -647,7 +650,7 @@ function AddModal({ onClose, onAdd }) {
             marginBottom: 20,
           }}
         >
-          <div style={{ fontFamily: "Syne", fontSize: 17, fontWeight: 800 }}>
+          <div style={{ fontFamily: "Montserrat", fontSize: 17, fontWeight: 800 }}>
             New Internship
           </div>
           <button className="bi" onClick={onClose}>
@@ -937,7 +940,7 @@ function DetailPage({ intern, onBack }) {
             </div>
             <h1
               style={{
-                fontFamily: "Syne",
+                fontFamily: "Montserrat",
                 fontSize: 21,
                 fontWeight: 800,
                 color: "#fff",
@@ -1073,7 +1076,7 @@ function DetailPage({ intern, onBack }) {
           <div>
             <div
               style={{
-                fontFamily: "Syne",
+                fontFamily: "Montserrat",
                 fontSize: 13,
                 fontWeight: 700,
                 color: "#06c9a0",
@@ -1148,7 +1151,7 @@ function DetailPage({ intern, onBack }) {
               <div>
                 <div
                   style={{
-                    fontFamily: "Syne",
+                    fontFamily: "Montserrat",
                     fontSize: 24,
                     fontWeight: 800,
                     color: "var(--t1)",
@@ -1215,7 +1218,7 @@ function DetailPage({ intern, onBack }) {
             >
               <div
                 style={{
-                  fontFamily: "Syne",
+                  fontFamily: "Montserrat",
                   fontSize: 15.5,
                   fontWeight: 700,
                   color: "var(--t1)",
@@ -1287,7 +1290,7 @@ function DetailPage({ intern, onBack }) {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontFamily: "Syne",
+                fontFamily: "Montserrat",
                 fontWeight: 800,
                 color: "#fff",
                 fontSize: 16,
@@ -1300,7 +1303,7 @@ function DetailPage({ intern, onBack }) {
             <div style={{ flex: 1 }}>
               <div
                 style={{
-                  fontFamily: "Syne",
+                  fontFamily: "Montserrat",
                   fontSize: 15.5,
                   fontWeight: 700,
                   color: "var(--t1)",
@@ -1377,7 +1380,7 @@ function DetailPage({ intern, onBack }) {
               </div>
               <div
                 style={{
-                  fontFamily: "Syne",
+                  fontFamily: "Montserrat",
                   fontSize: 15.5,
                   fontWeight: 700,
                   color: "var(--t1)",
@@ -1467,7 +1470,7 @@ function DetailPage({ intern, onBack }) {
               </div>
               <div
                 style={{
-                  fontFamily: "Syne",
+                  fontFamily: "Montserrat",
                   fontSize: 15.5,
                   fontWeight: 700,
                   color: "var(--t1)",
@@ -1581,7 +1584,7 @@ function DetailPage({ intern, onBack }) {
               </div>
               <div
                 style={{
-                  fontFamily: "Syne",
+                  fontFamily: "Montserrat",
                   fontSize: 15.5,
                   fontWeight: 700,
                   color: "var(--t1)",
@@ -1680,7 +1683,7 @@ function DetailPage({ intern, onBack }) {
               <div>
                 <div
                   style={{
-                    fontFamily: "Syne",
+                    fontFamily: "Montserrat",
                     fontSize: 15.5,
                     fontWeight: 800,
                     color: "var(--t1)",
@@ -1847,7 +1850,7 @@ function DetailPage({ intern, onBack }) {
                 display: "flex",
                 alignItems: "center",
                 gap: 5,
-                fontFamily: "Epilogue",
+                fontFamily: "Montserrat",
               }}
             >
               <X size={12} /> Close
@@ -1945,7 +1948,7 @@ function DashView({ internships, feedbacks, setNav, onOpen, user }) {
           <div style={{ position: "relative" }}>
             <div
               style={{
-                fontFamily: "Syne",
+                fontFamily: "Montserrat",
                 fontSize: 19,
                 fontWeight: 800,
                 marginBottom: 3,
@@ -1998,7 +2001,7 @@ function DashView({ internships, feedbacks, setNav, onOpen, user }) {
               </div>
               <div
                 style={{
-                  fontFamily: "Syne",
+                  fontFamily: "Montserrat",
                   fontSize: 27,
                   fontWeight: 800,
                   color: "var(--t1)",
@@ -2038,7 +2041,7 @@ function DashView({ internships, feedbacks, setNav, onOpen, user }) {
             >
               <div
                 style={{
-                  fontFamily: "Syne",
+                  fontFamily: "Montserrat",
                   fontSize: 15,
                   fontWeight: 700,
                   color: "var(--t1)",
@@ -2065,7 +2068,7 @@ function DashView({ internships, feedbacks, setNav, onOpen, user }) {
             >
               <div
                 style={{
-                  fontFamily: "Syne",
+                  fontFamily: "Montserrat",
                   fontSize: 15,
                   fontWeight: 700,
                   color: "var(--t1)",
@@ -2148,7 +2151,7 @@ function DashView({ internships, feedbacks, setNav, onOpen, user }) {
           >
             <div
               style={{
-                fontFamily: "Syne",
+                fontFamily: "Montserrat",
                 fontSize: 15,
                 fontWeight: 700,
                 color: "var(--t1)",
@@ -2230,7 +2233,7 @@ function DashView({ internships, feedbacks, setNav, onOpen, user }) {
         >
           <div
             style={{
-              fontFamily: "Syne",
+              fontFamily: "Montserrat",
               fontSize: 16,
               fontWeight: 700,
               color: "var(--t1)",
@@ -2289,7 +2292,7 @@ function DashView({ internships, feedbacks, setNav, onOpen, user }) {
                   </div>
                   <div
                     style={{
-                      fontFamily: "Syne",
+                      fontFamily: "Montserrat",
                       fontSize: 14,
                       fontWeight: 700,
                       color: "var(--t1)",
@@ -2398,7 +2401,7 @@ function FeedView({ feedbacks, onOpenFeedback }) {
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
             <div>
-              <div style={{ fontFamily: "Syne", fontSize: 22, fontWeight: 800, color: "var(--t1)", lineHeight: 1.1 }}>
+              <div style={{ fontFamily: "Montserrat", fontSize: 22, fontWeight: 800, color: "var(--t1)", lineHeight: 1.1 }}>
                 Internship Comments Feed
               </div>
               <div style={{ marginTop: 6, fontSize: 12.5, color: "var(--t2)" }}>
@@ -2547,7 +2550,7 @@ function SetView() {
         <div className="gc" style={{ padding: 24, marginBottom: 16 }}>
           <div
             style={{
-              fontFamily: "Syne",
+              fontFamily: "Montserrat",
               fontSize: 15,
               fontWeight: 700,
               color: "var(--t1)",
@@ -2573,7 +2576,7 @@ function SetView() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontFamily: "Syne",
+                fontFamily: "Montserrat",
                 fontSize: 19,
                 fontWeight: 800,
                 color: "#fff",
@@ -2583,7 +2586,7 @@ function SetView() {
             </div>
             <div>
               <div
-                style={{ fontFamily: "Syne", fontSize: 14.5, fontWeight: 700 }}
+                style={{ fontFamily: "Montserrat", fontSize: 14.5, fontWeight: 700 }}
               >
                 Jane Doe
               </div>
@@ -2612,7 +2615,7 @@ function SetView() {
         <div className="gc" style={{ padding: 24 }}>
           <div
             style={{
-              fontFamily: "Syne",
+              fontFamily: "Montserrat",
               fontSize: 15,
               fontWeight: 700,
               color: "var(--t1)",
@@ -2711,6 +2714,14 @@ export default function App() {
 
   const handleNavigate = (label) => {
     if (!canAccessNav(user?.role, label)) return;
+    // If navigation requested is the Create Internship action, open the create page
+    if (label === "Create Internship") {
+      setShowCreatePage(true);
+      setOpenIntern(null);
+      setSbOpen(false);
+      return;
+    }
+
     setNav(label);
     setOpenIntern(null);
     setShowCreatePage(false);
@@ -2739,7 +2750,15 @@ export default function App() {
 
           const studentData = await get('/student');
           if (studentData) {
-            setStudents(studentData);
+            // normalize shapes: API might return array or { data: [...] }
+            const studentsArray = Array.isArray(studentData)
+              ? studentData
+              : Array.isArray(studentData?.data)
+                ? studentData.data
+                : Array.isArray(studentData?.students)
+                  ? studentData.students
+                  : [];
+            setStudents(studentsArray);
           }
 
           const data = await get('/faculty');
@@ -2757,6 +2776,8 @@ export default function App() {
               students: intern.students || [],
               days: Array.isArray(intern.days) ? intern.days : [],
               desc: intern.description || intern.plan,
+              tutorID: intern.tutorID,
+              tutor: intern.tutor,
               ti: Number.isFinite(Number.parseInt(intern.tutorID, 10))
                 ? Number.parseInt(intern.tutorID, 10) % 4
                 : 0,
@@ -2866,7 +2887,9 @@ export default function App() {
     { I: Users, label: "Students" },
     { I: MessageSquare, label: "Feedback" },
     { I: BookOpen, label: "User Education" },
+    { I: Briefcase, label: "All Internships" },
     { I: UserCheck, label: "Create Tutors" },
+    { I: Plus, label: "Create Internship" },
   ].filter((item) => canAccessNav(user?.role, item.label));
 
   const fallbackNav = navItems[0]?.label || "Dashboard";
@@ -2879,7 +2902,8 @@ export default function App() {
 
   useEffect(() => {
     if (!showCreatePage) return;
-    if (canAccessNav(user?.role, "Dashboard")) return;
+    // allow opening create page only for roles allowed by NAV_PERMISSIONS
+    if (canAccessNav(user?.role, "Create Internship")) return;
     setShowCreatePage(false);
   }, [showCreatePage, user?.role]);
 
@@ -2995,7 +3019,7 @@ export default function App() {
     }
 
     if (showCreatePage) {
-      if (!canAccessNav(user?.role, "Dashboard")) {
+      if (!canAccessNav(user?.role, "Create Internship")) {
         return (
           <div className="pp">
             <PageState
@@ -3023,7 +3047,10 @@ export default function App() {
               end: newFaculty.duration?.end || newFaculty.endDate || "2024-06-01",
               role: newFaculty.role || "Intern",
               students: newFaculty.students || [],
+              days: Array.isArray(newFaculty.days) ? newFaculty.days : [],
               desc: newFaculty.description || newFaculty.plan,
+              tutorID: newFaculty.tutorID,
+              tutor: newFaculty.tutor,
               ti: Number.isFinite(Number.parseInt(newFaculty.tutorID, 10))
                 ? Number.parseInt(newFaculty.tutorID, 10) % 4
                 : 0,
@@ -3100,6 +3127,24 @@ export default function App() {
       return <CreateTutorPage />;
     }
 
+    if (nav === "All Internships") {
+      if (!canAccessNav(user?.role, "All Internships")) {
+        return (
+          <div className="pp">
+            <PageState variant="forbidden" title="Access denied" message="Only admins and rectors can access all internships." />
+          </div>
+        );
+      }
+
+      return (
+        <AllInternships
+          onView={(id) => setOpenIntern(id)}
+          user={user}
+          search={search}
+        />
+      );
+    }
+
     if (nav === "Feedback") {
       if (!canAccessNav(user?.role, "Feedback")) {
         return (
@@ -3144,8 +3189,7 @@ export default function App() {
     handleStudentUpdated,
     commentFeedbacks,
     handleOpenCommentFromFeedback,
-    navItems,
-    fallbackNav,
+    
   ]);
 
   if (page === "login")
@@ -3185,8 +3229,8 @@ export default function App() {
             <div className="sb-icon">
               <GraduationCap size={20} color="white" />
             </div>
-            <h1 style={{ color: "#fff", fontFamily: "Syne", fontSize: 18, fontWeight: 800 }}>
-              KaBoViZal
+            <h1 style={{ color: "#fff", fontFamily: "Montserrat", fontSize: 18, fontWeight: 800 }}>
+              SIUT
             </h1>
           </div>
           

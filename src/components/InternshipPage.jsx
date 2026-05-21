@@ -608,6 +608,38 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
       hasInfo: Boolean(tutorName || tutorContact),
     };
   }, [faculty]);
+
+  const internshipMapData = useMemo(() => {
+    if (!faculty) return null;
+
+    const coordsRaw = faculty?.locationYmaps;
+    const coords = Array.isArray(coordsRaw)
+      ? coordsRaw
+      : Array.isArray(coordsRaw?.coords)
+        ? coordsRaw.coords
+        : null;
+
+    if (Array.isArray(coords) && coords.length === 2) {
+      const lat = Number(coords[0]);
+      const lng = Number(coords[1]);
+      if (Number.isFinite(lat) && Number.isFinite(lng)) {
+        return {
+          label: faculty?.location?.trim() || faculty?.company?.trim() || 'Internship location',
+          embedUrl: `https://www.google.com/maps?q=${lat},${lng}&z=15&output=embed`,
+          linkUrl: `https://www.google.com/maps?q=${lat},${lng}`,
+        };
+      }
+    }
+
+    const locationText = String(faculty?.location || '').trim();
+    if (!locationText) return null;
+
+    return {
+      label: locationText,
+      embedUrl: `https://www.google.com/maps?q=${encodeURIComponent(locationText)}&z=15&output=embed`,
+      linkUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationText)}`,
+    };
+  }, [faculty]);
  
   // Check if current tutor is assigned to this faculty
   const isAssignedTutor = useMemo(() => {
@@ -778,17 +810,6 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
       setSubmitting(false);
     }
   }, [canManageStudents, faculty, facultyId, fetchFaculty, normalizeStudentRecord]);
-
-  const handleAttachStudent = useCallback(async (student) => {
-    const studentId = getStudentId(student);
-    if (!studentId) {
-      toast.error('Student could not be identified.');
-      return;
-    }
-
-    const nextStudents = [...attachedStudents, student];
-    await updateStudentAssignments(nextStudents, 'Student attached to the internship.');
-  }, [attachedStudents, getStudentId, updateStudentAssignments]);
 
   const handleDetachStudent = useCallback(async (student) => {
     const studentId = getStudentId(student);
@@ -1140,7 +1161,7 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
       await fetchFaculty();
       setNewComment('');
       toast.success('Comment added.');
-    } catch (err) {
+    } catch {
       // Fallback: try PATCH approach
       try {
         const newCommentObj = {
@@ -1440,6 +1461,45 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                   ))}
                 </select>
               </div>
+              {internshipMapData && (
+                <div className="ip-hero-item" style={{ gridColumn: '1 / -1' }}>
+                  <span className="ip-hero-label">Location map</span>
+                  <div
+                    style={{
+                      borderRadius: 16,
+                      overflow: 'hidden',
+                      border: '1px solid rgba(0,0,0,.08)',
+                      background: 'rgba(0,0,0,.03)',
+                      boxShadow: '0 10px 30px rgba(99,91,255,.08)',
+                    }}
+                  >
+                    <iframe
+                      title={`Map for ${internshipMapData.label}`}
+                      src={internshipMapData.embedUrl}
+                      style={{ width: '100%', height: 320, border: 0, display: 'block' }}
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                    />
+                  </div>
+                  <a
+                    href={internshipMapData.linkUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      display: 'inline-flex',
+                      marginTop: 10,
+                      alignItems: 'center',
+                      gap: 6,
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: 'var(--a1)',
+                      textDecoration: 'none',
+                    }}
+                  >
+                    Open in maps
+                  </a>
+                </div>
+              )}
               <div className="ip-hero-item">
                 <span className="ip-hero-label">Progress</span>
                 <div className="ip-progress-stack">

@@ -9,6 +9,13 @@ const YANDEX_MAPS_SRC = YANDEX_MAPS_API_KEY
   : 'https://api-maps.yandex.ru/2.1/?lang=en_US';
 const DEFAULT_MAP_CENTER = [41.3775, 69.1824]; // Center of Uzbekistan (Tashkent)
 
+function extractUsers(payload) {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.users)) return payload.users;
+  return [];
+}
+
 function formatCoordsLocation(coords) {
   const lat = Number(Number(coords[0]).toFixed(6));
   const lng = Number(Number(coords[1]).toFixed(6));
@@ -498,7 +505,7 @@ function MapPicker({ value, onChange }) {
   }, [query]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return undefined;
+    if (typeof window === 'undefined') return;
 
     const existingScript = document.querySelector('script[data-yandex-maps="true"]');
     const handleReady = () => {
@@ -626,11 +633,6 @@ function MapPicker({ value, onChange }) {
         };
       });
       setResults(mapped);
-      if (mapped[0]) {
-        setQuery(mapped[0].label);
-        onChangeRef.current(mapped[0]);
-        updateSelectionRef.current(mapped[0].coords, mapped[0]);
-      }
     } catch {
       setMapError('Could not search the place on Yandex Maps.');
     } finally {
@@ -652,7 +654,7 @@ function MapPicker({ value, onChange }) {
   const pickResult = (item) => {
     setQuery(item.label);
     setResults([]);
-    onChangeRef.current(item);
+    updateSelectionRef.current(item.coords, item);
   };
 
   return (
@@ -758,6 +760,23 @@ export default function CreatePage({ onSubmit, onCancel, students = [], user = n
     days: []
   });
 
+  // Local normalized students list (use prop if provided, otherwise fetch)
+  const [localStudents, setLocalStudents] = useState(() => {
+    try {
+      if (!Array.isArray(students)) return [];
+      return students.map((s) => ({
+        _id: s._id || s.id || s.studentId || String(Math.random()),
+        name: s.name || s.fullName || '',
+        surname: s.surname || '',
+        lastname: s.lastname || '',
+        nameFaculty: s.nameFaculty || s.faculty || s.facultyName || '',
+        studentId: s.studentId || s.id || '',
+      }));
+    } catch {
+      return [];
+    }
+  });
+
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFaculty, setSelectedFaculty] = useState(''); // Add faculty filter state
@@ -776,8 +795,11 @@ export default function CreatePage({ onSubmit, onCancel, students = [], user = n
       try {
         setLoadingTutors(true);
         const data = await get('/usersInternship');
-        const filtered = (Array.isArray(data) ? data : data.data || []).filter(
-          user => user.role === 'Tutor' || user.role === 'Professor'
+        const filtered = extractUsers(data).filter(
+          (user) => {
+            const role = String(user?.role || '').trim().toLowerCase();
+            return role === 'tutor' || role === 'professor';
+          }
         );
         setTutors(filtered);
       } catch (err) {
@@ -790,11 +812,55 @@ export default function CreatePage({ onSubmit, onCancel, students = [], user = n
     fetchTutors();
   }, [user?.role]);
 
+  // If parent didn't provide students, fetch them here and normalize
+  useEffect(() => {
+    if (Array.isArray(students) && students.length > 0) {
+      setLocalStudents(students.map((s) => ({
+        _id: s._id || s.id || s.studentId || String(Math.random()),
+        name: s.name || s.fullName || '',
+        surname: s.surname || '',
+        lastname: s.lastname || '',
+        nameFaculty: s.nameFaculty || s.faculty || s.facultyName || '',
+        studentId: s.studentId || s.id || '',
+      })));
+      return;
+    }
+
+    let mounted = true;
+    const fetchStudents = async () => {
+      try {
+        const data = await get('/student');
+        const arr = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.data)
+            ? data.data
+            : Array.isArray(data?.students)
+              ? data.students
+              : [];
+
+        if (!mounted) return;
+        setLocalStudents(arr.map((s) => ({
+          _id: s._id || s.id || s.studentId || String(Math.random()),
+          name: s.name || s.fullName || '',
+          surname: s.surname || '',
+          lastname: s.lastname || '',
+          nameFaculty: s.nameFaculty || s.faculty || s.facultyName || '',
+          studentId: s.studentId || s.id || '',
+        })));
+      } catch (err) {
+        console.error('Error fetching students for CreatePage:', err);
+      }
+    };
+
+    fetchStudents();
+    return () => { mounted = false; };
+  }, [students]);
+
   // Get unique faculties from students
-  const faculties = [...new Set(students.map(student => student.nameFaculty).filter(Boolean))];
+  const faculties = [...new Set(localStudents.map(student => student.nameFaculty).filter(Boolean))];
 
   // Filter students based on search term and faculty
-  const filteredStudents = students.filter(student => 
+  const filteredStudents = localStudents.filter(student => 
     (student.name && student.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (student.surname && student.surname.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (student.lastname && student.lastname.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -805,7 +871,7 @@ export default function CreatePage({ onSubmit, onCancel, students = [], user = n
 
   // Filter out already selected students from the filtered list
   const unselectedStudents = filteredStudents.filter(student => 
-    !selectedStudents.some(selected => selected._id === student._id)
+    !selectedStudents.some(selected => (selected._id || selected.id) === (student._id || student.id))
   );
 
   const handleChange = (e) => {
@@ -920,10 +986,7 @@ export default function CreatePage({ onSubmit, onCancel, students = [], user = n
 
   const selectedMapLocation = useMemo(() => {
     const current = formData.locationYmaps;
-    if (current?.label && Array.isArray(current?.coords) && current.coords.length === 2) {
-      return current;
-    }
-    return null;
+    return current?.label && Array.isArray(current?.coords) && current.coords.length === 2 ? current : null;
   }, [formData.locationYmaps]);
 
   const removeStudent = (studentId) => {

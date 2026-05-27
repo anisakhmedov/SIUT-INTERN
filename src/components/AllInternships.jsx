@@ -703,8 +703,9 @@ export default function AllInternships({ onView, search = "", user = null }) {
                             </>
                           )}
                         </div>
-                        <p className="dw-card-row">
-                          Who: <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                        <div className="dw-card-row">
+                          <span>Who:</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                             <div
                               style={{
                                 width: 28,
@@ -725,9 +726,9 @@ export default function AllInternships({ onView, search = "", user = null }) {
                             </div>
                             <strong>{getSupervisorLabel(faculty)}</strong>
                           </div>
-                        </p>
-                        <p className="dw-card-row">
-                          Where:
+                        </div>
+                        <div className="dw-card-row">
+                          <span>Where:</span>
                           {getYandexMapUrl(faculty) && (
                             <a
                               href={getYandexMapUrl(faculty)}
@@ -739,18 +740,18 @@ export default function AllInternships({ onView, search = "", user = null }) {
                               Link
                             </a>
                           )}
-                        </p>
-                        <p className="dw-card-row">
-                          When: <strong>{getWhenLabel(faculty)}</strong>
-                        </p>
-                        <p className="dw-card-row">
-                          How long: <strong>{getDurationLabel(faculty)}</strong>
-                        </p>
+                        </div>
+                        <div className="dw-card-row">
+                          <span>When:</span> <strong>{getWhenLabel(faculty)}</strong>
+                        </div>
+                        <div className="dw-card-row">
+                          <span>How long:</span> <strong>{getDurationLabel(faculty)}</strong>
+                        </div>
 
-                        <p className="dw-card-row">
-                          Contact:{" "}
+                        <div className="dw-card-row">
+                          <span>Contact:</span> {" "}
                           <strong>{getSupervisorContact(faculty)}</strong>
-                        </p>
+                        </div>
                         <div
                           className="dw-progress"
                           aria-label={`Progress ${shortProgress}%`}

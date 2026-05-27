@@ -66,6 +66,8 @@ import StudentDocumentsPage from "./components/StudentDocumentsPage";
 import UserEducationPage from "./components/UserEducationPage";
 import ToastViewport from "./components/ToastViewport";
 import PageState from "./components/PageState";
+import PublicEvaluationForm from "./components/PublicEvaluationForm";
+import AllEvaluationsPage from "./components/AllEvaluationsPage";
 
 /* ═══════════════════════════════════════════════
    STYLES
@@ -172,6 +174,9 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);}
 textarea.fi{resize:vertical;min-height:80px;}
 .mo{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:50;animation:fadeIn .18s ease;padding:clamp(16px,3vw,32px);}
 .mb{background:#fff;border-radius:clamp(16px,3vw,22px);padding:clamp(18px,4vw,28px);width:100%;max-width:clamp(300px,85vw,498px);animation:scaleIn .26s cubic-bezier(.22,1,.36,1);max-height:90vh;overflow-y:auto;}
+.route-fab{position:fixed;right:22px;bottom:22px;width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;box-shadow:0 8px 30px rgba(99,91,255,.24);cursor:pointer;z-index:120;font-size:18px}
+.route-fab:hover{transform:translateY(-4px);box-shadow:0 16px 48px rgba(99,91,255,.28)}
+.route-modal-list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
 .ndot{width:7px;height:7px;background:var(--a3);border-radius:50%;position:absolute;top:-2px;right:-2px;animation:dotP 2s ease infinite;}
 .hmb{display:none;}
 
@@ -320,6 +325,7 @@ const NAV_PERMISSIONS = {
   "Create Tutors": ["admin"],
   "Create Internship": ["admin"],
   Settings: ["admin"],
+  "All Evaluations": ["admin", "developer"],
 };
 
 function normalizeRole(role) {
@@ -2700,6 +2706,7 @@ export default function App() {
   // Remove redundant internships, feedbacks, tutors states since they're already declared above
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(false);
+  const [routeModalOpen, setRouteModalOpen] = useState(false);
   const [dd, setDd] = useState(false);
   const [sbOpen, setSbOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -2713,7 +2720,9 @@ export default function App() {
   const handleCloseSidebar = () => setSbOpen(false);
 
   const handleNavigate = (label) => {
-    if (!canAccessNav(user?.role, label)) return;
+    // Allow NAV_ALWAYS items regardless of role
+    const isAlways = Array.isArray(NAV_ALWAYS) && NAV_ALWAYS.some((i) => i.label === label);
+    if (!canAccessNav(user?.role, label) && !isAlways) return;
     // If navigation requested is the Create Internship action, open the create page
     if (label === "Create Internship") {
       setShowCreatePage(true);
@@ -2746,7 +2755,8 @@ export default function App() {
         try {
           const currentUser = await getCurrentUser();
           const savedUser = getUserFromStorage();
-          setUser(currentUser?.user || currentUser || savedUser || null);
+          const resolvedUser = currentUser?.user || currentUser || savedUser || null;
+          setUser(resolvedUser);
 
           const studentData = await get('/student');
           if (studentData) {
@@ -2759,6 +2769,39 @@ export default function App() {
                   ? studentData.students
                   : [];
             setStudents(studentsArray);
+          }
+
+          const canReadUsers = String(resolvedUser?.role || '').trim().toLowerCase() === 'admin';
+          if (canReadUsers) {
+            const tutorData = await get('/usersInternship');
+            if (tutorData) {
+              const tutorList = Array.isArray(tutorData)
+                ? tutorData
+                : Array.isArray(tutorData?.data)
+                  ? tutorData.data
+                  : Array.isArray(tutorData?.users)
+                    ? tutorData.users
+                    : [];
+
+              const normalizedTutors = tutorList
+                .map((member) => ({
+                  _id: member?._id || member?.id || member?.userId || '',
+                  name: member?.name || '',
+                  surname: member?.surname || '',
+                  lastname: member?.lastname || '',
+                  role: member?.role || '',
+                  login: member?.login || member?.email || '',
+                  phone: member?.phone || '',
+                }))
+                .filter((member) => {
+                  const role = String(member.role || '').trim().toLowerCase();
+                  return role === 'tutor' || role === 'professor';
+                });
+
+              setTutors(normalizedTutors);
+            }
+          } else {
+            setTutors([]);
           }
 
           const data = await get('/faculty');
@@ -2822,37 +2865,7 @@ export default function App() {
           },
         ]);
 
-        // Mock tutors data
-        setTutors([
-          {
-            id: 0,
-            name: "Alex Johnson",
-            i: "AJ",
-            g: "linear-gradient(135deg,#635bff,#06c9a0)",
-            r: "Senior Tutor",
-          },
-          {
-            id: 1,
-            name: "Maria Garcia",
-            i: "MG",
-            g: "linear-gradient(135deg,#ff5fa0,#635bff)",
-            r: "Lead Tutor",
-          },
-          {
-            id: 2,
-            name: "David Chen",
-            i: "DC",
-            g: "linear-gradient(135deg,#06c9a0,#f5a623)",
-            r: "Senior Tutor",
-          },
-          {
-            id: 3,
-            name: "Sarah Williams",
-            i: "SW",
-            g: "linear-gradient(135deg,#f5a623,#ff5fa0)",
-            r: "Head Tutor",
-          },
-        ]);
+        // Tutor list is loaded from /usersInternship above.
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -2888,17 +2901,23 @@ export default function App() {
     { I: MessageSquare, label: "Feedback" },
     { I: BookOpen, label: "User Education" },
     { I: Briefcase, label: "All Internships" },
+    { I: FileText, label: "All Evaluations" },
     { I: UserCheck, label: "Create Tutors" },
     { I: Plus, label: "Create Internship" },
   ].filter((item) => canAccessNav(user?.role, item.label));
+
+  const NAV_ALWAYS = useMemo(() => [
+    { I: Target, label: "Public Evaluation" },
+  ], []);
 
   const fallbackNav = navItems[0]?.label || "Dashboard";
 
   useEffect(() => {
     if (openIntern) return;
-    if (canAccessNav(user?.role, nav)) return;
+    const isAlwaysRoute = NAV_ALWAYS.some((item) => item.label === nav);
+    if (canAccessNav(user?.role, nav) || isAlwaysRoute) return;
     setNav(fallbackNav);
-  }, [fallbackNav, nav, openIntern, user?.role]);
+  }, [fallbackNav, nav, openIntern, user?.role, NAV_ALWAYS]);
 
   useEffect(() => {
     if (!showCreatePage) return;
@@ -3034,6 +3053,7 @@ export default function App() {
       return (
         <CreatePage
           students={students}
+          tutors={TUTORS}
           user={user}
           onSubmit={(newFaculty) => {
             const transformedFaculty = {
@@ -3157,6 +3177,22 @@ export default function App() {
       return <FeedView feedbacks={commentFeedbacks} onOpenFeedback={handleOpenCommentFromFeedback} />;
     }
 
+    if (nav === "Public Evaluation") {
+      return <PublicEvaluationForm />;
+    }
+
+    if (nav === "All Evaluations") {
+      if (!canAccessNav(user?.role, "All Evaluations")) {
+        return (
+          <div className="pp">
+            <PageState variant="forbidden" title="Access denied" message="Only administrators and developers can view all evaluations." />
+          </div>
+        );
+      }
+
+      return <AllEvaluationsPage />;
+    }
+
     if (nav === "User Education") {
       return <UserEducationPage user={user} />;
     }
@@ -3189,6 +3225,7 @@ export default function App() {
     handleStudentUpdated,
     commentFeedbacks,
     handleOpenCommentFromFeedback,
+    TUTORS,
     
   ]);
 
@@ -3204,6 +3241,11 @@ export default function App() {
           onUserSet={setUser}
           sessionMessage={sessionMessage}
         />
+        <div style={{ padding: 12, textAlign: 'center' }}>
+          <button className="bg" onClick={() => { setPage('dashboard'); setNav('Public Evaluation'); }}>
+            Open Public Evaluation Form
+          </button>
+        </div>
         <ToastViewport />
       </>
     );
@@ -3237,6 +3279,16 @@ export default function App() {
           <div className="sb-sec">
             <div className="sb-lbl">Main</div>
             {navItems.map((item) => (
+              <div
+                key={item.label}
+                className={`nv ${nav === item.label ? "on" : ""}`}
+                onClick={() => handleNavigate(item.label)}
+              >
+                <item.I size={16} color={nav === item.label ? "var(--a1)" : "rgba(255,255,255,.4)"} />
+                <span style={{ color: nav === item.label ? "#fff" : "rgba(255,255,255,.4)" }}>{item.label}</span>
+              </div>
+            ))}
+            {NAV_ALWAYS.map((item) => (
               <div
                 key={item.label}
                 className={`nv ${nav === item.label ? "on" : ""}`}
@@ -3309,6 +3361,34 @@ export default function App() {
           </div>
         </div>
       </div>
+      {user && String(user.role || '').toLowerCase() === 'admin' && (
+        <>
+          <div className="route-fab" onClick={() => setRouteModalOpen((p) => !p)} title="Quick routes">⤴</div>
+
+          {routeModalOpen && (
+            <div className="mo" onClick={() => setRouteModalOpen(false)}>
+              <div className="mb" onClick={(e) => e.stopPropagation()} style={{ width: 360, maxWidth: 'calc(100vw - 32px)' }}>
+                <h3 style={{ margin: 0, marginBottom: 8 }}>Quick Routes</h3>
+                <p style={{ marginTop: 0, marginBottom: 12, color: 'var(--t2)' }}>Jump to any main page</p>
+                            <div className="route-modal-list">
+                              {[...navItems, ...NAV_ALWAYS].map((item) => (
+                                <button
+                                  key={item.label}
+                                  className="bp"
+                                  onClick={() => {
+                                    handleNavigate(item.label);
+                                    setRouteModalOpen(false);
+                                  }}
+                                >
+                                  {item.label}
+                                </button>
+                              ))}
+                            </div>
+              </div>
+            </div>
+          )}
+        </>
+      )}
       <ToastViewport />
     </>
   );

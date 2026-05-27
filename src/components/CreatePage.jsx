@@ -16,6 +16,18 @@ function extractUsers(payload) {
   return [];
 }
 
+function normalizeTutorEntry(member) {
+  return {
+    _id: member?._id || member?.id || member?.userId || '',
+    name: member?.name || '',
+    surname: member?.surname || '',
+    lastname: member?.lastname || '',
+    role: member?.role || '',
+    login: member?.login || member?.email || '',
+    phone: member?.phone || '',
+  };
+}
+
 function formatCoordsLocation(coords) {
   const lat = Number(Number(coords[0]).toFixed(6));
   const lng = Number(Number(coords[1]).toFixed(6));
@@ -618,7 +630,7 @@ function MapPicker({ value, onChange }) {
     setLoading(true);
     setMapError('');
     try {
-      const response = await window.ymaps.geocode(trimmed, { results: 5 });
+      const response = await window.ymaps.geocode(trimmed, { results: 15 });
       const found = response?.geoObjects?.toArray?.() || [];
       const mapped = found.map((item) => {
         const coords = item.geometry.getCoordinates();
@@ -667,7 +679,7 @@ function MapPicker({ value, onChange }) {
             className="form-input"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search a location, street, or city"
+            placeholder="Type a place name, street, or city"
             style={{ paddingLeft: 38 }}
           />
         </div>
@@ -718,6 +730,9 @@ function MapPicker({ value, onChange }) {
 
       {results.length > 0 && (
         <div style={{ marginTop: 10, display: 'grid', gap: 8 }}>
+          <div style={{ fontSize: 11, color: 'var(--t3, #9ba3bb)', fontWeight: 600 }}>
+            Similar results
+          </div>
           {results.map((item) => (
             <button
               type="button"
@@ -747,7 +762,7 @@ function MapPicker({ value, onChange }) {
   );
 }
 
-export default function CreatePage({ onSubmit, onCancel, students = [], user = null }) { // Accept students as prop
+export default function CreatePage({ onSubmit, onCancel, students = [], tutors: tutorCandidates = [], user = null }) { // Accept students as prop
   const [formData, setFormData] = useState({
     name: '',
     company: '',
@@ -782,9 +797,26 @@ export default function CreatePage({ onSubmit, onCancel, students = [], user = n
   const [selectedFaculty, setSelectedFaculty] = useState(''); // Add faculty filter state
   const [tutors, setTutors] = useState([]);
   const [loadingTutors, setLoadingTutors] = useState(false);
+  const providedTutors = useMemo(() => {
+    return extractUsers(tutorCandidates)
+      .map(normalizeTutorEntry)
+      .filter((member) => {
+        const role = String(member.role || '').trim().toLowerCase();
+        return role === 'tutor' || role === 'professor';
+      });
+  }, [tutorCandidates]);
+
+  const tutorOptions = providedTutors.length > 0
+    ? providedTutors
+    : tutors;
 
   // Fetch tutors and professors on component mount
   useEffect(() => {
+    if (providedTutors.length > 0) {
+      setTutors(providedTutors);
+      return;
+    }
+
     const canReadUsers = String(user?.role || '').toLowerCase() === 'admin';
     if (!canReadUsers) {
       setTutors([]);
@@ -795,12 +827,12 @@ export default function CreatePage({ onSubmit, onCancel, students = [], user = n
       try {
         setLoadingTutors(true);
         const data = await get('/usersInternship');
-        const filtered = extractUsers(data).filter(
-          (user) => {
-            const role = String(user?.role || '').trim().toLowerCase();
+        const filtered = extractUsers(data)
+          .map(normalizeTutorEntry)
+          .filter((member) => {
+            const role = String(member.role || '').trim().toLowerCase();
             return role === 'tutor' || role === 'professor';
-          }
-        );
+          });
         setTutors(filtered);
       } catch (err) {
         console.error('Error fetching tutors:', err);
@@ -810,7 +842,7 @@ export default function CreatePage({ onSubmit, onCancel, students = [], user = n
     };
     
     fetchTutors();
-  }, [user?.role]);
+  }, [providedTutors, user?.role]);
 
   // If parent didn't provide students, fetch them here and normalize
   useEffect(() => {
@@ -1450,9 +1482,9 @@ export default function CreatePage({ onSubmit, onCancel, students = [], user = n
                   disabled={loadingTutors}
                 >
                   <option value="">-- Select a Tutor/Professor --</option>
-                  {tutors.map(tutor => (
+                  {tutorOptions.map(tutor => (
                     <option key={tutor._id} value={tutor._id}>
-                      {tutor.name} {tutor.surname} ({tutor.role})
+                      {[tutor.name, tutor.surname, tutor.lastname].filter(Boolean).join(' ')} ({tutor.role})
                     </option>
                   ))}
                 </select>

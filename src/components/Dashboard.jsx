@@ -903,19 +903,21 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
                       >
                         View Details
                       </button>
-                      <button
-                        type="button"
-                        className="dw-btn-icon"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          if (facultyId) removeFaculty(facultyId);
-                        }}
-                        title="Delete internship"
-                        aria-label="Delete internship"
-                      >
-                        ×
-                      </button>
+                      {(['admin', 'developer'].includes(String(user?.role || '').toLowerCase()) ) && (
+                        <button
+                          type="button"
+                          className="dw-btn-icon"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (facultyId) removeFaculty(facultyId);
+                          }}
+                          title="Delete internship"
+                          aria-label="Delete internship"
+                        >
+                          ×
+                        </button>
+                      )}
                     </div>
                   </article>
                 </li>

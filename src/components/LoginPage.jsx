@@ -3,7 +3,7 @@ import { GraduationCap } from 'lucide-react';
 import { post, setAuthSession } from '../utils/apiClient';
 import { toast } from '../utils/toast';
 
-export default function LoginPage({ onLogin, onUserSet, sessionMessage = '' }) {
+export default function LoginPage({ onLogin, onUserSet, sessionMessage = '', onOpenPublicEvaluation }) {
   const [f, setF] = useState({ login: '', password: '' });
   const [loading, setLoading] = useState(false);
 
@@ -185,6 +185,17 @@ export default function LoginPage({ onLogin, onUserSet, sessionMessage = '' }) {
           )}
           {loading ? 'Signing in…' : 'Sign In to Dashboard'}
         </button>
+        <div style={{ marginTop: 12, textAlign: 'center' }}>
+          <button
+            className="lpublic"
+            onClick={() => {
+              if (onOpenPublicEvaluation) onOpenPublicEvaluation();
+            }}
+            type="button"
+          >
+            Open for students
+          </button>
+        </div>
       </div>
     </div>
   );

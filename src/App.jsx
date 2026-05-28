@@ -160,6 +160,11 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);}
 .bi{background:#fff;border:1px solid rgba(0,0,0,.09);border-radius:9px;padding:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s;color:var(--t2);}
 .bi:hover{background:rgba(0,0,0,.04);color:var(--t1);}
 
+/* Public evaluation button on login: white, elevated, subtle hover */
+.lpublic{background:#ffffff;color:#0c0e18;border:none;border-radius:11px;padding:10px 16px;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 6px 20px rgba(2,6,23,.08);transition:transform .18s ease,box-shadow .18s ease,opacity .12s ease;}
+.lpublic:hover{transform:translateY(-3px);box-shadow:0 18px 46px rgba(2,6,23,.14);opacity:0.98}
+.lpublic:active{transform:translateY(-1px);box-shadow:0 10px 26px rgba(2,6,23,.10)}
+
 /* MISC */
 .badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:10.5px;font-weight:600;}
 .tag{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600;}
@@ -2906,9 +2911,15 @@ export default function App() {
     { I: Plus, label: "Create Internship" },
   ].filter((item) => canAccessNav(user?.role, item.label));
 
-  const NAV_ALWAYS = useMemo(() => [
-    { I: Target, label: "Public Evaluation" },
-  ], []);
+  const NAV_ALWAYS = useMemo(() => {
+    const role = (user?.role || '').toLowerCase();
+    if (role === 'admin' || role === 'developer') {
+      return [
+        { I: Target, label: "Public Evaluation" },
+      ];
+    }
+    return [];
+  }, [user?.role]);
 
   const fallbackNav = navItems[0]?.label || "Dashboard";
 
@@ -3240,12 +3251,8 @@ export default function App() {
           }}
           onUserSet={setUser}
           sessionMessage={sessionMessage}
+          onOpenPublicEvaluation={() => { setPage('dashboard'); setNav('Public Evaluation'); }}
         />
-        <div style={{ padding: 12, textAlign: 'center' }}>
-          <button className="bg" onClick={() => { setPage('dashboard'); setNav('Public Evaluation'); }}>
-            Open Public Evaluation Form
-          </button>
-        </div>
         <ToastViewport />
       </>
     );

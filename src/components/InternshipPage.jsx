@@ -2454,7 +2454,13 @@ export default function InternshipPage({
                     )}
                   </div>
                 ) : (
-                  <p className="ip-tutor-empty">No information available.</p>
+                  <button
+                    type="button"
+                    className="ip-student-action-btn"
+                    onClick={openTutorsModal}
+                  >
+                    Append tutor +
+                  </button>
                 )}
                 {showTutorsModal &&
                   createPortal(

@@ -287,11 +287,6 @@ export default function InternshipPage({
   const [selectedStudentIds, setSelectedStudentIds] = useState([]);
   const [selectedStudentFaculty, setSelectedStudentFaculty] = useState("all");
   const attendanceScrollRef = useRef(null);
-  const attendanceDragRef = useRef({
-    isDragging: false,
-    startX: 0,
-    scrollLeft: 0,
-  });
   const [selectedStudentYear, setSelectedStudentYear] = useState("all");
   const [showPlan, setShowPlan] = useState(true);
   const [showFinalReportModal, setShowFinalReportModal] = useState(false);
@@ -442,31 +437,6 @@ export default function InternshipPage({
     },
     [facultyId, fetchAttendance, attendance, isSameCalendarDay],
   );
-
-  const handleAttendanceMouseDown = useCallback((event) => {
-    const container = attendanceScrollRef.current;
-    if (!container || event.button !== 0) return;
-    attendanceDragRef.current = {
-      isDragging: true,
-      startX: event.pageX - container.offsetLeft,
-      scrollLeft: container.scrollLeft,
-    };
-  }, []);
-
-  const handleAttendanceMouseMove = useCallback((event) => {
-    const container = attendanceScrollRef.current;
-    const state = attendanceDragRef.current;
-    if (!container || !state.isDragging) return;
-
-    event.preventDefault();
-    const x = event.pageX - container.offsetLeft;
-    const walk = x - state.startX;
-    container.scrollLeft = state.scrollLeft - walk;
-  }, []);
-
-  const stopAttendanceDrag = useCallback(() => {
-    attendanceDragRef.current.isDragging = false;
-  }, []);
 
   useEffect(() => {
     const container = attendanceScrollRef.current;
@@ -723,6 +693,12 @@ export default function InternshipPage({
   );
 
   const days = useMemo(() => faculty?.days || [], [faculty]);
+  const attendanceDays = Array.isArray(attendance?.attendance)
+    ? attendance.attendance
+    : [];
+  const attendanceTableWidth = 700;
+  const attendanceNameColumnWidth = 260;
+  const attendanceDayColumnWidth = 132;
   const attachedStudents = useMemo(() => {
     if (Array.isArray(faculty?.numberOfStudents))
       return faculty.numberOfStudents;
@@ -1375,41 +1351,19 @@ export default function InternshipPage({
       const expectedDuration = formatDurationFromDays(facultySnapshot.days);
       if (!expectedDuration) return facultySnapshot;
 
-      const currentDuration = normalizeDurationValue(facultySnapshot.duration);
-      if (currentDuration === expectedDuration) {
-        if (!isInternshipEditMode) {
-          setBaseInfoDuration(expectedDuration);
-        }
-        return facultySnapshot;
+      if (!isInternshipEditMode) {
+        setBaseInfoDuration(expectedDuration);
       }
 
-      try {
-        await patch(`/faculty/${facultyId}`, {
-          ...facultySnapshot,
-          duration: expectedDuration,
-        });
+      setFaculty((prev) =>
+        prev && normalizeDurationValue(prev.duration) !== expectedDuration
+          ? { ...prev, duration: expectedDuration }
+          : prev,
+      );
 
-        const syncedFaculty = {
-          ...facultySnapshot,
-          duration: expectedDuration,
-        };
-
-        setFaculty((prev) =>
-          prev && normalizeDurationValue(prev.duration) !== expectedDuration
-            ? { ...prev, duration: expectedDuration }
-            : prev,
-        );
-        if (!isInternshipEditMode) {
-          setBaseInfoDuration(expectedDuration);
-        }
-
-        return syncedFaculty;
-      } catch (err) {
-        console.error("Failed to sync internship duration:", err);
-        return facultySnapshot;
-      }
+      return { ...facultySnapshot, duration: expectedDuration };
     },
-    [facultyId, isInternshipEditMode],
+    [isInternshipEditMode],
   );
 
   useEffect(() => {
@@ -2642,111 +2596,138 @@ export default function InternshipPage({
                 ) : (
                   <div className="ip-attendance-table-wrap">
                     <div className="ip-attendance-day">
-                      <div className="ip-attendance-day-head">
-                        <div>
-                          <strong>Attendance matrix</strong>
-                        </div>
-                        <div />
-                      </div>
-
                       <div
                         ref={attendanceScrollRef}
+                        className="ip-attendance-scroll"
                         style={{
+                          maxHeight: "min(70vh, 720px)",
                           overflowX: "auto",
-                          cursor: "grab",
+                          overflowY: "auto",
                           userSelect: "none",
+                          scrollbarGutter: "stable both-edges",
+                          touchAction: "auto",
+                          WebkitOverflowScrolling: "touch",
+                          cursor: "grab",
                         }}
-                        onMouseDown={handleAttendanceMouseDown}
-                        onMouseMove={handleAttendanceMouseMove}
-                        onMouseUp={stopAttendanceDrag}
-                        onMouseLeave={stopAttendanceDrag}
                       >
-                        <table className="ip-attendance-table">
-                          <thead>
-                            <tr>
-                              <th></th>
-                              {(attendance.attendance || []).map((day) => (
+                        <div
+                          className="ip-attendance-table-frame"
+                          style={{
+                            width: `${attendanceTableWidth}px`,
+                            minWidth: `${attendanceTableWidth}px`,
+                          }}
+                        >
+                          <table className="ip-attendance-table">
+                            <thead>
+                              <tr>
                                 <th
-                                  key={day.id || day.date}
-                                  style={{ whiteSpace: "nowrap" }}
-                                >
-                                  <div
+                                  style={{
+                                    minWidth: `${attendanceNameColumnWidth}px`,
+                                    width: `${attendanceNameColumnWidth}px`,
+                                  }}
+                                ></th>
+                                {attendanceDays.map((day) => (
+                                  <th
+                                    key={day.id || day.date}
                                     style={{
+                                      whiteSpace: "nowrap",
+                                      minWidth: `${attendanceDayColumnWidth}px`,
+                                      width: `${attendanceDayColumnWidth}px`,
                                       textAlign: "center",
                                     }}
                                   >
-                                    <div>
-                                      <div style={{ fontWeight: 700 }}>
-                                        {day.date
-                                          ? new Date(
-                                              day.date,
-                                            ).toLocaleDateString()
-                                          : `Day ${day.dayNumber}`}
+                                    <div
+                                      style={{
+                                        textAlign: "center",
+                                      }}
+                                    >
+                                      <div>
+                                        <div style={{ fontWeight: 700 }}>
+                                          {day.date
+                                            ? new Date(
+                                                day.date,
+                                              ).toLocaleDateString()
+                                            : `Day ${day.dayNumber}`}
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
-                                </th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {(Array.isArray(attachedStudents)
-                              ? attachedStudents
-                              : []
-                            ).map((stu, sidx) => {
-                              const sk = getStudentId(stu) || `key-${sidx}`;
-                              const studentName = getStudentName(stu);
-                              return (
-                                <tr key={sk}>
-                                  <td>{studentName}</td>
-                                  {(attendance.attendance || []).map((day) => {
-                                    const studentRecord = (
-                                      Array.isArray(day.students)
-                                        ? day.students
-                                        : []
-                                    ).find(
-                                      (s) =>
-                                        String(
-                                          s.studentKey ||
-                                            s.studentId ||
-                                            `${s.name}-${s.surname}`,
-                                        ).trim() === String(sk).trim(),
-                                    );
-                                    const present = Boolean(
-                                      studentRecord
-                                        ? studentRecord.present
-                                        : false,
-                                    );
-                                    return (
-                                      <td key={`${day.id || day.date}-${sk}`} style={{ textAlign: "center" }}>
-                                        <input
-                                          type="checkbox"
-                                          className="ip-attendance-radio"
-                                          checked={present}
-                                          disabled={
-                                            !isSameCalendarDay(day.date)
-                                          }
-                                          onChange={(e) =>
-                                            handleTogglePresent(
-                                              day.id,
-                                              sk,
-                                              e.target.checked,
-                                            )
-                                          }
-                                          title={
-                                            isSameCalendarDay(day.date)
-                                              ? "Toggle presence"
-                                              : "Only editable on the day itself"
-                                          }
-                                        />
-                                      </td>
-                                    );
-                                  })}
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {(Array.isArray(attachedStudents)
+                                ? attachedStudents
+                                : []
+                              ).map((stu, sidx) => {
+                                const sk = getStudentId(stu) || `key-${sidx}`;
+                                const studentName = getStudentName(stu);
+                                return (
+                                  <tr key={sk}>
+                                    <td
+                                      style={{
+                                        minWidth: `${attendanceNameColumnWidth}px`,
+                                        width: `${attendanceNameColumnWidth}px`,
+                                      }}
+                                    >
+                                      {studentName}
+                                    </td>
+                                    {attendanceDays.map((day) => {
+                                      const studentRecord = (
+                                        Array.isArray(day.students)
+                                          ? day.students
+                                          : []
+                                      ).find(
+                                        (s) =>
+                                          String(
+                                            s.studentKey ||
+                                              s.studentId ||
+                                              `${s.name}-${s.surname}`,
+                                          ).trim() === String(sk).trim(),
+                                      );
+                                      const present = Boolean(
+                                        studentRecord
+                                          ? studentRecord.present
+                                          : false,
+                                      );
+                                      return (
+                                        <td
+                                          key={`${day.id || day.date}-${sk}`}
+                                          style={{
+                                            textAlign: "center",
+                                            minWidth: `${attendanceDayColumnWidth}px`,
+                                            width: `${attendanceDayColumnWidth}px`,
+                                          }}
+                                        >
+                                          <input
+                                            type="checkbox"
+                                            className="ip-attendance-radio"
+                                            checked={present}
+                                            disabled={
+                                              !isSameCalendarDay(day.date)
+                                            }
+                                            onChange={(e) =>
+                                              handleTogglePresent(
+                                                day.id,
+                                                sk,
+                                                e.target.checked,
+                                              )
+                                            }
+                                            title={
+                                              isSameCalendarDay(day.date)
+                                                ? "Toggle presence"
+                                                : "Only editable on the day itself"
+                                            }
+                                          />
+                                        </td>
+                                      );
+                                    })}
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -5130,18 +5111,81 @@ const ipStyles = `
   }
   .ip-attendance-actions { display:flex; gap:8px; align-items:center; }
   .ip-attendance-body { }
-  .ip-attendance-table-wrap { display: grid; gap: 12px; }
+  .ip-attendance-table-wrap { display: grid; gap: 12px; min-height: 0; }
+  .ip-attendance-scroll {
+    cursor: grab;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .ip-attendance-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  .ip-attendance-scroll--dragging {
+    cursor: grabbing !important;
+  }
+  .ip-attendance-table-frame {
+    width: 700px;
+    min-width: 700px;
+  }
   .ip-attendance-day {
-    background: #fff;
-    border: 1px solid rgba(0,0,0,.04);
     border-radius: 12px;
-    padding: 12px;
   }
   .ip-attendance-day-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; }
-  .ip-attendance-table { width:100%; border-collapse:collapse; margin-top:8px; }
-  .ip-attendance-table thead th { text-align:left; padding:10px 12px; font-size:12px; text-transform:uppercase; color:var(--t2,#5a6278); background: rgba(0,0,0,.03); border-bottom:1px solid rgba(0,0,0,.06); }
-  .ip-attendance-table td { padding:10px 12px; border-bottom:1px solid rgba(0,0,0,.06); font-size:14px; color:var(--t1,#0c0e18); }
-  .ip-attendance-table tbody tr:nth-child(even) { background: rgba(0,0,0,.02); }
+  .ip-attendance-table {
+    width: 100%;
+    min-width: 700px;
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 8px;
+  }
+  .ip-attendance-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    text-align: left;
+    padding: 10px 12px;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: var(--t2,#5a6278);
+    background: rgba(246,248,252,.98);
+    border-bottom: 1px solid rgba(0,0,0,.08);
+    box-shadow: 0 1px 0 rgba(255,255,255,.8) inset;
+  }
+  .ip-attendance-table thead th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 6;
+    min-width: 260px;
+    width: 260px;
+    background: rgba(246,248,252,.98);
+  }
+  .ip-attendance-table thead th:not(:first-child),
+  .ip-attendance-table tbody td:not(:first-child) {
+    min-width: 132px;
+    width: 132px;
+  }
+  .ip-attendance-table tbody td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(0,0,0,.06);
+    font-size: 14px;
+    color: var(--t1,#0c0e18);
+    background: #fff;
+  }
+  .ip-attendance-table tbody tr:nth-child(even) td {
+    background: rgba(0,0,0,.02);
+  }
+  .ip-attendance-table tbody td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    min-width: 260px;
+    width: 260px;
+    box-shadow: 10px 0 16px -14px rgba(12,14,24,.45);
+  }
+  .ip-attendance-table tbody tr:nth-child(even) td:first-child {
+    background: rgba(250, 250, 250);
+  }
   .ip-attendance-radio {
     width:18px;
     height:18px;

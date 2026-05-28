@@ -2954,6 +2954,61 @@ export default function App() {
         ? "Search onboarding..."
         : "Search internships...";
 
+  const currentUserRole = normalizeRole(user?.role);
+
+  const getOwnershipTokens = useCallback((value) => {
+    if (!value) return [];
+
+    if (Array.isArray(value)) {
+      return value.flatMap((item) => getOwnershipTokens(item));
+    }
+
+    if (typeof value === 'object') {
+      return [
+        value._id,
+        value.id,
+        value.userId,
+        value.login,
+        value.username,
+        value.email,
+        value.name,
+        value.surname,
+        value.lastname,
+        [value.name, value.surname, value.lastname].filter(Boolean).join(' '),
+      ]
+        .map((token) => String(token || '').trim().toLowerCase())
+        .filter(Boolean);
+    }
+
+    return [String(value).trim().toLowerCase()].filter(Boolean);
+  }, []);
+
+  const isProfessorAssignedToInternship = useCallback((intern) => {
+    if (!intern) return true;
+    if (currentUserRole !== 'professor' && currentUserRole !== 'tutor') return true;
+
+    const currentUserTokens = getOwnershipTokens([
+      user?.id,
+      user?._id,
+      user?.userId,
+      user?.login,
+      user?.username,
+      user?.email,
+      user?.name,
+      user?.surname,
+      user?.lastname,
+      [user?.name, user?.surname, user?.lastname].filter(Boolean).join(' '),
+    ]);
+
+    const internshipTokens = getOwnershipTokens([
+      intern?.tutorID,
+      intern?.tutor,
+      intern?.supervisor,
+    ]);
+
+    return internshipTokens.some((token) => currentUserTokens.includes(token));
+  }, [currentUserRole, getOwnershipTokens, user]);
+
   const commentFeedbacks = useMemo(() => {
     const now = Date.now();
 
@@ -2977,6 +3032,8 @@ export default function App() {
 
     const rows = [];
     INTERNSHIPS.forEach((intern) => {
+      if (!isProfessorAssignedToInternship(intern)) return;
+
       const days = Array.isArray(intern.days) ? intern.days : [];
       days.forEach((day, dayIndex) => {
         const comments = Array.isArray(day?.comments) ? day.comments : [];
@@ -3019,7 +3076,7 @@ export default function App() {
       const tb = b.date ? new Date(b.date).getTime() : 0;
       return tb - ta;
     });
-  }, [INTERNSHIPS]);
+  }, [INTERNSHIPS, isProfessorAssignedToInternship]);
 
   const handleOpenCommentFromFeedback = useCallback((feedbackItem) => {
     if (!feedbackItem?.internshipId) return;

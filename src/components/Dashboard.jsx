@@ -52,6 +52,87 @@ const normalizeStatus = (status) => {
   return "Pending";
 };
 
+const extractDateRange = (faculty) => {
+  const duration = faculty?.duration;
+
+  if (duration && typeof duration === "object") {
+    return {
+      start: duration.start || duration.startDate || faculty?.startDate || "",
+      end: duration.end || duration.endDate || faculty?.endDate || "",
+      durationText: "",
+    };
+  }
+
+  const durationText = typeof duration === "string" ? duration.trim() : "";
+
+  if (faculty?.startDate || faculty?.endDate) {
+    return {
+      start: faculty?.startDate || "",
+      end: faculty?.endDate || "",
+      durationText,
+    };
+  }
+
+  if (durationText) {
+    const matches = durationText.match(
+      /\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}\.\d{1,2}\.\d{4}\b/g,
+    );
+
+    if (matches && matches.length >= 2) {
+      return {
+        start: matches[0],
+        end: matches[1],
+        durationText,
+      };
+    }
+  }
+
+  return { start: "", end: "", durationText };
+};
+
+const parseDateValue = (value) => {
+  if (!value) return null;
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+
+  if (typeof value === "number") {
+    const numericDate = new Date(value);
+    return Number.isNaN(numericDate.getTime()) ? null : numericDate;
+  }
+
+  const raw = String(value).trim();
+  if (!raw) return null;
+
+  const isoMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) {
+    const [, year, month, day] = isoMatch;
+    const parsed = new Date(Number(year), Number(month) - 1, Number(day));
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  const localMatch = raw.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+  if (localMatch) {
+    const [, day, month, year] = localMatch;
+    const parsed = new Date(Number(year), Number(month) - 1, Number(day));
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  const parsed = new Date(raw);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const formatDateValue = (value) => {
+  const parsed = parseDateValue(value);
+  if (!parsed) return "";
+
+  const day = String(parsed.getDate()).padStart(2, "0");
+  const month = String(parsed.getMonth() + 1).padStart(2, "0");
+  const year = parsed.getFullYear();
+  return `${day}.${month}.${year}`;
+};
+
 export default function Dashboard({ onNewFaculty, onView, search = "", user = null }) {
   const [faculties, setFaculties] = useState([]);
   const [usersById, setUsersById] = useState({});
@@ -144,51 +225,23 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
   };
 
   const getWhenLabel = (faculty) => {
-    const formatDate = (value) => {
-      if (!value) return "";
+    const { start, end, durationText } = extractDateRange(faculty);
+    const formattedStart = formatDateValue(start);
+    const formattedEnd = formatDateValue(end);
 
-      // Supports ISO and plain date strings from backend.
-      const datePart = String(value).split("T")[0];
-      const parts = datePart.split("-");
-      if (parts.length === 3) {
-        const [year, month, day] = parts;
-        if (year && month && day) return `${day}.${month}.${year}`;
-      }
-
-      const parsed = new Date(value);
-      if (!Number.isNaN(parsed.getTime())) {
-        const day = String(parsed.getDate()).padStart(2, "0");
-        const month = String(parsed.getMonth() + 1).padStart(2, "0");
-        const year = parsed.getFullYear();
-        return `${day}.${month}.${year}`;
-      }
-
-      return String(value);
-    };
-
-    const start = formatDate(faculty?.duration?.start || faculty?.startDate);
-    const end = formatDate(faculty?.duration?.end || faculty?.endDate);
-
-    if (start && end) return `${start} - ${end}`;
-    return start || end || "N/A";
+    if (formattedStart && formattedEnd) return `${formattedStart} - ${formattedEnd}`;
+    if (formattedStart || formattedEnd) return formattedStart || formattedEnd;
+    return durationText || "N/A";
   };
 
   const getDurationLabel = (faculty) => {
-    const startRaw = faculty?.duration?.start || faculty?.startDate;
-    const endRaw = faculty?.duration?.end || faculty?.endDate;
+    const { start, end, durationText } = extractDateRange(faculty);
+    const startDate = parseDateValue(start);
+    const endDate = parseDateValue(end);
 
-    if (!startRaw || !endRaw) {
-      if (typeof faculty?.duration === "string" && faculty.duration.trim())
-        return faculty.duration;
-      return "N/A";
-    }
+    if (!startDate || !endDate) return durationText || "N/A";
 
-    const start = new Date(startRaw);
-    const end = new Date(endRaw);
-    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()))
-      return "N/A";
-
-    const diffMs = end.getTime() - start.getTime();
+    const diffMs = endDate.getTime() - startDate.getTime();
     const days = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)) + 1);
     return `${days} day${days === 1 ? "" : "s"}`;
   };
@@ -854,10 +907,10 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
                           )}
                         </div>
                         <div className="dw-card-row">
-                          When: <strong>{getWhenLabel(faculty)}</strong>
+                          <span>When:</span> <strong>{getWhenLabel(faculty)}</strong>
                         </div>
                         <div className="dw-card-row">
-                          How long: <strong>{getDurationLabel(faculty)}</strong>
+                          <span>How long:</span> <strong>{getDurationLabel(faculty)}</strong>
                         </div>
 
                         <div className="dw-card-row">

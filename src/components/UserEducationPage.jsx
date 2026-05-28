@@ -127,7 +127,7 @@ const ROLE_GUIDES = {
   },
 };
 
-const roleOrder = ['Admin', 'Tutor', 'Professor', 'Rector', 'Student'];
+const roleOrder = ['Admin', 'Tutor', 'Professor', 'Rector'];
 
 function ListBlock({ title, items }) {
   return (

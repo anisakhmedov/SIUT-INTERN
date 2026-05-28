@@ -1,24 +1,43 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { createPortal } from 'react-dom';
-import { get, patch, post } from '../utils/apiClient';
-import { toast } from '../utils/toast';
-import { generateFinalReport } from '../utils/finalReportApi';
-import { getAuthTokenFromStorage } from '../utils/storageUtils';
-import PageState from './PageState';
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+} from "react";
+import { createPortal } from "react-dom";
+import { get, patch, post } from "../utils/apiClient";
+import * as attendanceApi from "../utils/attendanceApi";
+import { toast } from "../utils/toast";
+import { generateFinalReport } from "../utils/finalReportApi";
+import { getAuthTokenFromStorage } from "../utils/storageUtils";
+import PageState from "./PageState";
+import { TextAlignEnd } from "lucide-react";
 
-const INTERNSHIP_STATUS_OPTIONS = ['Pending', 'In Progress', 'Completed'];
+const INTERNSHIP_STATUS_OPTIONS = ["Pending", "In Progress", "Completed"];
 
-const clampProgress = (value) => Math.max(0, Math.min(100, Number.isFinite(value) ? value : 0));
+const clampProgress = (value) =>
+  Math.max(0, Math.min(100, Number.isFinite(value) ? value : 0));
 
 function hasReportContent(day) {
   if (!day?.shortReport) return false;
 
-  const title = typeof day.shortReport.title === 'string' ? day.shortReport.title.trim() : '';
-  const description = typeof day.shortReport.description === 'string' ? day.shortReport.description.trim() : '';
-  const reportImages = Array.isArray(day.shortReport.images) ? day.shortReport.images : [];
+  const title =
+    typeof day.shortReport.title === "string"
+      ? day.shortReport.title.trim()
+      : "";
+  const description =
+    typeof day.shortReport.description === "string"
+      ? day.shortReport.description.trim()
+      : "";
+  const reportImages = Array.isArray(day.shortReport.images)
+    ? day.shortReport.images
+    : [];
   const dayImages = Array.isArray(day.images) ? day.images : [];
 
-  return Boolean(title || description || reportImages.length || dayImages.length);
+  return Boolean(
+    title || description || reportImages.length || dayImages.length,
+  );
 }
 
 function calculateProgressPercent(days) {
@@ -30,41 +49,46 @@ function calculateProgressPercent(days) {
 }
 
 function parseProgressPercent(value) {
-  const numericValue = typeof value === 'number'
-    ? value
-    : typeof value === 'string'
-      ? Number.parseFloat(value.replace('%', '').trim())
-      : NaN;
+  const numericValue =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number.parseFloat(value.replace("%", "").trim())
+        : NaN;
 
-  return Number.isFinite(numericValue) ? clampProgress(Math.round(numericValue)) : null;
+  return Number.isFinite(numericValue)
+    ? clampProgress(Math.round(numericValue))
+    : null;
 }
 
 function normalizeInternshipStatus(value) {
-  const raw = String(value || '').trim().toLowerCase();
-  if (raw === 'completed') return 'Completed';
-  if (raw === 'in progress' || raw === 'active') return 'In Progress';
-  return 'Pending';
+  const raw = String(value || "")
+    .trim()
+    .toLowerCase();
+  if (raw === "completed") return "Completed";
+  if (raw === "in progress" || raw === "active") return "In Progress";
+  return "Pending";
 }
 
 function escapeHtml(text) {
   return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function renderInlineMarkdown(text) {
   return text
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/_(.+?)_/g, '<em>$1</em>')
-    .replace(/`(.+?)`/g, '<code>$1</code>');
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/_(.+?)_/g, "<em>$1</em>")
+    .replace(/`(.+?)`/g, "<code>$1</code>");
 }
 
 function renderSimpleMarkdown(text) {
-  const source = String(text || '').trim();
-  if (!source) return '<p>No plan provided.</p>';
+  const source = String(text || "").trim();
+  if (!source) return "<p>No plan provided.</p>";
 
   const lines = source.split(/\r?\n/);
   const chunks = [];
@@ -74,15 +98,15 @@ function renderSimpleMarkdown(text) {
     const escaped = escapeHtml(line.trim());
     if (!escaped) {
       if (inList) {
-        chunks.push('</ul>');
+        chunks.push("</ul>");
         inList = false;
       }
       return;
     }
 
-    if (escaped.startsWith('- ')) {
+    if (escaped.startsWith("- ")) {
       if (!inList) {
-        chunks.push('<ul>');
+        chunks.push("<ul>");
         inList = true;
       }
       chunks.push(`<li>${renderInlineMarkdown(escaped.slice(2))}</li>`);
@@ -90,11 +114,11 @@ function renderSimpleMarkdown(text) {
     }
 
     if (inList) {
-      chunks.push('</ul>');
+      chunks.push("</ul>");
       inList = false;
     }
 
-    if (escaped.startsWith('## ')) {
+    if (escaped.startsWith("## ")) {
       chunks.push(`<h3>${renderInlineMarkdown(escaped.slice(3))}</h3>`);
       return;
     }
@@ -102,9 +126,9 @@ function renderSimpleMarkdown(text) {
     chunks.push(`<p>${renderInlineMarkdown(escaped)}</p>`);
   });
 
-  if (inList) chunks.push('</ul>');
+  if (inList) chunks.push("</ul>");
 
-  return chunks.join('');
+  return chunks.join("");
 }
 
 function CustomFilterSelect({ id, value, onChange, options = [] }) {
@@ -112,7 +136,8 @@ function CustomFilterSelect({ id, value, onChange, options = [] }) {
   const rootRef = useRef(null);
 
   const selectedOption = useMemo(
-    () => options.find((option) => option.value === value) || options[0] || null,
+    () =>
+      options.find((option) => option.value === value) || options[0] || null,
     [options, value],
   );
 
@@ -126,17 +151,17 @@ function CustomFilterSelect({ id, value, onChange, options = [] }) {
     };
 
     const handleEscape = (event) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         setIsOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handlePointerDown);
-    document.addEventListener('keydown', handleEscape);
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleEscape);
 
     return () => {
-      document.removeEventListener('mousedown', handlePointerDown);
-      document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleEscape);
     };
   }, [isOpen]);
 
@@ -145,13 +170,17 @@ function CustomFilterSelect({ id, value, onChange, options = [] }) {
       <button
         id={id}
         type="button"
-        className={`ip-custom-trigger ${isOpen ? 'ip-custom-trigger--open' : ''}`}
+        className={`ip-custom-trigger ${isOpen ? "ip-custom-trigger--open" : ""}`}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         onClick={() => setIsOpen((current) => !current)}
       >
-        <span className="ip-custom-trigger-text">{selectedOption?.label || 'Select option'}</span>
-        <span className={`ip-custom-chevron ${isOpen ? 'ip-custom-chevron--open' : ''}`}></span>
+        <span className="ip-custom-trigger-text">
+          {selectedOption?.label || "Select option"}
+        </span>
+        <span
+          className={`ip-custom-chevron ${isOpen ? "ip-custom-chevron--open" : ""}`}
+        ></span>
       </button>
 
       {isOpen && (
@@ -164,7 +193,7 @@ function CustomFilterSelect({ id, value, onChange, options = [] }) {
                 type="button"
                 role="option"
                 aria-selected={isSelected}
-                className={`ip-custom-option ${isSelected ? 'ip-custom-option--selected' : ''}`}
+                className={`ip-custom-option ${isSelected ? "ip-custom-option--selected" : ""}`}
                 onClick={() => {
                   onChange(option.value);
                   setIsOpen(false);
@@ -181,44 +210,62 @@ function CustomFilterSelect({ id, value, onChange, options = [] }) {
   );
 }
 
-export default function InternshipPage({ facultyId, onBack, user, initialDayIndex, focusCommentKey, students = [] }) {
+export default function InternshipPage({
+  facultyId,
+  onBack,
+  user,
+  initialDayIndex,
+  focusCommentKey,
+  students = [],
+}) {
+  const REPORT_DESCRIPTION_MIN_LENGTH = 150;
+
   const [faculty, setFaculty] = useState(null);
   const [dayIndex, setDayIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [newComment, setNewComment] = useState('');
+  const [error, setError] = useState("");
+  const [newComment, setNewComment] = useState("");
   const [showReportForm, setShowReportForm] = useState(false);
-  const [reportTitle, setReportTitle] = useState('');
-  const [reportDescription, setReportDescription] = useState('');
-  const [reportDayDate, setReportDayDate] = useState('');
+  const [reportTitle, setReportTitle] = useState("");
+  const [reportDescription, setReportDescription] = useState("");
+  const [reportDayDate, setReportDayDate] = useState("");
   const [reportImages, setReportImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [isInternshipEditMode, setIsInternshipEditMode] = useState(false);
-  const [baseInfoName, setBaseInfoName] = useState('');
-  const [baseInfoCompany, setBaseInfoCompany] = useState('');
-  const [baseInfoLocation, setBaseInfoLocation] = useState('');
-  const [baseInfoDuration, setBaseInfoDuration] = useState('');
-  const [baseInfoStatus, setBaseInfoStatus] = useState('');
-  const [baseInfoProgressAll, setBaseInfoProgressAll] = useState('');
-  const [baseInfoPlan, setBaseInfoPlan] = useState('');
-  const [activeImageSrc, setActiveImageSrc] = useState('');
+  const [baseInfoName, setBaseInfoName] = useState("");
+  const [baseInfoCompany, setBaseInfoCompany] = useState("");
+  const [baseInfoLocation, setBaseInfoLocation] = useState("");
+  const [baseInfoDuration, setBaseInfoDuration] = useState("");
+  const [baseInfoStatus, setBaseInfoStatus] = useState("");
+  const [baseInfoProgressAll, setBaseInfoProgressAll] = useState("");
+  const [baseInfoPlan, setBaseInfoPlan] = useState("");
+  const [activeImageSrc, setActiveImageSrc] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showFeedbackView, setShowFeedbackView] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0); // 0-100 for progress tracking
   const [showAddDayModal, setShowAddDayModal] = useState(false);
-  const [newDayDate, setNewDayDate] = useState(new Date().toISOString().slice(0, 10));
-  const [highlightedCommentKey, setHighlightedCommentKey] = useState('');
+  const [newDayDate, setNewDayDate] = useState(
+    new Date().toISOString().slice(0, 10),
+  );
+  const [attendance, setAttendance] = useState(null);
+  const [attendanceLoading, setAttendanceLoading] = useState(false);
+  const [attendanceError, setAttendanceError] = useState("");
+  const [showAttendanceEditor, setShowAttendanceEditor] = useState(false);
+  const [editorDay, setEditorDay] = useState(null); // null -> create
+  const [highlightedCommentKey, setHighlightedCommentKey] = useState("");
   const [showStudents, setShowStudents] = useState(false);
   const [showStudentManager, setShowStudentManager] = useState(false);
-  const [studentSearchTerm, setStudentSearchTerm] = useState('');
+  const [studentSearchTerm, setStudentSearchTerm] = useState("");
   const [selectedStudentIds, setSelectedStudentIds] = useState([]);
-  const [selectedStudentFaculty, setSelectedStudentFaculty] = useState('all');
-  const [selectedStudentYear, setSelectedStudentYear] = useState('all');
+  const [selectedStudentFaculty, setSelectedStudentFaculty] = useState("all");
+  const attendanceScrollRef = useRef(null);
+  const attendanceDragRef = useRef({ isDragging: false, startX: 0, scrollLeft: 0 });
+  const [selectedStudentYear, setSelectedStudentYear] = useState("all");
   const [showPlan, setShowPlan] = useState(true);
   const [showFinalReportModal, setShowFinalReportModal] = useState(false);
   const [finalReportLoading, setFinalReportLoading] = useState(false);
-  const [finalReportMarkdown, setFinalReportMarkdown] = useState('');
-  const [finalReportError, setFinalReportError] = useState('');
+  const [finalReportMarkdown, setFinalReportMarkdown] = useState("");
+  const [finalReportError, setFinalReportError] = useState("");
   const [reportFormSnapshot, setReportFormSnapshot] = useState(null);
   const commentsSectionRef = useRef(null);
   const reportDescriptionRef = useRef(null);
@@ -226,118 +273,395 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
   const dayCarouselRef = useRef(null);
   const dayItemRefs = useRef([]);
 
-  const fetchFaculty = useCallback(async () => {
+  const fetchFaculty = useCallback(async (opts = {}) => {
+    // opts.skipIfEditing: don't overwrite local edit state when true
     try {
+      if (!opts || typeof opts !== "object") opts = {};
       setLoading(true);
       const data = await get(`/faculty/${facultyId}`);
+      // If caller asked to avoid overwriting while user is editing, keep existing faculty
+      if (
+        opts.skipIfEditing &&
+        (isInternshipEditMode || showReportForm || submitting)
+      ) {
+        // still return fetched data for callers that want to inspect it
+        setError("");
+        return data;
+      }
+
       setFaculty(data);
-      setError('');
+      setError("");
       return data;
     } catch (err) {
       setError(err.message);
-      console.error('Error fetching faculty:', err);
+      console.error("Error fetching faculty:", err);
       return null;
     } finally {
       setLoading(false);
     }
+  }, [facultyId, isInternshipEditMode, showReportForm, submitting]);
+
+  const fetchAttendance = useCallback(async () => {
+    if (!facultyId) return;
+    setAttendanceLoading(true);
+    setAttendanceError("");
+    try {
+      const data = await attendanceApi.getAttendance(facultyId);
+      setAttendance(data || null);
+    } catch (err) {
+      setAttendanceError(err?.message || String(err));
+    } finally {
+      setAttendanceLoading(false);
+    }
   }, [facultyId]);
+
+  useEffect(() => {
+    if (!faculty) return;
+    fetchAttendance();
+  }, [faculty, fetchAttendance]);
+
+  const handleSyncRoster = useCallback(async () => {
+    if (!facultyId) return;
+    setAttendanceLoading(true);
+    try {
+      await attendanceApi.syncAttendance(facultyId);
+      await fetchAttendance();
+      toast.success("Roster synced.");
+    } catch (err) {
+      toast.error(err?.message || "Failed to sync roster.");
+    } finally {
+      setAttendanceLoading(false);
+    }
+  }, [facultyId, fetchAttendance]);
+
+  const isSameCalendarDay = useCallback((dateValue) => {
+    if (!dateValue) return false;
+    try {
+      const d = new Date(dateValue);
+      const now = new Date();
+      d.setHours(0, 0, 0, 0);
+      now.setHours(0, 0, 0, 0);
+      return d.getTime() === now.getTime();
+    } catch {
+      return false;
+    }
+  }, []);
+
+  const openAttendanceEditor = useCallback((day = null) => {
+    setEditorDay(day);
+    setShowAttendanceEditor(true);
+  }, []);
+
+  const handleSaveAttendanceDay = useCallback(
+    async (payload) => {
+      if (!facultyId) return;
+      setAttendanceLoading(true);
+      try {
+        if (payload.id) {
+          await attendanceApi.updateAttendanceDay(
+            facultyId,
+            payload.id,
+            payload,
+          );
+        } else {
+          await attendanceApi.createAttendanceDay(facultyId, payload);
+        }
+        await fetchAttendance();
+        setShowAttendanceEditor(false);
+        toast.success("Attendance saved.");
+      } catch (err) {
+        toast.error(err?.message || "Failed to save attendance day.");
+      } finally {
+        setAttendanceLoading(false);
+      }
+    },
+    [facultyId, fetchAttendance],
+  );
+
+  const handleTogglePresent = useCallback(
+    async (dayId, studentKey, present) => {
+      if (!facultyId) return;
+      // Prevent toggling for days that are not the current calendar day
+      try {
+        const day = (attendance?.attendance || []).find(
+          (d) => String(d.id || d._id || d.dayNumber) === String(dayId),
+        );
+        if (day && !isSameCalendarDay(day.date)) {
+          toast.warning("Attendance can only be changed on the actual day.");
+          return;
+        }
+      } catch {
+        // ignore and continue
+      }
+      try {
+        await attendanceApi.toggleAttendanceStudent(
+          facultyId,
+          dayId,
+          studentKey,
+          present,
+        );
+        await fetchAttendance();
+      } catch (err) {
+        toast.error(err?.message || "Failed to update attendance.");
+      }
+    },
+    [facultyId, fetchAttendance, attendance, isSameCalendarDay],
+  );
+
+  const handleAttendanceMouseDown = useCallback((event) => {
+    const container = attendanceScrollRef.current;
+    if (!container || event.button !== 0) return;
+    attendanceDragRef.current = {
+      isDragging: true,
+      startX: event.pageX - container.offsetLeft,
+      scrollLeft: container.scrollLeft,
+    };
+  }, []);
+
+  const handleAttendanceMouseMove = useCallback((event) => {
+    const container = attendanceScrollRef.current;
+    const state = attendanceDragRef.current;
+    if (!container || !state.isDragging) return;
+
+    event.preventDefault();
+    const x = event.pageX - container.offsetLeft;
+    const walk = x - state.startX;
+    container.scrollLeft = state.scrollLeft - walk;
+  }, []);
+
+  const stopAttendanceDrag = useCallback(() => {
+    attendanceDragRef.current.isDragging = false;
+  }, []);
+
+  useEffect(() => {
+    const container = attendanceScrollRef.current;
+    if (!container) return undefined;
+
+    const handleWheel = (event) => {
+      if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+      container.scrollLeft += event.deltaY;
+      event.preventDefault();
+    };
+
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      container.removeEventListener('wheel', handleWheel);
+    };
+  }, [attendance?.attendance?.length]);
 
   useEffect(() => {
     fetchFaculty();
   }, [fetchFaculty]);
+
+  // Periodically poll server for changes to shared internship days
+  useEffect(() => {
+    if (!facultyId) return undefined;
+
+    const intervalMs = 15000; // 15s
+    let mounted = true;
+
+    const tick = async () => {
+      try {
+        // Don't overwrite local edits while user is interacting
+        await fetchFaculty({ skipIfEditing: true });
+      } catch (e) {
+        // ignore polling errors
+      }
+    };
+
+    const id = setInterval(() => {
+      if (!mounted) return;
+      tick();
+    }, intervalMs);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") tick();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      mounted = false;
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [facultyId, fetchFaculty]);
 
   const getDayId = useCallback((day) => {
     if (!day) return null;
     return day._id ?? day.id ?? null;
   }, []);
 
+  const normalizeRoleLocal = (r) =>
+    String(r || "")
+      .trim()
+      .toLowerCase();
+
+  const getOwnershipTokensLocal = useCallback((value) => {
+    if (!value) return [];
+    if (Array.isArray(value))
+      return value.flatMap((v) => getOwnershipTokensLocal(v));
+    if (typeof value === "object") {
+      return [
+        value._id,
+        value.id,
+        value.userId,
+        value.login,
+        value.username,
+        value.email,
+        value.name,
+        value.surname,
+        value.lastname,
+        [value.name, value.surname, value.lastname].filter(Boolean).join(" "),
+      ]
+        .map((t) =>
+          String(t || "")
+            .trim()
+            .toLowerCase(),
+        )
+        .filter(Boolean);
+    }
+    return [String(value).trim().toLowerCase()].filter(Boolean);
+  }, []);
+
+  const canViewComments = useMemo(() => {
+    const role = normalizeRoleLocal(user?.role);
+    if (!faculty) return false;
+    // Admins and others keep full access
+    if (role === "admin" || role === "developer" || role === "rector")
+      return true;
+    // Tutors and professors only if assigned to this internship
+    if (role === "tutor" || role === "professor") {
+      const userTokens = getOwnershipTokensLocal([
+        user?.id,
+        user?._id,
+        user?.userId,
+        user?.login,
+        user?.username,
+        user?.email,
+        user?.name,
+        user?.surname,
+        user?.lastname,
+        [user?.name, user?.surname, user?.lastname].filter(Boolean).join(" "),
+      ]);
+      const internTokens = getOwnershipTokensLocal([
+        faculty?.tutorID,
+        faculty?.tutor,
+        faculty?.supervisor,
+      ]);
+      return internTokens.some((t) => userTokens.includes(t));
+    }
+    // Other roles (students) can view comments for the internship page
+    return true;
+  }, [user, faculty, getOwnershipTokensLocal]);
+
   const getCommentKey = useCallback((comment, index) => {
     if (!comment) return `idx-${index}`;
-    return String(comment._id || `${comment.date || ''}-${comment.text || ''}-${index}`);
+    return String(
+      comment._id || `${comment.date || ""}-${comment.text || ""}-${index}`,
+    );
   }, []);
 
   const getStudentId = useCallback((student) => {
-    if (!student) return '';
-    return String(student._id ?? student.id ?? student.studentId ?? '').trim();
+    if (!student) return "";
+    return String(student._id ?? student.id ?? student.studentId ?? "").trim();
   }, []);
 
   const getStudentName = useCallback((student) => {
-    if (!student) return 'Unnamed student';
-    return [student.name, student.surname, student.lastname].filter(Boolean).join(' ').trim() || 'Unnamed student';
+    if (!student) return "Unnamed student";
+    return (
+      [student.name, student.surname, student.lastname]
+        .filter(Boolean)
+        .join(" ")
+        .trim() || "Unnamed student"
+    );
   }, []);
 
   const getStudentFacultyName = useCallback((student) => {
-    if (!student) return '';
-    if (typeof student.nameFaculty === 'string' && student.nameFaculty.trim()) return student.nameFaculty.trim();
-    if (typeof student?.faculty === 'object' && student.faculty) {
-      return String(student.faculty.name || student.faculty.title || '').trim();
+    if (!student) return "";
+    if (typeof student.nameFaculty === "string" && student.nameFaculty.trim())
+      return student.nameFaculty.trim();
+    if (typeof student?.faculty === "object" && student.faculty) {
+      return String(student.faculty.name || student.faculty.title || "").trim();
     }
-    return '';
+    return "";
   }, []);
 
   const getStudentYear = useCallback((student) => {
-    if (!student) return '';
+    if (!student) return "";
 
-    const rawYear = student.year ?? student.faculty?.year ?? student.facultyYear ?? student.courseYear;
-    if (rawYear == null || rawYear === '') return '';
+    const rawYear =
+      student.year ??
+      student.faculty?.year ??
+      student.facultyYear ??
+      student.courseYear;
+    if (rawYear == null || rawYear === "") return "";
 
     return String(rawYear).trim();
   }, []);
 
-  const normalizeStudentRecord = useCallback((student) => {
-    if (!student) return null;
+  const normalizeStudentRecord = useCallback(
+    (student) => {
+      if (!student) return null;
 
-    if (typeof student === 'string' || typeof student === 'number') {
-      const studentId = String(student).trim();
-      return studentId ? { _id: studentId } : null;
-    }
+      if (typeof student === "string" || typeof student === "number") {
+        const studentId = String(student).trim();
+        return studentId ? { _id: studentId } : null;
+      }
 
-    const studentId = getStudentId(student);
-    const normalized = {
-      name: typeof student.name === 'string' ? student.name : '',
-      surname: typeof student.surname === 'string' ? student.surname : '',
-      lastname: typeof student.lastname === 'string' ? student.lastname : '',
-      nameFaculty: getStudentFacultyName(student),
-      year: getStudentYear(student),
-    };
+      const studentId = getStudentId(student);
+      const normalized = {
+        name: typeof student.name === "string" ? student.name : "",
+        surname: typeof student.surname === "string" ? student.surname : "",
+        lastname: typeof student.lastname === "string" ? student.lastname : "",
+        nameFaculty: getStudentFacultyName(student),
+        year: getStudentYear(student),
+      };
 
-    if (studentId) {
-      normalized._id = studentId;
-    } else if (typeof student.id === 'string' && student.id.trim()) {
-      normalized.id = student.id.trim();
-    }
+      if (studentId) {
+        normalized._id = studentId;
+      } else if (typeof student.id === "string" && student.id.trim()) {
+        normalized.id = student.id.trim();
+      }
 
-    return normalized;
-  }, [getStudentFacultyName, getStudentId, getStudentYear]);
+      return normalized;
+    },
+    [getStudentFacultyName, getStudentId, getStudentYear],
+  );
 
   const extractImageUrls = useCallback((day) => {
     if (!day) return [];
 
     const sourceImages = Array.isArray(day.images)
       ? day.images
-      : (Array.isArray(day.shortReport?.images) ? day.shortReport.images : []);
+      : Array.isArray(day.shortReport?.images)
+        ? day.shortReport.images
+        : [];
 
     return sourceImages
       .map((item) => {
-        if (typeof item === 'string') return item;
-        if (item && typeof item.url === 'string') return item.url;
+        if (typeof item === "string") return item;
+        if (item && typeof item.url === "string") return item.url;
         return null;
       })
       .filter(Boolean);
   }, []);
 
-  const createReportFormSnapshot = useCallback((day) => ({
-    date: day?.date ? String(day.date).slice(0, 10) : '',
-    title: day?.shortReport?.title || '',
-    description: day?.shortReport?.description || '',
-    imageUrls: extractImageUrls(day),
-  }), [extractImageUrls]);
+  const createReportFormSnapshot = useCallback(
+    (day) => ({
+      date: day?.date ? String(day.date).slice(0, 10) : "",
+      title: day?.shortReport?.title || "",
+      description: day?.shortReport?.description || "",
+      imageUrls: extractImageUrls(day),
+    }),
+    [extractImageUrls],
+  );
 
   const resetDayForm = useCallback(() => {
     setShowReportForm(false);
-    setReportTitle('');
-    setReportDescription('');
-    setReportDayDate('');
+    setReportTitle("");
+    setReportDescription("");
+    setReportDayDate("");
     setReportImages([]);
     setImagePreviews([]);
     setUploadProgress(0);
@@ -346,52 +670,67 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
   const initBaseInfoFields = useCallback((facultySnapshot) => {
     if (!facultySnapshot) return;
     const durationValue = facultySnapshot?.duration
-      ? (typeof facultySnapshot.duration === 'string'
+      ? typeof facultySnapshot.duration === "string"
         ? facultySnapshot.duration
-        : [facultySnapshot.duration?.start, facultySnapshot.duration?.end].filter(Boolean).join(' - '))
-      : '';
+        : [facultySnapshot.duration?.start, facultySnapshot.duration?.end]
+            .filter(Boolean)
+            .join(" - ")
+      : "";
 
-    setBaseInfoName(facultySnapshot.name || '');
-    setBaseInfoCompany(facultySnapshot.company || '');
-    setBaseInfoLocation(facultySnapshot.location || '');
+    setBaseInfoName(facultySnapshot.name || "");
+    setBaseInfoCompany(facultySnapshot.company || "");
+    setBaseInfoLocation(facultySnapshot.location || "");
     setBaseInfoDuration(durationValue);
     setBaseInfoStatus(normalizeInternshipStatus(facultySnapshot.status));
-    setBaseInfoProgressAll(facultySnapshot.progressAll != null ? String(facultySnapshot.progressAll) : '');
-    setBaseInfoPlan(facultySnapshot.plan || '');
+    setBaseInfoProgressAll(
+      facultySnapshot.progressAll != null
+        ? String(facultySnapshot.progressAll)
+        : "",
+    );
+    setBaseInfoPlan(facultySnapshot.plan || "");
   }, []);
 
-  const applyFormatting = useCallback((textareaRef, setter, before, after = '', placeholder = 'text') => {
-    const el = textareaRef?.current;
-    if (!el) return;
+  const applyFormatting = useCallback(
+    (textareaRef, setter, before, after = "", placeholder = "text") => {
+      const el = textareaRef?.current;
+      if (!el) return;
 
-    const start = el.selectionStart ?? 0;
-    const end = el.selectionEnd ?? 0;
-    const value = el.value ?? '';
-    const selected = value.slice(start, end);
-    const insert = `${before}${selected || placeholder}${after}`;
-    const nextValue = `${value.slice(0, start)}${insert}${value.slice(end)}`;
+      const start = el.selectionStart ?? 0;
+      const end = el.selectionEnd ?? 0;
+      const value = el.value ?? "";
+      const selected = value.slice(start, end);
+      const insert = `${before}${selected || placeholder}${after}`;
+      const nextValue = `${value.slice(0, start)}${insert}${value.slice(end)}`;
 
-    setter(nextValue);
+      setter(nextValue);
 
-    requestAnimationFrame(() => {
-      el.focus();
-      if (selected) {
-        el.setSelectionRange(start + before.length, start + before.length + selected.length);
-      } else {
-        const cursorStart = start + before.length;
-        el.setSelectionRange(cursorStart, cursorStart + placeholder.length);
-      }
-    });
-  }, []);
+      requestAnimationFrame(() => {
+        el.focus();
+        if (selected) {
+          el.setSelectionRange(
+            start + before.length,
+            start + before.length + selected.length,
+          );
+        } else {
+          const cursorStart = start + before.length;
+          el.setSelectionRange(cursorStart, cursorStart + placeholder.length);
+        }
+      });
+    },
+    [],
+  );
 
   const days = useMemo(() => faculty?.days || [], [faculty]);
   const attachedStudents = useMemo(() => {
-    if (Array.isArray(faculty?.numberOfStudents)) return faculty.numberOfStudents;
+    if (Array.isArray(faculty?.numberOfStudents))
+      return faculty.numberOfStudents;
     if (Array.isArray(faculty?.students)) return faculty.students;
     return [];
   }, [faculty]);
   const attachedStudentIds = useMemo(() => {
-    return new Set(attachedStudents.map((student) => getStudentId(student)).filter(Boolean));
+    return new Set(
+      attachedStudents.map((student) => getStudentId(student)).filter(Boolean),
+    );
   }, [attachedStudents, getStudentId]);
   const getOwnershipTokens = useCallback((value) => {
     const tokens = new Set();
@@ -406,8 +745,10 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
       return tokens;
     }
 
-    if (value && typeof value === 'object') {
-      [value._id, value.id, value.login, value.username, value.email].forEach(pushValue);
+    if (value && typeof value === "object") {
+      [value._id, value.id, value.login, value.username, value.email].forEach(
+        pushValue,
+      );
       return tokens;
     }
 
@@ -415,9 +756,11 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
     return tokens;
   }, []);
   const canManageStudents = useMemo(() => {
-    const role = String(user?.role || '').trim().toLowerCase();
-    if (role === 'admin') return true;
-    if (role !== 'tutor') return false;
+    const role = String(user?.role || "")
+      .trim()
+      .toLowerCase();
+    if (role === "admin") return true;
+    if (role !== "tutor") return false;
 
     const currentUserTokens = getOwnershipTokens([
       user?._id,
@@ -451,17 +794,21 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
     return false;
   }, [faculty, getOwnershipTokens, user]);
   const openStudentManager = useCallback(() => {
-    setStudentSearchTerm('');
+    setStudentSearchTerm("");
     setSelectedStudentIds([]);
-    setSelectedStudentFaculty('all');
-    setSelectedStudentYear('all');
+    setSelectedStudentFaculty("all");
+    setSelectedStudentYear("all");
     setShowStudentManager(true);
   }, []);
   const studentDirectory = useMemo(() => {
     const term = studentSearchTerm.trim().toLowerCase();
     const sourceStudents = Array.isArray(students) ? students : [];
-    const selectedFacultyValue = String(selectedStudentFaculty || 'all').trim().toLowerCase();
-    const selectedYearValue = String(selectedStudentYear || 'all').trim().toLowerCase();
+    const selectedFacultyValue = String(selectedStudentFaculty || "all")
+      .trim()
+      .toLowerCase();
+    const selectedYearValue = String(selectedStudentYear || "all")
+      .trim()
+      .toLowerCase();
 
     return sourceStudents
       .filter((student) => {
@@ -471,17 +818,25 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
           getStudentId(student),
           getStudentName(student),
           getStudentFacultyName(student),
-        ].join(' ').toLowerCase();
+        ]
+          .join(" ")
+          .toLowerCase();
 
         return searchable.includes(term);
       })
       .filter((student) => {
-        if (selectedFacultyValue === 'all') return true;
-        return String(getStudentFacultyName(student)).trim().toLowerCase() === selectedFacultyValue;
+        if (selectedFacultyValue === "all") return true;
+        return (
+          String(getStudentFacultyName(student)).trim().toLowerCase() ===
+          selectedFacultyValue
+        );
       })
       .filter((student) => {
-        if (selectedYearValue === 'all') return true;
-        return String(getStudentYear(student)).trim().toLowerCase() === selectedYearValue;
+        if (selectedYearValue === "all") return true;
+        return (
+          String(getStudentYear(student)).trim().toLowerCase() ===
+          selectedYearValue
+        );
       })
       .map((student) => {
         const studentId = getStudentId(student);
@@ -496,8 +851,12 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
         };
       })
       .sort((a, b) => {
-        const facultyA = String(a.studentFacultyName || '').trim().toLowerCase();
-        const facultyB = String(b.studentFacultyName || '').trim().toLowerCase();
+        const facultyA = String(a.studentFacultyName || "")
+          .trim()
+          .toLowerCase();
+        const facultyB = String(b.studentFacultyName || "")
+          .trim()
+          .toLowerCase();
         if (facultyA !== facultyB) {
           if (!facultyA) return 1;
           if (!facultyB) return -1;
@@ -513,7 +872,17 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
         if (hasYearA !== hasYearB) return hasYearA ? -1 : 1;
         return a.studentName.localeCompare(b.studentName);
       });
-  }, [attachedStudentIds, getStudentFacultyName, getStudentId, getStudentName, getStudentYear, selectedStudentFaculty, selectedStudentYear, studentSearchTerm, students]);
+  }, [
+    attachedStudentIds,
+    getStudentFacultyName,
+    getStudentId,
+    getStudentName,
+    getStudentYear,
+    selectedStudentFaculty,
+    selectedStudentYear,
+    studentSearchTerm,
+    students,
+  ]);
   const availableStudentFaculties = useMemo(() => {
     const faculties = new Set();
     (Array.isArray(students) ? students : []).forEach((student) => {
@@ -533,73 +902,103 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
     return Array.from(years).sort((a, b) => {
       const yearA = Number.parseInt(a, 10);
       const yearB = Number.parseInt(b, 10);
-      if (Number.isFinite(yearA) && Number.isFinite(yearB) && yearA !== yearB) return yearA - yearB;
+      if (Number.isFinite(yearA) && Number.isFinite(yearB) && yearA !== yearB)
+        return yearA - yearB;
       return a.localeCompare(b);
     });
   }, [getStudentYear, students]);
   const facultyFilterOptions = useMemo(
     () => [
-      { value: 'all', label: 'All faculties' },
-      ...availableStudentFaculties.map((facultyName) => ({ value: facultyName, label: facultyName })),
+      { value: "all", label: "All faculties" },
+      ...availableStudentFaculties.map((facultyName) => ({
+        value: facultyName,
+        label: facultyName,
+      })),
     ],
     [availableStudentFaculties],
   );
   const yearFilterOptions = useMemo(
     () => [
-      { value: 'all', label: 'All years' },
+      { value: "all", label: "All years" },
       ...availableStudentYears.map((year) => ({ value: year, label: year })),
     ],
     [availableStudentYears],
   );
-  const reportedDaysCount = useMemo(() => days.filter((day) => hasReportContent(day)).length, [days]);
+  const reportedDaysCount = useMemo(
+    () => days.filter((day) => hasReportContent(day)).length,
+    [days],
+  );
   const progressPercent = useMemo(() => calculateProgressPercent(days), [days]);
-  const computedProgressLabel = useMemo(() => `${progressPercent}%`, [progressPercent]);
-  const progressHue = useMemo(() => Math.round((progressPercent / 100) * 120), [progressPercent]);
+  const computedProgressLabel = useMemo(
+    () => `${progressPercent}%`,
+    [progressPercent],
+  );
+  const progressHue = useMemo(
+    () => Math.round((progressPercent / 100) * 120),
+    [progressPercent],
+  );
   const currentDay = days[dayIndex];
-  const currentDayImageUrls = useMemo(() => extractImageUrls(currentDay), [extractImageUrls, currentDay]);
+  const currentDayImageUrls = useMemo(
+    () => extractImageUrls(currentDay),
+    [extractImageUrls, currentDay],
+  );
+  const reportDescriptionLength = reportDescription.length;
+  const isReportDescriptionLongEnough =
+    reportDescription.trim().length >= REPORT_DESCRIPTION_MIN_LENGTH;
   const reportFormDirty = useMemo(() => {
     if (!showReportForm || !reportFormSnapshot) return false;
 
     return (
-      reportDayDate !== reportFormSnapshot.date
-      || reportTitle !== reportFormSnapshot.title
-      || reportDescription !== reportFormSnapshot.description
-      || reportImages.length > 0
+      reportDayDate !== reportFormSnapshot.date ||
+      reportTitle !== reportFormSnapshot.title ||
+      reportDescription !== reportFormSnapshot.description ||
+      reportImages.length > 0
     );
-  }, [reportDayDate, reportDescription, reportFormSnapshot, reportImages.length, reportTitle, showReportForm]);
+  }, [
+    reportDayDate,
+    reportDescription,
+    reportFormSnapshot,
+    reportImages.length,
+    reportTitle,
+    showReportForm,
+  ]);
   const tutorInfo = useMemo(() => {
-    const tutorSource = faculty?.tutorID || faculty?.tutor || faculty?.supervisor || null;
+    const tutorSource =
+      faculty?.tutorID || faculty?.tutor || faculty?.supervisor || null;
 
-    const tutorName = [
-      typeof tutorSource === 'object' ? tutorSource?.name : '',
-      typeof tutorSource === 'object' ? tutorSource?.surname : '',
-      typeof tutorSource === 'object' ? tutorSource?.lastname : '',
-    ]
-      .filter(Boolean)
-      .join(' ')
-      .trim()
-      || faculty?.tutorName
-      || faculty?.supervisorName
-      || (typeof tutorSource === 'string' ? tutorSource.trim() : '');
+    const tutorName =
+      [
+        typeof tutorSource === "object" ? tutorSource?.name : "",
+        typeof tutorSource === "object" ? tutorSource?.surname : "",
+        typeof tutorSource === "object" ? tutorSource?.lastname : "",
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .trim() ||
+      faculty?.tutorName ||
+      faculty?.supervisorName ||
+      (typeof tutorSource === "string" ? tutorSource.trim() : "");
 
     // Calculate initials from name and surname
     const getInitials = (name) => {
-      if (!name) return 'U';
-      return name
-        .split(' ')
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part[0]?.toUpperCase())
-        .join('') || 'U';
+      if (!name) return "U";
+      return (
+        name
+          .split(" ")
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((part) => part[0]?.toUpperCase())
+          .join("") || "U"
+      );
     };
 
     const tutorContact =
-      (typeof tutorSource === 'object'
+      (typeof tutorSource === "object"
         ? tutorSource?.phone || tutorSource?.email || tutorSource?.login
-        : '')
-      || faculty?.tutorContact
-      || faculty?.supervisorContact
-      || '';
+        : "") ||
+      faculty?.tutorContact ||
+      faculty?.supervisorContact ||
+      "";
 
     return {
       name: tutorName,
@@ -624,14 +1023,17 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
       const lng = Number(coords[1]);
       if (Number.isFinite(lat) && Number.isFinite(lng)) {
         return {
-          label: faculty?.location?.trim() || faculty?.company?.trim() || 'Internship location',
+          label:
+            faculty?.location?.trim() ||
+            faculty?.company?.trim() ||
+            "Internship location",
           embedUrl: `https://www.google.com/maps?q=${lat},${lng}&z=15&output=embed`,
           linkUrl: `https://www.google.com/maps?q=${lat},${lng}`,
         };
       }
     }
 
-    const locationText = String(faculty?.location || '').trim();
+    const locationText = String(faculty?.location || "").trim();
     if (!locationText) return null;
 
     return {
@@ -640,29 +1042,33 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
       linkUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationText)}`,
     };
   }, [faculty]);
- 
+
   // Check if current tutor is assigned to this faculty
   const isAssignedTutor = useMemo(() => {
-    if (user?.role !== 'Tutor' || !faculty) return false;
-    const tutorSource = faculty?.tutorID || faculty?.tutor || faculty?.supervisor;
+    if (user?.role !== "Tutor" || !faculty) return false;
+    const tutorSource =
+      faculty?.tutorID || faculty?.tutor || faculty?.supervisor;
     if (!tutorSource) return false;
-    
+
     // Check if tutorSource matches current user
-    const tutorId = typeof tutorSource === 'object' ? tutorSource?._id || tutorSource?.id : tutorSource;
+    const tutorId =
+      typeof tutorSource === "object"
+        ? tutorSource?._id || tutorSource?.id
+        : tutorSource;
     const userId = user?.id || user?._id;
-    
+
     return tutorId && userId && tutorId === userId;
   }, [user, faculty]);
- 
-  const canWriteReport = user?.role === 'Admin' || isAssignedTutor; // Only Admin or assigned Tutor can write reports
-  const canWriteComments = true; // Allow anyone to write comments
-  const canEditInternship = user?.role === 'Admin' || isAssignedTutor;
-  const canApprove = user?.role === 'Admin';
-  const canExport = user?.role === 'Admin';
+
+  const canWriteReport = user?.role === "Admin" || isAssignedTutor; // Only Admin or assigned Tutor can write reports
+  const canWriteComments = canViewComments; // Allow writing only when comments are viewable (assigned staff or allowed roles)
+  const canEditInternship = user?.role === "Admin" || isAssignedTutor;
+  const canApprove = user?.role === "Admin";
+  const canExport = user?.role === "Admin";
 
   const confirmDiscardReportChanges = useCallback(() => {
     if (!reportFormDirty) return true;
-    return window.confirm('You have unsaved report changes. Discard them?');
+    return window.confirm("You have unsaved report changes. Discard them?");
   }, [reportFormDirty]);
 
   const guardedResetDayForm = useCallback(() => {
@@ -678,22 +1084,31 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
     onBack();
   }, [confirmDiscardReportChanges, onBack]);
 
-  const attemptDayChange = useCallback((nextIndex) => {
-    const boundedNext = Math.max(0, Math.min(days.length - 1, nextIndex));
-    if (boundedNext === dayIndex) return;
+  const attemptDayChange = useCallback(
+    (nextIndex) => {
+      const boundedNext = Math.max(0, Math.min(days.length - 1, nextIndex));
+      if (boundedNext === dayIndex) return;
 
-    if (showReportForm) {
-      if (!confirmDiscardReportChanges()) return;
-      setReportFormSnapshot(null);
-      resetDayForm();
-    }
+      if (showReportForm) {
+        if (!confirmDiscardReportChanges()) return;
+        setReportFormSnapshot(null);
+        resetDayForm();
+      }
 
-    setDayIndex(boundedNext);
-  }, [confirmDiscardReportChanges, dayIndex, days.length, resetDayForm, showReportForm]);
+      setDayIndex(boundedNext);
+    },
+    [
+      confirmDiscardReportChanges,
+      dayIndex,
+      days.length,
+      resetDayForm,
+      showReportForm,
+    ],
+  );
 
   const handleFinalReport = useCallback(async () => {
     if (!faculty) {
-      toast.error('Internship data is not ready yet. Please try again.');
+      toast.error("Internship data is not ready yet. Please try again.");
       return;
     }
 
@@ -701,8 +1116,8 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
       if (!Array.isArray(rawImages)) return [];
       return rawImages
         .map((item) => {
-          if (typeof item === 'string') return item;
-          if (item && typeof item.url === 'string') return item.url;
+          if (typeof item === "string") return item;
+          if (item && typeof item.url === "string") return item.url;
           return null;
         })
         .filter(Boolean);
@@ -711,16 +1126,22 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
     const reportDays = days.slice(0, 30).map((day, index) => {
       const shortReportImages = normalizeImageUrls(day?.shortReport?.images);
       const dayImages = normalizeImageUrls(day?.images);
-      const photoUrls = Array.from(new Set([...shortReportImages, ...dayImages]));
+      const photoUrls = Array.from(
+        new Set([...shortReportImages, ...dayImages]),
+      );
 
       const comments = Array.isArray(day?.comments)
         ? day.comments.map((comment) => ({
-          text: typeof comment?.text === 'string' ? comment.text : String(comment || ''),
-          date: comment?.date || null,
-          userID: typeof comment?.userID === 'object'
-            ? (comment.userID?._id || comment.userID?.id || null)
-            : (comment?.userID || null),
-        }))
+            text:
+              typeof comment?.text === "string"
+                ? comment.text
+                : String(comment || ""),
+            date: comment?.date || null,
+            userID:
+              typeof comment?.userID === "object"
+                ? comment.userID?._id || comment.userID?.id || null
+                : comment?.userID || null,
+          }))
         : [];
 
       return {
@@ -728,8 +1149,14 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
         date: day?.date || null,
         approved: Boolean(day?.approved),
         shortReport: {
-          title: typeof day?.shortReport?.title === 'string' ? day.shortReport.title : '',
-          description: typeof day?.shortReport?.description === 'string' ? day.shortReport.description : '',
+          title:
+            typeof day?.shortReport?.title === "string"
+              ? day.shortReport.title
+              : "",
+          description:
+            typeof day?.shortReport?.description === "string"
+              ? day.shortReport.description
+              : "",
         },
         comments,
         photoUrls,
@@ -739,26 +1166,29 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
     const payload = {
       internship: {
         id: faculty?._id || faculty?.id || facultyId,
-        name: faculty?.name || '',
-        company: faculty?.company || '',
-        location: faculty?.location || '',
-        status: faculty?.status || '',
+        name: faculty?.name || "",
+        company: faculty?.company || "",
+        location: faculty?.location || "",
+        status: faculty?.status || "",
         duration: faculty?.duration || null,
-        plan: faculty?.plan || '',
-        progressAll: faculty?.progressAll || '',
+        plan: faculty?.plan || "",
+        progressAll: faculty?.progressAll || "",
         students: attachedStudents.map((student) => ({
           id: student?._id || student?.id || student?.studentId || null,
-          name: [student?.name, student?.surname, student?.lastname].filter(Boolean).join(' ').trim(),
+          name: [student?.name, student?.surname, student?.lastname]
+            .filter(Boolean)
+            .join(" ")
+            .trim(),
           faculty: student?.nameFaculty || null,
         })),
       },
       days: reportDays,
-      reportType: 'final-30-day-report',
+      reportType: "final-30-day-report",
     };
 
     setFinalReportLoading(true);
-    setFinalReportError('');
-    setFinalReportMarkdown('');
+    setFinalReportError("");
+    setFinalReportMarkdown("");
     setShowFinalReportModal(true);
 
     try {
@@ -766,9 +1196,9 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
       const response = await generateFinalReport(payload, token);
 
       setFinalReportMarkdown(response.report);
-      toast.success('Final report generated successfully.');
+      toast.success("Final report generated successfully.");
     } catch (error) {
-      const message = error?.message || 'Failed to generate AI final report.';
+      const message = error?.message || "Failed to generate AI final report.";
       setFinalReportError(message);
       toast.error(message);
     } finally {
@@ -776,51 +1206,81 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
     }
   }, [attachedStudents, days, faculty, facultyId]);
 
-  const updateStudentAssignments = useCallback(async (nextStudents, successMessage) => {
-    if (!faculty) return false;
-    if (!canManageStudents) {
-      toast.error('You do not have permission to manage students for this internship.');
-      return false;
-    }
+  const updateStudentAssignments = useCallback(
+    async (nextStudents, successMessage) => {
+      if (!faculty) return false;
+      if (!canManageStudents) {
+        toast.error(
+          "You do not have permission to manage students for this internship.",
+        );
+        return false;
+      }
 
-    const normalizedStudents = [];
-    const seenStudentKeys = new Set();
+      const normalizedStudents = [];
+      const seenStudentKeys = new Set();
 
-    (Array.isArray(nextStudents) ? nextStudents : []).forEach((student) => {
-      const normalizedStudent = normalizeStudentRecord(student);
-      if (!normalizedStudent) return;
+      (Array.isArray(nextStudents) ? nextStudents : []).forEach((student) => {
+        const normalizedStudent = normalizeStudentRecord(student);
+        if (!normalizedStudent) return;
 
-      const studentKey = normalizedStudent._id || normalizedStudent.id || [normalizedStudent.name, normalizedStudent.surname, normalizedStudent.lastname].filter(Boolean).join('|');
-      if (!studentKey || seenStudentKeys.has(studentKey)) return;
+        const studentKey =
+          normalizedStudent._id ||
+          normalizedStudent.id ||
+          [
+            normalizedStudent.name,
+            normalizedStudent.surname,
+            normalizedStudent.lastname,
+          ]
+            .filter(Boolean)
+            .join("|");
+        if (!studentKey || seenStudentKeys.has(studentKey)) return;
 
-      seenStudentKeys.add(studentKey);
-      normalizedStudents.push(normalizedStudent);
-    });
+        seenStudentKeys.add(studentKey);
+        normalizedStudents.push(normalizedStudent);
+      });
 
-    setSubmitting(true);
-    try {
-      await patch(`/faculty/${facultyId}`, { numberOfStudents: normalizedStudents });
-      await fetchFaculty();
-      toast.success(successMessage);
-      return true;
-    } catch (err) {
-      toast.error(err.message || 'Something went wrong.');
-      return false;
-    } finally {
-      setSubmitting(false);
-    }
-  }, [canManageStudents, faculty, facultyId, fetchFaculty, normalizeStudentRecord]);
+      setSubmitting(true);
+      try {
+        await patch(`/faculty/${facultyId}`, {
+          numberOfStudents: normalizedStudents,
+        });
+        await fetchFaculty();
+        toast.success(successMessage);
+        return true;
+      } catch (err) {
+        toast.error(err.message || "Something went wrong.");
+        return false;
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [
+      canManageStudents,
+      faculty,
+      facultyId,
+      fetchFaculty,
+      normalizeStudentRecord,
+    ],
+  );
 
-  const handleDetachStudent = useCallback(async (student) => {
-    const studentId = getStudentId(student);
-    if (!studentId) {
-      toast.error('Student could not be identified.');
-      return;
-    }
+  const handleDetachStudent = useCallback(
+    async (student) => {
+      const studentId = getStudentId(student);
+      if (!studentId) {
+        toast.error("Student could not be identified.");
+        return;
+      }
 
-    const nextStudents = attachedStudents.filter((item) => getStudentId(item) !== studentId);
-    await updateStudentAssignments(nextStudents, 'Student detached from the internship.');
-  }, [attachedStudents, getStudentId, updateStudentAssignments]);
+      const nextStudents = attachedStudents.filter(
+        (item) => getStudentId(item) !== studentId,
+      );
+      await updateStudentAssignments(
+        nextStudents,
+        "Student detached from the internship.",
+      );
+    },
+    [attachedStudents, getStudentId, updateStudentAssignments],
+  );
 
   const handleToggleStudentSelection = useCallback((studentId) => {
     if (!studentId) return;
@@ -835,17 +1295,22 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
 
   const handleAttachSelectedStudents = useCallback(async () => {
     if (selectedStudentIds.length === 0) {
-      toast.warning('Select at least one student first.');
+      toast.warning("Select at least one student first.");
       return;
     }
 
     const selectedLookup = new Set(selectedStudentIds);
     const studentsToAttach = studentDirectory
-      .filter(({ studentId, isAttached }) => studentId && selectedLookup.has(studentId) && !isAttached)
+      .filter(
+        ({ studentId, isAttached }) =>
+          studentId && selectedLookup.has(studentId) && !isAttached,
+      )
       .map(({ student }) => student);
 
     if (studentsToAttach.length === 0) {
-      toast.warning('Selected students are already attached or could not be found.');
+      toast.warning(
+        "Selected students are already attached or could not be found.",
+      );
       return;
     }
 
@@ -858,98 +1323,135 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
     if (didSave) {
       setSelectedStudentIds([]);
     }
-  }, [attachedStudents, selectedStudentIds, studentDirectory, updateStudentAssignments]);
+  }, [
+    attachedStudents,
+    selectedStudentIds,
+    studentDirectory,
+    updateStudentAssignments,
+  ]);
 
   useEffect(() => {
     if (!faculty || isInternshipEditMode) return;
     initBaseInfoFields(faculty);
   }, [faculty, isInternshipEditMode, initBaseInfoFields]);
 
-  const syncFacultyProgress = useCallback(async (facultySnapshot) => {
-    if (!facultySnapshot) return;
+  const syncFacultyProgress = useCallback(
+    async (facultySnapshot) => {
+      if (!facultySnapshot) return;
 
-    const expectedPercent = calculateProgressPercent(facultySnapshot.days || []);
-    const currentPercent = parseProgressPercent(facultySnapshot.progressAll);
-    const expectedLabel = `${expectedPercent}%`;
+      const expectedPercent = calculateProgressPercent(
+        facultySnapshot.days || [],
+      );
+      const currentPercent = parseProgressPercent(facultySnapshot.progressAll);
+      const expectedLabel = `${expectedPercent}%`;
 
-    if (currentPercent === expectedPercent) {
-      if (String(facultySnapshot.progressAll || '').trim() !== expectedLabel) {
-        setFaculty((prev) => (prev ? { ...prev, progressAll: expectedLabel } : prev));
+      if (currentPercent === expectedPercent) {
+        if (
+          String(facultySnapshot.progressAll || "").trim() !== expectedLabel
+        ) {
+          setFaculty((prev) =>
+            prev ? { ...prev, progressAll: expectedLabel } : prev,
+          );
+        }
+        return;
       }
-      return;
-    }
 
-    try {
-      await patch(`/faculty/${facultyId}`, {
-        ...facultySnapshot,
-        progressAll: expectedLabel,
-      });
-      setFaculty((prev) => (prev ? { ...prev, progressAll: expectedLabel } : prev));
-    } catch (err) {
-      console.error('Failed to sync internship progress:', err);
-    }
-  }, [facultyId]);
+      try {
+        await patch(`/faculty/${facultyId}`, {
+          ...facultySnapshot,
+          progressAll: expectedLabel,
+        });
+        setFaculty((prev) =>
+          prev ? { ...prev, progressAll: expectedLabel } : prev,
+        );
+      } catch (err) {
+        console.error("Failed to sync internship progress:", err);
+      }
+    },
+    [facultyId],
+  );
 
-  const updateDay = useCallback(async (day, payload, index = null) => {
-    const dayId = getDayId(day) ?? (index != null ? String(index) : null);
-    if (dayId == null) {
-      toast.error('Day could not be identified. Try refreshing.');
-      return;
-    }
-    setSubmitting(true);
-    try {
-      await patch(`/faculty/${facultyId}/days/${dayId}`, payload);
-      await fetchFaculty(); // Refresh the data
-      toast.success('Saved.');
-    } catch (err) {
-      toast.error(err.message || 'Something went wrong.');
-    } finally {
-      setSubmitting(false);
-    }
-  }, [facultyId, getDayId, fetchFaculty]);
+  const updateDay = useCallback(
+    async (day, payload, index = null) => {
+      const dayId = getDayId(day) ?? (index != null ? String(index) : null);
+      if (dayId == null) {
+        toast.error("Day could not be identified. Try refreshing.");
+        return;
+      }
+      setSubmitting(true);
+      try {
+        await patch(`/faculty/${facultyId}/days/${dayId}`, payload);
+        await fetchFaculty(); // Refresh the data
+        toast.success("Saved.");
+      } catch (err) {
+        toast.error(err.message || "Something went wrong.");
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [facultyId, getDayId, fetchFaculty],
+  );
 
-  const handleBaseInfoSubmit = useCallback(async (e) => {
-    if (e?.preventDefault) e.preventDefault();
-    if (!faculty) return;
+  const handleBaseInfoSubmit = useCallback(
+    async (e) => {
+      if (e?.preventDefault) e.preventDefault();
+      if (!faculty) return;
 
-    setSubmitting(true);
+      setSubmitting(true);
 
-    try {
-      const nextName = baseInfoName.trim();
-      const nextCompany = baseInfoCompany.trim();
-      const nextLocation = baseInfoLocation.trim();
-      const nextDuration = baseInfoDuration.trim();
-      const nextStatus = normalizeInternshipStatus(baseInfoStatus);
-      const nextProgressAll = baseInfoProgressAll.trim();
-      const nextPlan = baseInfoPlan.trim();
+      try {
+        const nextName = baseInfoName.trim();
+        const nextCompany = baseInfoCompany.trim();
+        const nextLocation = baseInfoLocation.trim();
+        const nextDuration = baseInfoDuration.trim();
+        const nextStatus = normalizeInternshipStatus(baseInfoStatus);
+        const nextProgressAll = baseInfoProgressAll.trim();
+        const nextPlan = baseInfoPlan.trim();
 
-      if (!nextName) throw new Error('Internship name is required.');
-      if (!nextCompany) throw new Error('Company is required.');
-      if (!nextLocation) throw new Error('Location is required.');
+        if (!nextName) throw new Error("Internship name is required.");
+        if (!nextCompany) throw new Error("Company is required.");
+        if (!nextLocation) throw new Error("Location is required.");
 
-      const payload = {
-        ...faculty,
-        name: nextName,
-        company: nextCompany,
-        location: nextLocation,
-        duration: nextDuration || faculty.duration,
-        status: nextStatus,
-        progressAll: nextProgressAll,
-        plan: nextPlan,
-        locationYmaps: nextLocation === (faculty.location || '') ? faculty.locationYmaps : null,
-      };
+        const payload = {
+          ...faculty,
+          name: nextName,
+          company: nextCompany,
+          location: nextLocation,
+          duration: nextDuration || faculty.duration,
+          status: nextStatus,
+          progressAll: nextProgressAll,
+          plan: nextPlan,
+          locationYmaps:
+            nextLocation === (faculty.location || "")
+              ? faculty.locationYmaps
+              : null,
+        };
 
-      await patch(`/faculty/${facultyId}`, payload);
-      const refreshedFaculty = await fetchFaculty();
-      await syncFacultyProgress(refreshedFaculty);
-      toast.success('Internship information saved.');
-      setIsInternshipEditMode(false);
-    } catch (err) {
-      toast.error(err.message || 'Something went wrong.');
-    } finally {
-      setSubmitting(false);
-    }
-  }, [faculty, facultyId, baseInfoName, baseInfoCompany, baseInfoLocation, baseInfoDuration, baseInfoStatus, baseInfoProgressAll, baseInfoPlan, fetchFaculty, syncFacultyProgress]);
+        await patch(`/faculty/${facultyId}`, payload);
+        const refreshedFaculty = await fetchFaculty();
+        await syncFacultyProgress(refreshedFaculty);
+        toast.success("Internship information saved.");
+        setIsInternshipEditMode(false);
+      } catch (err) {
+        toast.error(err.message || "Something went wrong.");
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [
+      faculty,
+      facultyId,
+      baseInfoName,
+      baseInfoCompany,
+      baseInfoLocation,
+      baseInfoDuration,
+      baseInfoStatus,
+      baseInfoProgressAll,
+      baseInfoPlan,
+      fetchFaculty,
+      syncFacultyProgress,
+    ],
+  );
 
   const handleInternshipEditStart = useCallback(() => {
     if (!faculty) return;
@@ -966,11 +1468,11 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
     const snapshot = createReportFormSnapshot(currentDay);
     setReportDayDate(snapshot.date);
     if (currentDay?.shortReport) {
-      setReportTitle(currentDay.shortReport.title || '');
-      setReportDescription(currentDay.shortReport.description || '');
+      setReportTitle(currentDay.shortReport.title || "");
+      setReportDescription(currentDay.shortReport.description || "");
     } else {
-      setReportTitle('');
-      setReportDescription('');
+      setReportTitle("");
+      setReportDescription("");
     }
     setReportImages([]);
     setImagePreviews([]);
@@ -978,161 +1480,233 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
     setShowReportForm(true);
   }, [createReportFormSnapshot, currentDay]);
 
-  const handleReportSubmit = useCallback(async (e) => {
-    e.preventDefault();
-    if (!currentDay) return;
-    
-    setSubmitting(true);
-    setUploadProgress(0);
-    
-    try {
-      const dayId = getDayId(currentDay);
-      if (!dayId) throw new Error('Day could not be identified. Try refreshing.');
+  const handleReportSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
+      if (!currentDay) return;
 
-      const existingImageUrls = extractImageUrls(currentDay);
-
-      const extractShortReportImageUrls = (day) => {
-        const shortReportImages = Array.isArray(day?.shortReport?.images) ? day.shortReport.images : [];
-        return shortReportImages
-          .map((item) => {
-            if (typeof item === 'string') return item;
-            if (item && typeof item.url === 'string') return item.url;
-            return null;
-          })
-          .filter(Boolean);
-      };
-
-      let uploadedUrls = [];
-
-      // Step 1: Upload images in one multipart/form-data request
-      if (reportImages && reportImages.length > 0) {
-        const imageFormData = new FormData();
-
-        // Recommended field: append every file under "images"
-        reportImages.forEach((file) => {
-          imageFormData.append('images', file);
-        });
-
-        // Backward compatibility: also send first file under "image"
-        imageFormData.append('image', reportImages[0]);
-
-        const uploadedData = await post(`/faculty/${facultyId}/days/${dayId}/images`, imageFormData);
-        const responseUrls = [];
-
-        if (Array.isArray(uploadedData?.images)) {
-          uploadedData.images.forEach((item) => {
-            if (typeof item === 'string') responseUrls.push(item);
-            else if (item?.url) responseUrls.push(item.url);
-          });
-        }
-
-        if (uploadedData?.image?.url) responseUrls.push(uploadedData.image.url);
-
-        uploadedUrls = Array.from(new Set(responseUrls.filter(Boolean)));
-        if (uploadedUrls.length === 0) {
-          throw new Error('Upload succeeded but image URL is missing in response.');
-        }
-        setUploadProgress(100);
-
-        // Step 2: Immediate verification via GET /faculty/:id
-        const verifyAfterUploadFaculty = await get(`/faculty/${facultyId}`);
-        const verifyDay = (verifyAfterUploadFaculty?.days || []).find((d) => (d?._id ?? d?.id ?? null) === dayId);
-        if (!verifyDay) throw new Error('Uploaded image verification failed: day not found.');
-
-        const shortReportUrlsAfterUpload = extractShortReportImageUrls(verifyDay);
-        const hasUploadedUrlsInShortReport = uploadedUrls.every((url) => shortReportUrlsAfterUpload.includes(url));
-        if (!hasUploadedUrlsInShortReport) {
-          throw new Error('Uploaded image URL was not found in shortReport.images after upload.');
-        }
+      if (!isReportDescriptionLongEnough) {
+        toast.error(
+          `Description must be at least ${REPORT_DESCRIPTION_MIN_LENGTH} characters.`,
+        );
+        return;
       }
 
-      const finalImageUrls = uploadedUrls.length > 0
-        ? Array.from(new Set([...existingImageUrls, ...uploadedUrls]))
-        : existingImageUrls;
-      
-      // Step 2: Create/update report with image URLs
-      
-      const normalizedTitle = reportTitle.trim();
-      const normalizedDescription = reportDescription.trim();
-      const normalizedDayDate = reportDayDate || currentDay.date || '';
-
-      const reportPayload = {
-        ...currentDay,
-        dayNumber: currentDay.dayNumber,
-        date: normalizedDayDate,
-        approved: currentDay.approved,
-        images: finalImageUrls,
-      };
-
-      const shouldPersistReport = Boolean(currentDay?.shortReport || normalizedTitle || normalizedDescription || finalImageUrls.length > 0);
-      if (shouldPersistReport) {
-        reportPayload.shortReport = {
-          title: normalizedTitle || currentDay.shortReport?.title || 'Report',
-          description: normalizedDescription || currentDay.shortReport?.description || '',
-          images: finalImageUrls,
-          date: currentDay.shortReport?.date || new Date().toISOString(),
-        };
-      }
-
-      await patch(`/faculty/${facultyId}/days/${dayId}`, reportPayload);
-
-      // Step 3: Verify images remain after normal update flow
-      if (uploadedUrls.length > 0) {
-        const verifyAfterUpdateFaculty = await get(`/faculty/${facultyId}`);
-        const verifyDayAfterUpdate = (verifyAfterUpdateFaculty?.days || []).find((d) => (d?._id ?? d?.id ?? null) === dayId);
-        if (!verifyDayAfterUpdate) throw new Error('Post-update verification failed: day not found.');
-
-        const urlsAfterUpdate = extractImageUrls(verifyDayAfterUpdate);
-        const allUploadedUrlsRemain = uploadedUrls.every((url) => urlsAfterUpdate.includes(url));
-        if (!allUploadedUrlsRemain) {
-          throw new Error('Image was uploaded but did not remain after report update.');
-        }
-      }
-
-      const refreshedFaculty = await fetchFaculty(); // Refresh the data
-      await syncFacultyProgress(refreshedFaculty);
-      toast.success(`Day saved with ${finalImageUrls.length} image(s).`);
-      setReportFormSnapshot(null);
-      resetDayForm();
-    } catch (err) {
-      toast.error(err.message || 'Something went wrong.');
-    } finally {
-      setSubmitting(false);
+      setSubmitting(true);
       setUploadProgress(0);
-    }
-  }, [currentDay, reportTitle, reportDescription, reportDayDate, reportImages, facultyId, getDayId, fetchFaculty, extractImageUrls, resetDayForm, syncFacultyProgress]);
+
+      try {
+        const dayId = getDayId(currentDay);
+        if (!dayId)
+          throw new Error("Day could not be identified. Try refreshing.");
+
+        const existingImageUrls = extractImageUrls(currentDay);
+
+        const extractShortReportImageUrls = (day) => {
+          const shortReportImages = Array.isArray(day?.shortReport?.images)
+            ? day.shortReport.images
+            : [];
+          return shortReportImages
+            .map((item) => {
+              if (typeof item === "string") return item;
+              if (item && typeof item.url === "string") return item.url;
+              return null;
+            })
+            .filter(Boolean);
+        };
+
+        let uploadedUrls = [];
+
+        // Step 1: Upload images in one multipart/form-data request
+        if (reportImages && reportImages.length > 0) {
+          const imageFormData = new FormData();
+
+          // Recommended field: append every file under "images"
+          reportImages.forEach((file) => {
+            imageFormData.append("images", file);
+          });
+
+          // Backward compatibility: also send first file under "image"
+          imageFormData.append("image", reportImages[0]);
+
+          const uploadedData = await post(
+            `/faculty/${facultyId}/days/${dayId}/images`,
+            imageFormData,
+          );
+          const responseUrls = [];
+
+          if (Array.isArray(uploadedData?.images)) {
+            uploadedData.images.forEach((item) => {
+              if (typeof item === "string") responseUrls.push(item);
+              else if (item?.url) responseUrls.push(item.url);
+            });
+          }
+
+          if (uploadedData?.image?.url)
+            responseUrls.push(uploadedData.image.url);
+
+          uploadedUrls = Array.from(new Set(responseUrls.filter(Boolean)));
+          if (uploadedUrls.length === 0) {
+            throw new Error(
+              "Upload succeeded but image URL is missing in response.",
+            );
+          }
+          setUploadProgress(100);
+
+          // Step 2: Immediate verification via GET /faculty/:id
+          const verifyAfterUploadFaculty = await get(`/faculty/${facultyId}`);
+          const verifyDay = (verifyAfterUploadFaculty?.days || []).find(
+            (d) => (d?._id ?? d?.id ?? null) === dayId,
+          );
+          if (!verifyDay)
+            throw new Error(
+              "Uploaded image verification failed: day not found.",
+            );
+
+          const shortReportUrlsAfterUpload =
+            extractShortReportImageUrls(verifyDay);
+          const hasUploadedUrlsInShortReport = uploadedUrls.every((url) =>
+            shortReportUrlsAfterUpload.includes(url),
+          );
+          if (!hasUploadedUrlsInShortReport) {
+            throw new Error(
+              "Uploaded image URL was not found in shortReport.images after upload.",
+            );
+          }
+        }
+
+        const finalImageUrls =
+          uploadedUrls.length > 0
+            ? Array.from(new Set([...existingImageUrls, ...uploadedUrls]))
+            : existingImageUrls;
+
+        // Step 2: Create/update report with image URLs
+
+        const normalizedTitle = reportTitle.trim();
+        const normalizedDescription = reportDescription.trim();
+        const normalizedDayDate = reportDayDate || currentDay.date || "";
+
+        const reportPayload = {
+          ...currentDay,
+          dayNumber: currentDay.dayNumber,
+          date: normalizedDayDate,
+          approved: currentDay.approved,
+          images: finalImageUrls,
+        };
+
+        const shouldPersistReport = Boolean(
+          currentDay?.shortReport ||
+          normalizedTitle ||
+          normalizedDescription ||
+          finalImageUrls.length > 0,
+        );
+        if (shouldPersistReport) {
+          reportPayload.shortReport = {
+            title: normalizedTitle || currentDay.shortReport?.title || "Report",
+            description:
+              normalizedDescription ||
+              currentDay.shortReport?.description ||
+              "",
+            images: finalImageUrls,
+            date: currentDay.shortReport?.date || new Date().toISOString(),
+          };
+        }
+
+        await patch(`/faculty/${facultyId}/days/${dayId}`, reportPayload);
+
+        // Step 3: Verify images remain after normal update flow
+        if (uploadedUrls.length > 0) {
+          const verifyAfterUpdateFaculty = await get(`/faculty/${facultyId}`);
+          const verifyDayAfterUpdate = (
+            verifyAfterUpdateFaculty?.days || []
+          ).find((d) => (d?._id ?? d?.id ?? null) === dayId);
+          if (!verifyDayAfterUpdate)
+            throw new Error("Post-update verification failed: day not found.");
+
+          const urlsAfterUpdate = extractImageUrls(verifyDayAfterUpdate);
+          const allUploadedUrlsRemain = uploadedUrls.every((url) =>
+            urlsAfterUpdate.includes(url),
+          );
+          if (!allUploadedUrlsRemain) {
+            throw new Error(
+              "Image was uploaded but did not remain after report update.",
+            );
+          }
+        }
+
+        const refreshedFaculty = await fetchFaculty(); // Refresh the data
+        await syncFacultyProgress(refreshedFaculty);
+        toast.success(`Day saved with ${finalImageUrls.length} image(s).`);
+        setReportFormSnapshot(null);
+        resetDayForm();
+      } catch (err) {
+        toast.error(err.message || "Something went wrong.");
+      } finally {
+        setSubmitting(false);
+        setUploadProgress(0);
+      }
+    },
+    [
+      currentDay,
+      reportTitle,
+      reportDescription,
+      reportDayDate,
+      reportImages,
+      facultyId,
+      getDayId,
+      fetchFaculty,
+      extractImageUrls,
+      resetDayForm,
+      syncFacultyProgress,
+      isReportDescriptionLongEnough,
+    ],
+  );
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
-    const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
-    
-    const newValidImages = files.filter(file => {
+    const validImageTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp",
+      "image/gif",
+    ];
+
+    const newValidImages = files.filter((file) => {
       if (!validImageTypes.includes(file.type)) {
-        toast.warning(`${file.name} is not a valid image file. Only JPEG, PNG, WebP and GIF are allowed.`);
+        toast.warning(
+          `${file.name} is not a valid image file. Only JPEG, PNG, WebP and GIF are allowed.`,
+        );
         return false;
       }
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      if (file.size > 5 * 1024 * 1024) {
+        // 5MB limit
         toast.warning(`${file.name} is too large. Maximum size is 5MB.`);
         return false;
       }
       return true;
     });
-    
-    setReportImages(prev => [...prev, ...newValidImages]);
-    
+
+    setReportImages((prev) => [...prev, ...newValidImages]);
+
     // Create previews for the new images
-    newValidImages.forEach(file => {
+    newValidImages.forEach((file) => {
       const reader = new FileReader();
       reader.onload = () => {
-        setImagePreviews(prev => [...prev, { id: file.lastModified, src: reader.result, name: file.name }]);
+        setImagePreviews((prev) => [
+          ...prev,
+          { id: file.lastModified, src: reader.result, name: file.name },
+        ]);
       };
       reader.readAsDataURL(file);
     });
   };
 
   const removeImage = (imageId) => {
-    setReportImages(prev => prev.filter(img => img.lastModified !== imageId));
-    setImagePreviews(prev => prev.filter(img => img.id !== imageId));
+    setReportImages((prev) =>
+      prev.filter((img) => img.lastModified !== imageId),
+    );
+    setImagePreviews((prev) => prev.filter((img) => img.id !== imageId));
   };
 
   const handleApprove = useCallback(async () => {
@@ -1140,46 +1714,62 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
     await updateDay(currentDay, { ...currentDay, approved: true }, dayIndex);
   }, [currentDay, updateDay, dayIndex]);
 
-  const handlePostComment = useCallback(async (e) => {
-    e.preventDefault();
-    const text = newComment.trim();
-    if (!text || !currentDay) return;
-    
-    setSubmitting(true);
-    try {
-      const dayId = getDayId(currentDay) ?? (dayIndex != null ? String(dayIndex) : null);
-      if (!dayId) throw new Error('Day could not be identified.');
-      
-      // Try to post comment via POST endpoint
-      const newCommentObj = {
-        text: text,
-        date: new Date().toISOString(),
-        userID: user?.id || user?._id || 'anonymous'
-      };
-      
-      await post(`/faculty/${facultyId}/days/${dayId}/comments`, newCommentObj);
-      await fetchFaculty();
-      setNewComment('');
-      toast.success('Comment added.');
-    } catch {
-      // Fallback: try PATCH approach
+  const handlePostComment = useCallback(
+    async (e) => {
+      e.preventDefault();
+      const text = newComment.trim();
+      if (!text || !currentDay) return;
+
+      setSubmitting(true);
       try {
+        const dayId =
+          getDayId(currentDay) ?? (dayIndex != null ? String(dayIndex) : null);
+        if (!dayId) throw new Error("Day could not be identified.");
+
+        // Try to post comment via POST endpoint
         const newCommentObj = {
           text: text,
           date: new Date().toISOString(),
-          userID: user?.id || user?._id || 'anonymous'
+          userID: user?.id || user?._id || "anonymous",
         };
-        
-        const comments = [...(currentDay.comments || []), newCommentObj];
-        await updateDay(currentDay, { ...currentDay, comments }, dayIndex);
-        setNewComment('');
-      } catch (fallbackErr) {
-        toast.error(fallbackErr.message || 'Failed to add comment.');
+
+        await post(
+          `/faculty/${facultyId}/days/${dayId}/comments`,
+          newCommentObj,
+        );
+        await fetchFaculty();
+        setNewComment("");
+        toast.success("Comment added.");
+      } catch {
+        // Fallback: try PATCH approach
+        try {
+          const newCommentObj = {
+            text: text,
+            date: new Date().toISOString(),
+            userID: user?.id || user?._id || "anonymous",
+          };
+
+          const comments = [...(currentDay.comments || []), newCommentObj];
+          await updateDay(currentDay, { ...currentDay, comments }, dayIndex);
+          setNewComment("");
+        } catch (fallbackErr) {
+          toast.error(fallbackErr.message || "Failed to add comment.");
+        }
+      } finally {
+        setSubmitting(false);
       }
-    } finally {
-      setSubmitting(false);
-    }
-  }, [currentDay, newComment, updateDay, dayIndex, user, facultyId, fetchFaculty, getDayId]);
+    },
+    [
+      currentDay,
+      newComment,
+      updateDay,
+      dayIndex,
+      user,
+      facultyId,
+      fetchFaculty,
+      getDayId,
+    ],
+  );
 
   const handleAddDayClick = useCallback(() => {
     setNewDayDate(new Date().toISOString().slice(0, 10));
@@ -1199,41 +1789,78 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
       await post(`/faculty/${facultyId}/days`, newDay);
       const refreshedFaculty = await fetchFaculty(); // Refresh the data
       await syncFacultyProgress(refreshedFaculty);
-      setDayIndex(days.length);
-      toast.success('Day added.');
+      await attendanceApi.syncAttendance(facultyId);
+      await fetchAttendance();
+      setDayIndex(Math.max(0, (refreshedFaculty?.days?.length || days.length || 1) - 1));
+      toast.success("Day added.");
       setShowAddDayModal(false);
       setNewDayDate(new Date().toISOString().slice(0, 10));
     } catch (err) {
-      toast.error(err.message || 'Failed to add day.');
+      toast.error(err.message || "Failed to add day.");
     } finally {
       setSubmitting(false);
     }
-  }, [facultyId, days.length, newDayDate, fetchFaculty, syncFacultyProgress]);
+  }, [facultyId, days.length, newDayDate, fetchAttendance, fetchFaculty, syncFacultyProgress]);
+
+  const handleAttendanceEditorSave = useCallback(async (event) => {
+    event.preventDefault();
+    const dateEl = document.getElementById("attendance-editor-date");
+    const dateVal = dateEl ? dateEl.value : null;
+    const studentCheckboxes = Array.from(
+      document.querySelectorAll("[data-student-key]"),
+    );
+    const studentsPayload = studentCheckboxes.map((el) => ({
+      studentKey: el.getAttribute("data-student-key"),
+      present: Boolean(el.checked),
+    }));
+    const payload = {
+      id: editorDay?.id,
+      date: dateVal,
+      dayNumber:
+        editorDay?.dayNumber || (attendance?.attendance?.length || 0) + 1,
+      students: studentsPayload,
+    };
+    await handleSaveAttendanceDay(payload);
+    await attendanceApi.syncAttendance(facultyId);
+    await fetchAttendance();
+  }, [attendance?.attendance?.length, editorDay, facultyId, fetchAttendance, handleSaveAttendanceDay]);
 
   const allComments = useMemo(() => {
     if (!faculty || !faculty.days) return [];
-    return faculty.days.flatMap((day, index) => 
-      (day.comments || []).map(comment => ({
+    if (!canViewComments) return [];
+    return faculty.days.flatMap((day, index) =>
+      (day.comments || []).map((comment) => ({
         text: comment.text || comment,
         date: comment.date,
         userID: comment.userID,
         commentID: comment._id,
         dayIndex: index,
-        dayNumber: day.dayNumber
-      }))
+        dayNumber: day.dayNumber,
+      })),
     );
-  }, [faculty]);
+  }, [faculty, canViewComments]);
 
-  const navigateToDay = useCallback((dayIndex) => {
-    attemptDayChange(dayIndex);
-    setShowFeedbackView(false);
-  }, [attemptDayChange]);
+  const visibleCurrentDayComments = useMemo(
+    () => (canViewComments ? currentDay?.comments || [] : []),
+    [currentDay, canViewComments],
+  );
+
+  const navigateToDay = useCallback(
+    (dayIndex) => {
+      attemptDayChange(dayIndex);
+      setShowFeedbackView(false);
+    },
+    [attemptDayChange],
+  );
 
   useEffect(() => {
     if (!Array.isArray(days) || days.length === 0) return;
     if (!Number.isInteger(initialDayIndex)) return;
 
-    const safeDayIndex = Math.max(0, Math.min(days.length - 1, initialDayIndex));
+    const safeDayIndex = Math.max(
+      0,
+      Math.min(days.length - 1, initialDayIndex),
+    );
     setDayIndex(safeDayIndex);
   }, [days, initialDayIndex]);
 
@@ -1251,10 +1878,10 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
   useEffect(() => {
     setShowStudents(false);
     setShowStudentManager(false);
-    setStudentSearchTerm('');
+    setStudentSearchTerm("");
     setSelectedStudentIds([]);
-    setSelectedStudentFaculty('all');
-    setSelectedStudentYear('all');
+    setSelectedStudentFaculty("all");
+    setSelectedStudentYear("all");
     setShowPlan(true);
   }, [facultyId]);
 
@@ -1268,10 +1895,10 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
     const prevTop = body.style.top;
     const prevWidth = body.style.width;
 
-    body.style.overflow = 'hidden';
-    body.style.position = 'fixed';
+    body.style.overflow = "hidden";
+    body.style.position = "fixed";
     body.style.top = `-${scrollY}px`;
-    body.style.width = '100%';
+    body.style.width = "100%";
 
     return () => {
       body.style.overflow = prevOverflow;
@@ -1287,19 +1914,23 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
 
     const beforeUnload = (event) => {
       event.preventDefault();
-      event.returnValue = '';
+      event.returnValue = "";
     };
 
-    window.addEventListener('beforeunload', beforeUnload);
+    window.addEventListener("beforeunload", beforeUnload);
     return () => {
-      window.removeEventListener('beforeunload', beforeUnload);
+      window.removeEventListener("beforeunload", beforeUnload);
     };
   }, [reportFormDirty]);
 
   useEffect(() => {
     const item = dayItemRefs.current[dayIndex];
     if (!item) return;
-    item.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    item.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "center",
+    });
   }, [dayIndex, days.length]);
 
   useEffect(() => {
@@ -1307,7 +1938,8 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
     if (!currentDay) return;
 
     const commentIndex = (currentDay.comments || []).findIndex(
-      (comment, index) => getCommentKey(comment, index) === String(focusCommentKey),
+      (comment, index) =>
+        getCommentKey(comment, index) === String(focusCommentKey),
     );
 
     if (commentIndex < 0) return;
@@ -1315,11 +1947,14 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
     setHighlightedCommentKey(String(focusCommentKey));
 
     const timerId = setTimeout(() => {
-      commentsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      commentsSectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
     }, 140);
 
     const clearTimer = setTimeout(() => {
-      setHighlightedCommentKey('');
+      setHighlightedCommentKey("");
     }, 2600);
 
     return () => {
@@ -1334,8 +1969,19 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
         <div className="ip-page">
           <style>{ipStyles}</style>
           <div className="ip-shell">
-            <button type="button" className="ip-back" onClick={handleBackToDashboard}>← Back to dashboard</button>
-            <PageState variant="loading" title="Loading internship details" message="Preparing days, comments, and attachments..." className="ip-loading" />
+            <button
+              type="button"
+              className="ip-back"
+              onClick={handleBackToDashboard}
+            >
+              ← Back to dashboard
+            </button>
+            <PageState
+              variant="loading"
+              title="Loading internship details"
+              message="Preparing days, comments, and attachments..."
+              className="ip-loading"
+            />
           </div>
         </div>
       );
@@ -1346,8 +1992,19 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
         <div className="ip-page">
           <style>{ipStyles}</style>
           <div className="ip-shell">
-            <button type="button" className="ip-back" onClick={handleBackToDashboard}>← Back to dashboard</button>
-            <PageState variant="error" title="Failed to load internship" message={error} className="ip-alert" />
+            <button
+              type="button"
+              className="ip-back"
+              onClick={handleBackToDashboard}
+            >
+              ← Back to dashboard
+            </button>
+            <PageState
+              variant="error"
+              title="Failed to load internship"
+              message={error}
+              className="ip-alert"
+            />
           </div>
         </div>
       );
@@ -1358,8 +2015,19 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
         <div className="ip-page">
           <style>{ipStyles}</style>
           <div className="ip-shell">
-            <button type="button" className="ip-back" onClick={handleBackToDashboard}>← Back to dashboard</button>
-            <PageState variant="empty" title="Internship not found" message="This internship does not exist or is no longer accessible." className="ip-empty" />
+            <button
+              type="button"
+              className="ip-back"
+              onClick={handleBackToDashboard}
+            >
+              ← Back to dashboard
+            </button>
+            <PageState
+              variant="empty"
+              title="Internship not found"
+              message="This internship does not exist or is no longer accessible."
+              className="ip-empty"
+            />
           </div>
         </div>
       );
@@ -1369,7 +2037,11 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
       <div className="ip-page">
         <style>{ipStyles}</style>
         <div className="ip-shell">
-          <button type="button" className="ip-back" onClick={handleBackToDashboard}>
+          <button
+            type="button"
+            className="ip-back"
+            onClick={handleBackToDashboard}
+          >
             ← Back to dashboard
           </button>
 
@@ -1385,30 +2057,60 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                   aria-label="Internship name"
                 />
                 <p className="ip-hero-copy">
-                  Review daily progress, attach evidence, and keep the approval trail clear for everyone involved.
+                  Review daily progress, attach evidence, and keep the approval
+                  trail clear for everyone involved.
                 </p>
               </div>
-              <div className="ip-hero-statuslist" aria-label="Current internship status">
-                <span className="ip-status-pill">{currentDay ? `Day ${currentDay.dayNumber}` : 'No day selected'}</span>
-                <span className={`ip-status-pill ${currentDay?.approved ? 'ip-status-pill--ok' : 'ip-status-pill--warn'}`}>
-                  {currentDay?.approved ? 'Approved' : 'Pending review'}
+              <div
+                className="ip-hero-statuslist"
+                aria-label="Current internship status"
+              >
+                <span className="ip-status-pill">
+                  {currentDay
+                    ? `Day ${currentDay.dayNumber}`
+                    : "No day selected"}
                 </span>
-                <span className={`ip-status-pill ip-status-pill--internship-${normalizeInternshipStatus(baseInfoStatus).toLowerCase().replace(/\s+/g, '-')}`}>
+                <span
+                  className={`ip-status-pill ${currentDay?.approved ? "ip-status-pill--ok" : "ip-status-pill--warn"}`}
+                >
+                  {currentDay?.approved ? "Approved" : "Pending review"}
+                </span>
+                <span
+                  className={`ip-status-pill ip-status-pill--internship-${normalizeInternshipStatus(baseInfoStatus).toLowerCase().replace(/\s+/g, "-")}`}
+                >
                   {normalizeInternshipStatus(baseInfoStatus)}
                 </span>
-                <span className="ip-status-pill">{canWriteReport ? 'Editable' : 'Read only'}</span>
-                <span className="ip-status-pill">{faculty.plan ? 'Plan available' : 'No plan'}</span>
+                <span className="ip-status-pill">
+                  {canWriteReport ? "Editable" : "Read only"}
+                </span>
+                <span className="ip-status-pill">
+                  {faculty.plan ? "Plan available" : "No plan"}
+                </span>
                 {canEditInternship && !isInternshipEditMode && (
-                  <button type="button" className="ip-status-action" onClick={handleInternshipEditStart}>
+                  <button
+                    type="button"
+                    className="ip-status-action"
+                    onClick={handleInternshipEditStart}
+                  >
                     Edit
                   </button>
                 )}
                 {canEditInternship && isInternshipEditMode && (
                   <>
-                    <button type="button" className="ip-status-action" onClick={handleBaseInfoSubmit} disabled={submitting}>
-                      {submitting ? 'Saving…' : 'Save'}
+                    <button
+                      type="button"
+                      className="ip-status-action"
+                      onClick={handleBaseInfoSubmit}
+                      disabled={submitting}
+                    >
+                      {submitting ? "Saving…" : "Save"}
                     </button>
-                    <button type="button" className="ip-status-action ip-status-action--cancel" onClick={handleInternshipEditCancel} disabled={submitting}>
+                    <button
+                      type="button"
+                      className="ip-status-action ip-status-action--cancel"
+                      onClick={handleInternshipEditCancel}
+                      disabled={submitting}
+                    >
                       Cancel
                     </button>
                   </>
@@ -1457,26 +2159,33 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                   aria-label="Status"
                 >
                   {INTERNSHIP_STATUS_OPTIONS.map((status) => (
-                    <option key={status} value={status}>{status}</option>
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
                   ))}
                 </select>
               </div>
               {internshipMapData && (
-                <div className="ip-hero-item" style={{ gridColumn: '1 / -1' }}>
+                <div className="ip-hero-item" style={{ gridColumn: "1 / -1" }}>
                   <span className="ip-hero-label">Location map</span>
                   <div
                     style={{
                       borderRadius: 16,
-                      overflow: 'hidden',
-                      border: '1px solid rgba(0,0,0,.08)',
-                      background: 'rgba(0,0,0,.03)',
-                      boxShadow: '0 10px 30px rgba(99,91,255,.08)',
+                      overflow: "hidden",
+                      border: "1px solid rgba(0,0,0,.08)",
+                      background: "rgba(0,0,0,.03)",
+                      boxShadow: "0 10px 30px rgba(99,91,255,.08)",
                     }}
                   >
                     <iframe
                       title={`Map for ${internshipMapData.label}`}
                       src={internshipMapData.embedUrl}
-                      style={{ width: '100%', height: 320, border: 0, display: 'block' }}
+                      style={{
+                        width: "100%",
+                        height: 320,
+                        border: 0,
+                        display: "block",
+                      }}
                       loading="lazy"
                       referrerPolicy="no-referrer-when-downgrade"
                     />
@@ -1486,14 +2195,14 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                     target="_blank"
                     rel="noreferrer"
                     style={{
-                      display: 'inline-flex',
+                      display: "inline-flex",
                       marginTop: 10,
-                      alignItems: 'center',
+                      alignItems: "center",
                       gap: 6,
                       fontSize: 12,
                       fontWeight: 700,
-                      color: 'var(--a1)',
-                      textDecoration: 'none',
+                      color: "var(--a1)",
+                      textDecoration: "none",
                     }}
                   >
                     Open in maps
@@ -1513,7 +2222,10 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                   >
                     {computedProgressLabel}
                   </span>
-                  <div className="ip-progress-track" aria-label={`Internship progress ${computedProgressLabel}`}>
+                  <div
+                    className="ip-progress-track"
+                    aria-label={`Internship progress ${computedProgressLabel}`}
+                  >
                     <div
                       className="ip-progress-fill"
                       style={{
@@ -1522,9 +2234,10 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                       }}
                     ></div>
                   </div>
-                  <span className="ip-progress-meta">{reportedDaysCount}/{days.length || 0} days reported</span>
+                  <span className="ip-progress-meta">
+                    {reportedDaysCount}/{days.length || 0} days reported
+                  </span>
                 </div>
-
               </div>
             </div>
 
@@ -1536,16 +2249,80 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                   className="ip-student-action-btn"
                   onClick={() => setShowPlan((prev) => !prev)}
                 >
-                  {showPlan ? 'Close plan' : 'Open plan'}
+                  {showPlan ? "Close plan" : "Open plan"}
                 </button>
               </div>
               {showPlan && (
                 <>
-                  <div className="ip-format-toolbar" role="toolbar" aria-label="Plan text formatting">
-                    <button type="button" className="ip-format-btn" disabled={!isInternshipEditMode} onClick={() => applyFormatting(planEditorRef, setBaseInfoPlan, '**', '**', 'bold')}>Bold</button>
-                    <button type="button" className="ip-format-btn" disabled={!isInternshipEditMode} onClick={() => applyFormatting(planEditorRef, setBaseInfoPlan, '_', '_', 'italic')}>Italic</button>
-                    <button type="button" className="ip-format-btn" disabled={!isInternshipEditMode} onClick={() => applyFormatting(planEditorRef, setBaseInfoPlan, '## ', '', 'Heading')}>H2</button>
-                    <button type="button" className="ip-format-btn" disabled={!isInternshipEditMode} onClick={() => applyFormatting(planEditorRef, setBaseInfoPlan, '- ', '', 'List item')}>List</button>
+                  <div
+                    className="ip-format-toolbar"
+                    role="toolbar"
+                    aria-label="Plan text formatting"
+                  >
+                    <button
+                      type="button"
+                      className="ip-format-btn"
+                      disabled={!isInternshipEditMode}
+                      onClick={() =>
+                        applyFormatting(
+                          planEditorRef,
+                          setBaseInfoPlan,
+                          "**",
+                          "**",
+                          "bold",
+                        )
+                      }
+                    >
+                      Bold
+                    </button>
+                    <button
+                      type="button"
+                      className="ip-format-btn"
+                      disabled={!isInternshipEditMode}
+                      onClick={() =>
+                        applyFormatting(
+                          planEditorRef,
+                          setBaseInfoPlan,
+                          "_",
+                          "_",
+                          "italic",
+                        )
+                      }
+                    >
+                      Italic
+                    </button>
+                    <button
+                      type="button"
+                      className="ip-format-btn"
+                      disabled={!isInternshipEditMode}
+                      onClick={() =>
+                        applyFormatting(
+                          planEditorRef,
+                          setBaseInfoPlan,
+                          "## ",
+                          "",
+                          "Heading",
+                        )
+                      }
+                    >
+                      H2
+                    </button>
+                    <button
+                      type="button"
+                      className="ip-format-btn"
+                      disabled={!isInternshipEditMode}
+                      onClick={() =>
+                        applyFormatting(
+                          planEditorRef,
+                          setBaseInfoPlan,
+                          "- ",
+                          "",
+                          "List item",
+                        )
+                      }
+                    >
+                      List
+                    </button>
                   </div>
                   <div className="ip-plan-text">
                     {isInternshipEditMode ? (
@@ -1560,7 +2337,9 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                     ) : (
                       <div
                         className="ip-plan-rendered"
-                        dangerouslySetInnerHTML={{ __html: renderSimpleMarkdown(baseInfoPlan) }}
+                        dangerouslySetInnerHTML={{
+                          __html: renderSimpleMarkdown(baseInfoPlan),
+                        }}
                       ></div>
                     )}
                   </div>
@@ -1575,28 +2354,45 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
               </div>
               {tutorInfo.hasInfo ? (
                 <div className="ip-tutor-body">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                    }}
+                  >
                     <div
                       style={{
                         width: 40,
                         height: 40,
                         borderRadius: 8,
-                        background: 'linear-gradient(135deg,#635bff,#06c9a0)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontFamily: 'Syne',
+                        background: "linear-gradient(135deg,#635bff,#06c9a0)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontFamily: "Syne",
                         fontWeight: 700,
-                        color: '#fff',
+                        color: "#fff",
                         fontSize: 13,
                         flexShrink: 0,
                       }}
                     >
                       {tutorInfo.initials}
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <strong className="ip-tutor-name">{tutorInfo.name || 'No information'}</strong>
-                      <span className="ip-tutor-contact">{tutorInfo.contact || 'No contact information'}</span>
+                    <div
+                      style={{
+                        flex: 1,
+                        flexDirection: "column",
+                        display: "flex",
+                        gap: 4,
+                      }}
+                    >
+                      <strong className="ip-tutor-name">
+                        {tutorInfo.name || "No information"}
+                      </strong>
+                      <span className="ip-tutor-contact">
+                        {tutorInfo.contact || "No contact information"}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -1609,7 +2405,9 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
               <div className="ip-students-head">
                 <div>
                   <span className="ip-summary-label">Students</span>
-                  <strong className="ip-summary-value">{attachedStudents.length} attached</strong>
+                  <strong className="ip-summary-value">
+                    {attachedStudents.length} attached
+                  </strong>
                 </div>
                 <div className="ip-students-head-actions">
                   {canManageStudents && (
@@ -1617,7 +2415,11 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                       type="button"
                       className="ip-student-action-btn"
                       onClick={openStudentManager}
-                      disabled={submitting || !Array.isArray(students) || students.length === 0}
+                      disabled={
+                        submitting ||
+                        !Array.isArray(students) ||
+                        students.length === 0
+                      }
                     >
                       Manage students
                     </button>
@@ -1626,10 +2428,25 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                     type="button"
                     className="ip-eye-btn"
                     onClick={() => setShowStudents((prev) => !prev)}
-                    aria-label={showStudents ? 'Hide attached students' : 'Show attached students'}
+                    aria-label={
+                      showStudents
+                        ? "Hide attached students"
+                        : "Show attached students"
+                    }
                     aria-expanded={showStudents}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                       <circle cx="12" cy="12" r="3"></circle>
                     </svg>
@@ -1644,7 +2461,7 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       aria-hidden="true"
-                      className={`ip-eye-chevron ${showStudents ? 'ip-eye-chevron--open' : ''}`}
+                      className={`ip-eye-chevron ${showStudents ? "ip-eye-chevron--open" : ""}`}
                     >
                       <polyline points="6 9 12 15 18 9"></polyline>
                     </svg>
@@ -1656,13 +2473,19 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                 <div className="ip-students-list-wrap">
                   {attachedStudents.length === 0 ? (
                     <div className="ip-students-empty-state">
-                      <p className="ip-students-empty">No students attached to this internship.</p>
+                      <p className="ip-students-empty">
+                        No students attached to this internship.
+                      </p>
                       {canManageStudents && (
                         <button
                           type="button"
                           className="ip-student-action-btn"
                           onClick={openStudentManager}
-                          disabled={submitting || !Array.isArray(students) || students.length === 0}
+                          disabled={
+                            submitting ||
+                            !Array.isArray(students) ||
+                            students.length === 0
+                          }
                         >
                           Attach students
                         </button>
@@ -1671,13 +2494,20 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                   ) : (
                     <ul className="ip-students-list">
                       {attachedStudents.map((student, index) => {
-                        const studentId = getStudentId(student) || `student-${index}`;
+                        const studentId =
+                          getStudentId(student) || `student-${index}`;
                         const studentName = getStudentName(student);
                         return (
                           <li key={studentId} className="ip-student-item">
                             <div className="ip-student-copy">
-                              <span className="ip-student-name">{studentName}</span>
-                              {getStudentFacultyName(student) && <span className="ip-student-faculty">{getStudentFacultyName(student)}</span>}
+                              <span className="ip-student-name">
+                                {studentName}
+                              </span>
+                              {getStudentFacultyName(student) && (
+                                <span className="ip-student-faculty">
+                                  {getStudentFacultyName(student)}
+                                </span>
+                              )}
                             </div>
                             {canManageStudents && (
                               <button
@@ -1697,6 +2527,159 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                 </div>
               )}
             </div>
+
+            <div className="ip-attendance-card" aria-label="Attendance">
+              <div className="ip-attendance-head">
+                <div>
+                  <span className="ip-summary-label">Attendance</span>
+                  <strong className="ip-summary-value">
+                    {attendance?.attendance?.length || 0} days
+                  </strong>
+                </div>
+                <div className="ip-attendance-actions">
+                  <button
+                    type="button"
+                    className="ip-btn ip-btn--secondary"
+                    onClick={handleSyncRoster}
+                    disabled={attendanceLoading}
+                  >
+                    {attendanceLoading ? "Syncing…" : "Sync roster"}
+                  </button>
+                  <button
+                    type="button"
+                    className="ip-btn ip-btn--primary"
+                    onClick={() => openAttendanceEditor(null)}
+                    disabled={attendanceLoading}
+                  >
+                    New day
+                  </button>
+                </div>
+              </div>
+
+              <div className="ip-attendance-body">
+                {attendanceLoading ? (
+                  <div className="ip-empty-state">Loading attendance…</div>
+                ) : attendanceError ? (
+                  <div className="ip-empty-state">Error: {attendanceError}</div>
+                ) : !attendance ||
+                  !Array.isArray(attendance.attendance) ||
+                  attendance.attendance.length === 0 ? (
+                  <div className="ip-empty-state">
+                    No attendance recorded yet.
+                  </div>
+                ) : (
+                  <div className="ip-attendance-table-wrap">
+                    <div className="ip-attendance-day">
+                      <div className="ip-attendance-day-head">
+                        <div>
+                          <strong>Attendance matrix</strong>
+                          <div className="ip-muted">
+                            Dates across top, students on rows
+                          </div>
+                        </div>
+                        <div />
+                      </div>
+
+                      <div
+                        ref={attendanceScrollRef}
+                        style={{ overflowX: "auto", cursor: "grab", userSelect: "none" }}
+                        onMouseDown={handleAttendanceMouseDown}
+                        onMouseMove={handleAttendanceMouseMove}
+                        onMouseUp={stopAttendanceDrag}
+                        onMouseLeave={stopAttendanceDrag}
+                      >
+                        <table className="ip-attendance-table">
+                          <thead>
+                            <tr>
+                              <th></th>
+                              {(attendance.attendance || []).map((day) => (
+                                <th
+                                  key={day.id || day.date}
+                                  style={{ whiteSpace: "nowrap" }}
+                                >
+                                  <div
+                                    style={{
+                                      textAlign: "center",
+                                    }}
+                                  >
+                                    <div>
+                                      <div style={{ fontWeight: 700 }}>
+                                        {day.date
+                                          ? new Date(
+                                              day.date,
+                                            ).toLocaleDateString()
+                                          : `Day ${day.dayNumber}`}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {(Array.isArray(attachedStudents)
+                              ? attachedStudents
+                              : []
+                            ).map((stu, sidx) => {
+                              const sk = getStudentId(stu) || `key-${sidx}`;
+                              const studentName = getStudentName(stu);
+                              return (
+                                <tr key={sk}>
+                                  <td>{studentName}</td>
+                                  {(attendance.attendance || []).map((day) => {
+                                    const studentRecord = (
+                                      Array.isArray(day.students)
+                                        ? day.students
+                                        : []
+                                    ).find(
+                                      (s) =>
+                                        String(
+                                          s.studentKey ||
+                                            s.studentId ||
+                                            `${s.name}-${s.surname}`,
+                                        ).trim() === String(sk).trim(),
+                                    );
+                                    const present = Boolean(
+                                      studentRecord
+                                        ? studentRecord.present
+                                        : false,
+                                    );
+                                    return (
+                                      <td key={`${day.id || day.date}-${sk}`}>
+                                        <input
+                                          type="checkbox"
+                                          className="ip-attendance-radio"
+                                          checked={present}
+                                          disabled={
+                                            !isSameCalendarDay(day.date)
+                                          }
+                                          onChange={(e) =>
+                                            handleTogglePresent(
+                                              day.id,
+                                              sk,
+                                              e.target.checked,
+                                            )
+                                          }
+                                          title={
+                                            isSameCalendarDay(day.date)
+                                              ? "Toggle presence"
+                                              : "Only editable on the day itself"
+                                          }
+                                        />
+                                      </td>
+                                    );
+                                  })}
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </header>
 
           {(canApprove || canExport) && (
@@ -1712,7 +2695,11 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                 </button>
               )}
               {canExport && (
-                <button type="button" className="ip-btn ip-btn--primary" onClick={() => window.print()}>
+                <button
+                  type="button"
+                  className="ip-btn ip-btn--primary"
+                  onClick={() => window.print()}
+                >
                   Export PDF
                 </button>
               )}
@@ -1724,7 +2711,7 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                   disabled={submitting || finalReportLoading}
                   title="Generate final AI report"
                 >
-                  {finalReportLoading ? 'Generating…' : 'Final report'}
+                  {finalReportLoading ? "Generating…" : "Final report"}
                 </button>
               )}
             </div>
@@ -1733,25 +2720,42 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
           {showReportForm && currentDay && (
             <div className="ip-report-form-card">
               <div className="ip-report-form-header">
-                <h4 className="ip-report-form-title">Edit day information — Day {currentDay.dayNumber}</h4>
-                <button 
-                  type="button" 
+                <h4 className="ip-report-form-title">
+                  Edit day information — Day {currentDay.dayNumber}
+                </h4>
+                <button
+                  type="button"
                   className="ip-close-btn"
                   onClick={() => {
                     guardedResetDayForm();
                   }}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
                   </svg>
                 </button>
               </div>
-              
-              <form onSubmit={handleReportSubmit} className="ip-report-form ip-report-form-wrapper">
+
+              <form
+                onSubmit={handleReportSubmit}
+                className="ip-report-form ip-report-form-wrapper"
+              >
                 <div className="ip-form-section">
                   <div className="ip-field">
-                    <label className="ip-label" htmlFor="ip-day-date">Date</label>
+                    <label className="ip-label" htmlFor="ip-day-date">
+                      Date
+                    </label>
                     <input
                       id="ip-day-date"
                       type="date"
@@ -1766,7 +2770,9 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
 
                 <div className="ip-form-section">
                   <div className="ip-field">
-                    <label className="ip-label" htmlFor="ip-report-title">Title</label>
+                    <label className="ip-label" htmlFor="ip-report-title">
+                      Title
+                    </label>
                     <input
                       id="ip-report-title"
                       type="text"
@@ -1779,15 +2785,77 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                 </div>
 
                 <div className="ip-form-divider"></div>
-                
+
                 <div className="ip-form-section">
                   <div className="ip-field">
-                    <label className="ip-label" htmlFor="ip-report-desc">Description</label>
-                    <div className="ip-format-toolbar" role="toolbar" aria-label="Report text formatting">
-                      <button type="button" className="ip-format-btn" onClick={() => applyFormatting(reportDescriptionRef, setReportDescription, '**', '**', 'bold')}>Bold</button>
-                      <button type="button" className="ip-format-btn" onClick={() => applyFormatting(reportDescriptionRef, setReportDescription, '_', '_', 'italic')}>Italic</button>
-                      <button type="button" className="ip-format-btn" onClick={() => applyFormatting(reportDescriptionRef, setReportDescription, '## ', '', 'Heading')}>H2</button>
-                      <button type="button" className="ip-format-btn" onClick={() => applyFormatting(reportDescriptionRef, setReportDescription, '- ', '', 'List item')}>List</button>
+                    <label className="ip-label" htmlFor="ip-report-desc">
+                      Description
+                    </label>
+                    <div
+                      className="ip-format-toolbar"
+                      role="toolbar"
+                      aria-label="Report text formatting"
+                    >
+                      <button
+                        type="button"
+                        className="ip-format-btn"
+                        onClick={() =>
+                          applyFormatting(
+                            reportDescriptionRef,
+                            setReportDescription,
+                            "**",
+                            "**",
+                            "bold",
+                          )
+                        }
+                      >
+                        Bold
+                      </button>
+                      <button
+                        type="button"
+                        className="ip-format-btn"
+                        onClick={() =>
+                          applyFormatting(
+                            reportDescriptionRef,
+                            setReportDescription,
+                            "_",
+                            "_",
+                            "italic",
+                          )
+                        }
+                      >
+                        Italic
+                      </button>
+                      <button
+                        type="button"
+                        className="ip-format-btn"
+                        onClick={() =>
+                          applyFormatting(
+                            reportDescriptionRef,
+                            setReportDescription,
+                            "## ",
+                            "",
+                            "Heading",
+                          )
+                        }
+                      >
+                        H2
+                      </button>
+                      <button
+                        type="button"
+                        className="ip-format-btn"
+                        onClick={() =>
+                          applyFormatting(
+                            reportDescriptionRef,
+                            setReportDescription,
+                            "- ",
+                            "",
+                            "List item",
+                          )
+                        }
+                      >
+                        List
+                      </button>
                     </div>
                     <textarea
                       ref={reportDescriptionRef}
@@ -1796,17 +2864,30 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                       onChange={(e) => setReportDescription(e.target.value)}
                       className="ip-input ip-textarea"
                       placeholder="What was done today?"
+                      minLength={REPORT_DESCRIPTION_MIN_LENGTH}
                       rows={5}
                     />
+                    <div
+                      className="ip-report-counter"
+                      style={{ textAlign: "end" }}
+                      aria-live="polite"
+                    >
+                      {reportDescriptionLength}/{REPORT_DESCRIPTION_MIN_LENGTH}
+                    </div>
                   </div>
                 </div>
 
                 <div className="ip-form-divider"></div>
-                
+
                 <div className="ip-form-section">
-                  <label className="ip-label" htmlFor="ip-report-images">Attachments</label>
+                  <label className="ip-label" htmlFor="ip-report-images">
+                    Attachments
+                  </label>
                   <div className="ip-image-upload-container">
-                    <label htmlFor="ip-report-images" className="ip-image-upload-area">
+                    <label
+                      htmlFor="ip-report-images"
+                      className="ip-image-upload-area"
+                    >
                       <input
                         id="ip-report-images"
                         type="file"
@@ -1817,25 +2898,46 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                       />
                       <div className="ip-upload-content">
                         <div className="ip-upload-icon">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                            <polyline points="17 8 12 3 7 8"/>
-                            <line x1="12" y1="3" x2="12" y2="15"/>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
                           </svg>
                         </div>
-                        <p className="ip-upload-text">Click to upload or drag and drop</p>
-                        <p className="ip-upload-hint">SVG, PNG, JPG, GIF (max. 5MB)</p>
+                        <p className="ip-upload-text">
+                          Click to upload or drag and drop
+                        </p>
+                        <p className="ip-upload-hint">
+                          SVG, PNG, JPG, GIF (max. 5MB)
+                        </p>
                       </div>
                     </label>
-                    
+
                     {/* Preview of selected images */}
                     {imagePreviews.length > 0 && (
                       <div className="ip-image-previews-grid">
                         {imagePreviews.map((preview) => (
-                          <div key={preview.id} className="ip-image-preview-item">
-                            <img src={preview.src} alt={preview.name} className="ip-image-preview" />
-                            <button 
-                              type="button" 
+                          <div
+                            key={preview.id}
+                            className="ip-image-preview-item"
+                          >
+                            <img
+                              src={preview.src}
+                              alt={preview.name}
+                              className="ip-image-preview"
+                            />
+                            <button
+                              type="button"
                               className="ip-remove-image-btn"
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -1843,7 +2945,17 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                               }}
                               aria-label="Remove image"
                             >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
                                 <line x1="18" y1="6" x2="6" y2="18"></line>
                                 <line x1="6" y1="6" x2="18" y2="18"></line>
                               </svg>
@@ -1854,15 +2966,20 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                     )}
                   </div>
                 </div>
-                
+
                 <div className="ip-form-actions">
-                  {submitting && reportImages.length > 0 && uploadProgress > 0 && (
-                    <div className="ip-progress-bar">
-                      <div className="ip-progress-bar-fill" style={{ width: `${uploadProgress}%` }}></div>
-                    </div>
-                  )}
-                  <button 
-                    type="button" 
+                  {submitting &&
+                    reportImages.length > 0 &&
+                    uploadProgress > 0 && (
+                      <div className="ip-progress-bar">
+                        <div
+                          className="ip-progress-bar-fill"
+                          style={{ width: `${uploadProgress}%` }}
+                        ></div>
+                      </div>
+                    )}
+                  <button
+                    type="button"
                     className="ip-btn ip-btn--secondary"
                     onClick={() => {
                       guardedResetDayForm();
@@ -1870,20 +2987,23 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                   >
                     Cancel
                   </button>
-                  <button 
-                    type="submit" 
-                    className="ip-btn ip-btn--primary" 
-                    disabled={submitting}
+                  <button
+                    type="submit"
+                    className="ip-btn ip-btn--primary"
+                    disabled={submitting || !isReportDescriptionLongEnough}
                   >
                     {submitting ? (
                       <>
                         <span className="ip-spinner"></span>
-                        {reportImages.length > 0 && uploadProgress > 0 && uploadProgress < 100 
+                        {reportImages.length > 0 &&
+                        uploadProgress > 0 &&
+                        uploadProgress < 100
                           ? `Uploading (${uploadProgress}%)`
-                          : 'Saving…'
-                        }
+                          : "Saving…"}
                       </>
-                    ) : 'Save Changes'}
+                    ) : (
+                      "Save Changes"
+                    )}
                   </button>
                 </div>
               </form>
@@ -1899,26 +3019,52 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                   disabled={dayIndex === 0}
                   onClick={() => attemptDayChange(dayIndex - 1)}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <polyline points="15 18 9 12 15 6"></polyline>
                   </svg>
                 </button>
-                
+
                 <div className="ip-carousel" ref={dayCarouselRef}>
                   <div className="ip-carousel-track">
                     {days.map((day, idx) => (
                       <button
                         key={idx}
                         type="button"
-                        ref={(el) => { dayItemRefs.current[idx] = el; }}
-                        className={`ip-carousel-item ${dayIndex === idx ? 'ip-carousel-item--active' : ''}`}
+                        ref={(el) => {
+                          dayItemRefs.current[idx] = el;
+                        }}
+                        className={`ip-carousel-item ${dayIndex === idx ? "ip-carousel-item--active" : ""}`}
                         onClick={() => attemptDayChange(idx)}
                       >
-                        <span className="ip-carousel-day-number">Day {day.dayNumber}</span>
-                        <span className="ip-carousel-day-date">{day.date || 'No date'}</span>
+                        <span className="ip-carousel-day-number">
+                          Day {day.dayNumber}
+                        </span>
+                        <span className="ip-carousel-day-date">
+                          {day.date || "No date"}
+                        </span>
                         {day.approved && (
                           <span className="ip-carousel-approved-badge">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="12"
+                              height="12"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
                               <polyline points="20 6 9 17 4 12"></polyline>
                             </svg>
                             Approved
@@ -1926,33 +3072,57 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                         )}
                       </button>
                     ))}
-                    
+
                     {canWriteReport && (
                       <button
                         type="button"
-                        ref={(el) => { dayItemRefs.current[days.length] = el; }}
+                        ref={(el) => {
+                          dayItemRefs.current[days.length] = el;
+                        }}
                         className="ip-carousel-add-day"
                         onClick={handleAddDayClick}
                         disabled={submitting}
                         title="Add a new internship day"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
                           <line x1="12" y1="5" x2="12" y2="19"></line>
                           <line x1="5" y1="12" x2="19" y2="12"></line>
                         </svg>
-                        <span className="ip-carousel-add-day-text">Add day</span>
+                        <span className="ip-carousel-add-day-text">
+                          Add day
+                        </span>
                       </button>
                     )}
                   </div>
                 </div>
-                
+
                 <button
                   type="button"
                   className="ip-carousel-btn ip-carousel-btn--next"
                   disabled={dayIndex >= days.length - 1}
                   onClick={() => attemptDayChange(dayIndex + 1)}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <polyline points="9 18 15 12 9 6"></polyline>
                   </svg>
                 </button>
@@ -1962,24 +3132,45 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                 <div className="ip-day-card">
                   <div className="ip-day-header">
                     <div>
-                      <span className="ip-day-title">Day {currentDay.dayNumber}</span>
-                      <div className="ip-day-subtitle">{currentDay.date || 'No date'}</div>
+                      <span className="ip-day-title">
+                        Day {currentDay.dayNumber}
+                      </span>
+                      <div className="ip-day-subtitle">
+                        {currentDay.date || "No date"}
+                      </div>
                     </div>
                     <div className="ip-day-header-actions">
-                      <span className={`ip-day-badge ${currentDay.approved ? 'ip-day-badge--ok' : 'ip-day-badge--pending'}`}>
+                      <span
+                        className={`ip-day-badge ${currentDay.approved ? "ip-day-badge--ok" : "ip-day-badge--pending"}`}
+                      >
                         {currentDay.approved ? (
                           <>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="currentColor"
+                              stroke="none"
+                            >
+                              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
                             </svg>
                             Approved
                           </>
                         ) : (
                           <>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <circle cx="12" cy="12" r="10"/>
-                              <line x1="12" y1="8" x2="12" y2="12"/>
-                              <line x1="12" y1="16" x2="12.01" y2="16"/>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <circle cx="12" cy="12" r="10" />
+                              <line x1="12" y1="8" x2="12" y2="12" />
+                              <line x1="12" y1="16" x2="12.01" y2="16" />
                             </svg>
                             Pending
                           </>
@@ -1992,9 +3183,19 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                           onClick={handleWriteReportOpen}
                           disabled={submitting}
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M12 20h9"/>
-                            <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M12 20h9" />
+                            <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
                           </svg>
                           Edit
                         </button>
@@ -2004,10 +3205,16 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
 
                   {currentDay.shortReport && (
                     <div className="ip-report">
-                      <h4 className="ip-report-title">{currentDay.shortReport.title || 'Untitled'}</h4>
+                      <h4 className="ip-report-title">
+                        {currentDay.shortReport.title || "Untitled"}
+                      </h4>
                       <div
                         className="ip-report-desc"
-                        dangerouslySetInnerHTML={{ __html: renderSimpleMarkdown(currentDay.shortReport.description || '') }}
+                        dangerouslySetInnerHTML={{
+                          __html: renderSimpleMarkdown(
+                            currentDay.shortReport.description || "",
+                          ),
+                        }}
                       ></div>
                       {currentDayImageUrls.length > 0 && (
                         <div className="ip-report-images">
@@ -2018,7 +3225,11 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                               className="ip-report-img-btn"
                               onClick={() => setActiveImageSrc(img)}
                             >
-                              <img src={img} alt={`Report ${idx + 1}`} className="ip-report-img" />
+                              <img
+                                src={img}
+                                alt={`Report ${idx + 1}`}
+                                className="ip-report-img"
+                              />
                             </button>
                           ))}
                         </div>
@@ -2026,35 +3237,83 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                     </div>
                   )}
 
-                  {(currentDay.comments?.length > 0 || canWriteComments) && (
+                  {(visibleCurrentDayComments.length > 0 ||
+                    canWriteComments) && (
                     <div className="ip-comments" ref={commentsSectionRef}>
-                      <h4 className="ip-comments-title">Comments ({currentDay.comments?.length || 0})</h4>
-                      {currentDay.comments && currentDay.comments.length > 0 && (
-                        <ul className="ip-comments-list">
-                          {currentDay.comments.map((comment, idx) => {
-                            const user = typeof comment.userID === 'object' ? comment.userID : null;
-                            const userName = user ? `${user.name} ${user.surname}` : 'Unknown User';
-                            const userRole = user ? user.role : '';
-                            const commentKey = getCommentKey(comment, idx);
-                            return (
-                              <li
-                                key={comment._id || idx}
-                                className={`ip-comment ${highlightedCommentKey === commentKey ? 'ip-comment--focus' : ''}`}
-                              >
-                                <div className="ip-comment-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px', fontSize: '12px', color: 'var(--t3, #9ba3bb)' }}>
-                                  <div>
-                                    <div style={{ fontWeight: 600, color: 'var(--t1, #0c0e18)', marginBottom: '4px' }}>{userName} {userRole && <span style={{ fontSize: '11px', fontWeight: 500, color: 'var(--a1, #635bff)' }}>({userRole})</span>}</div>
-                                    <div>{new Date(comment.date).toLocaleDateString()} {new Date(comment.date).toLocaleTimeString()}</div>
+                      <h4 className="ip-comments-title">
+                        Comments ({visibleCurrentDayComments.length || 0})
+                      </h4>
+                      {visibleCurrentDayComments &&
+                        visibleCurrentDayComments.length > 0 && (
+                          <ul className="ip-comments-list">
+                            {visibleCurrentDayComments.map((comment, idx) => {
+                              const user =
+                                typeof comment.userID === "object"
+                                  ? comment.userID
+                                  : null;
+                              const userName = user
+                                ? `${user.name} ${user.surname}`
+                                : "Unknown User";
+                              const userRole = user ? user.role : "";
+                              const commentKey = getCommentKey(comment, idx);
+                              return (
+                                <li
+                                  key={comment._id || idx}
+                                  className={`ip-comment ${highlightedCommentKey === commentKey ? "ip-comment--focus" : ""}`}
+                                >
+                                  <div
+                                    className="ip-comment-header"
+                                    style={{
+                                      display: "flex",
+                                      justifyContent: "space-between",
+                                      alignItems: "flex-start",
+                                      marginBottom: "8px",
+                                      fontSize: "12px",
+                                      color: "var(--t3, #9ba3bb)",
+                                    }}
+                                  >
+                                    <div>
+                                      <div
+                                        style={{
+                                          fontWeight: 600,
+                                          color: "var(--t1, #0c0e18)",
+                                          marginBottom: "4px",
+                                        }}
+                                      >
+                                        {userName}{" "}
+                                        {userRole && (
+                                          <span
+                                            style={{
+                                              fontSize: "11px",
+                                              fontWeight: 500,
+                                              color: "var(--a1, #635bff)",
+                                            }}
+                                          >
+                                            ({userRole})
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div>
+                                        {new Date(
+                                          comment.date,
+                                        ).toLocaleDateString()}{" "}
+                                        {new Date(
+                                          comment.date,
+                                        ).toLocaleTimeString()}
+                                      </div>
+                                    </div>
                                   </div>
-                                </div>
-                                <p style={{ margin: 0 }}>{comment.text}</p>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      )}
+                                  <p style={{ margin: 0 }}>{comment.text}</p>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
                       {canWriteComments && (
-                        <form className="ip-comment-form" onSubmit={handlePostComment}>
+                        <form
+                          className="ip-comment-form"
+                          onSubmit={handlePostComment}
+                        >
                           <input
                             type="text"
                             value={newComment}
@@ -2062,7 +3321,11 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                             placeholder="Add a comment…"
                             className="ip-input"
                           />
-                          <button type="submit" className="ip-btn ip-btn--primary" disabled={submitting || !newComment.trim()}>
+                          <button
+                            type="submit"
+                            className="ip-btn ip-btn--primary"
+                            disabled={submitting || !newComment.trim()}
+                          >
                             Post
                           </button>
                         </form>
@@ -2074,7 +3337,9 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
             </div>
           ) : (
             <div className="ip-empty-card">
-              <p style={{ margin: '0 0 16px 0' }}>No days recorded for this internship yet.</p>
+              <p style={{ margin: "0 0 16px 0" }}>
+                No days recorded for this internship yet.
+              </p>
               {canWriteReport && (
                 <button
                   type="button"
@@ -2082,40 +3347,68 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
                   disabled={submitting}
                   onClick={handleAddDayClick}
                 >
-                  {submitting ? 'Adding…' : 'Add first day'}
+                  {submitting ? "Adding…" : "Add first day"}
                 </button>
               )}
             </div>
           )}
-          
+
           {showFeedbackView && (
             <div className="ip-feedback-view">
               <div className="ip-feedback-header">
                 <h3 className="ip-feedback-title">All Comments</h3>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="ip-btn ip-btn--secondary"
                   onClick={() => setShowFeedbackView(false)}
                 >
                   Back to Days
                 </button>
               </div>
-              
+
               {allComments.length > 0 ? (
                 <ul className="ip-comments-list">
                   {allComments.map((comment, idx) => {
-                    const user = typeof comment.userID === 'object' ? comment.userID : null;
-                    const userName = user ? `${user.name} ${user.surname}` : 'Unknown User';
-                    const userRole = user ? user.role : '';
+                    const user =
+                      typeof comment.userID === "object"
+                        ? comment.userID
+                        : null;
+                    const userName = user
+                      ? `${user.name} ${user.surname}`
+                      : "Unknown User";
+                    const userRole = user ? user.role : "";
                     return (
                       <li key={comment.commentID || idx} className="ip-comment">
                         <div className="ip-comment-header">
                           <div style={{ flex: 1 }}>
-                            <div style={{ fontWeight: 600, color: 'var(--t1, #0c0e18)', marginBottom: '4px' }}>{userName} {userRole && <span style={{ fontSize: '11px', fontWeight: 500, color: 'var(--a1, #635bff)' }}>({userRole})</span>}</div>
-                            <span className="ip-comment-day">Day {comment.dayNumber} • {new Date(comment.date).toLocaleDateString()} {new Date(comment.date).toLocaleTimeString()}</span>
+                            <div
+                              style={{
+                                fontWeight: 600,
+                                color: "var(--t1, #0c0e18)",
+                                marginBottom: "4px",
+                              }}
+                            >
+                              {userName}{" "}
+                              {userRole && (
+                                <span
+                                  style={{
+                                    fontSize: "11px",
+                                    fontWeight: 500,
+                                    color: "var(--a1, #635bff)",
+                                  }}
+                                >
+                                  ({userRole})
+                                </span>
+                              )}
+                            </div>
+                            <span className="ip-comment-day">
+                              Day {comment.dayNumber} •{" "}
+                              {new Date(comment.date).toLocaleDateString()}{" "}
+                              {new Date(comment.date).toLocaleTimeString()}
+                            </span>
                           </div>
-                          <button 
-                            type="button" 
+                          <button
+                            type="button"
                             className="ip-comment-navigate-btn"
                             onClick={() => navigateToDay(comment.dayIndex)}
                           >
@@ -2133,262 +3426,493 @@ export default function InternshipPage({ facultyId, onBack, user, initialDayInde
             </div>
           )}
 
-          {activeImageSrc && typeof document !== 'undefined' && createPortal(
-            <div className="ip-image-modal" onClick={() => setActiveImageSrc('')}>
-              <button
-                type="button"
-                className="ip-image-modal-close"
-                onClick={() => setActiveImageSrc('')}
-                aria-label="Close image preview"
+          {activeImageSrc &&
+            typeof document !== "undefined" &&
+            createPortal(
+              <div
+                className="ip-image-modal"
+                onClick={() => setActiveImageSrc("")}
               >
-                ×
-              </button>
-              <img
-                src={activeImageSrc}
-                alt="Full size report"
-                className="ip-image-modal-content"
-                onClick={(e) => e.stopPropagation()}
-              />
-            </div>,
-            document.body,
-          )}
+                <button
+                  type="button"
+                  className="ip-image-modal-close"
+                  onClick={() => setActiveImageSrc("")}
+                  aria-label="Close image preview"
+                >
+                  ×
+                </button>
+                <img
+                  src={activeImageSrc}
+                  alt="Full size report"
+                  className="ip-image-modal-content"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>,
+              document.body,
+            )}
 
-          {showAddDayModal && typeof document !== 'undefined' && createPortal(
-            <div className="ip-modal-overlay" onClick={() => setShowAddDayModal(false)}>
-              <div className="ip-modal-content" onClick={(e) => e.stopPropagation()}>
-                <div className="ip-modal-header">
-                  <h3 className="ip-modal-title">Add New Day</h3>
-                  <button 
-                    type="button" 
-                    className="ip-close-btn"
-                    onClick={() => setShowAddDayModal(false)}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="18" y1="6" x2="6" y2="18"></line>
-                      <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                  </button>
-                </div>
-                <div className="ip-modal-body">
-                  <label className="ip-label" htmlFor="new-day-date">Select date for the new day</label>
-                  <input
-                    id="new-day-date"
-                    type="date"
-                    value={newDayDate}
-                    onChange={(e) => setNewDayDate(e.target.value)}
-                    className="ip-input ip-date-input"
-                  />
-                </div>
-                <div className="ip-modal-footer">
-                  <button 
-                    type="button" 
-                    className="ip-btn ip-btn--secondary"
-                    onClick={() => setShowAddDayModal(false)}
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    type="button" 
-                    className="ip-btn ip-btn--primary"
-                    onClick={handleAddDayConfirm}
-                    disabled={submitting}
-                  >
-                    {submitting ? 'Adding…' : 'Add Day'}
-                  </button>
-                </div>
-              </div>
-            </div>,
-            document.body,
-          )}
-
-          {showStudentManager && typeof document !== 'undefined' && createPortal(
-            <div className="ip-modal-overlay" onClick={() => setShowStudentManager(false)}>
-              <div className="ip-modal-content ip-modal-content--wide" onClick={(e) => e.stopPropagation()}>
-                <div className="ip-modal-header">
-                  <h3 className="ip-modal-title">Manage students</h3>
-                  <button
-                    type="button"
-                    className="ip-close-btn"
-                    onClick={() => setShowStudentManager(false)}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="18" y1="6" x2="6" y2="18"></line>
-                      <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                  </button>
-                </div>
-
-                <div className="ip-modal-body">
-                  <label className="ip-label" htmlFor="student-search">Search students</label>
-                  <input
-                    id="student-search"
-                    type="text"
-                    value={studentSearchTerm}
-                    onChange={(e) => setStudentSearchTerm(e.target.value)}
-                    className="ip-input"
-                    placeholder="Search by name or faculty"
-                  />
-
-                  <div className="ip-student-filter-row">
-                    <div className="ip-filter-card">
-                      <label className="ip-label" htmlFor="student-faculty-filter">Faculty</label>
-                      <CustomFilterSelect
-                        id="student-faculty-filter"
-                        value={selectedStudentFaculty}
-                        onChange={setSelectedStudentFaculty}
-                        options={facultyFilterOptions}
-                      />
-                    </div>
-
-                    <div className="ip-filter-card">
-                      <label className="ip-label" htmlFor="student-year-filter">Faculty year</label>
-                      <CustomFilterSelect
-                        id="student-year-filter"
-                        value={selectedStudentYear}
-                        onChange={setSelectedStudentYear}
-                        options={yearFilterOptions}
-                      />
-                    </div>
+          {showAddDayModal &&
+            typeof document !== "undefined" &&
+            createPortal(
+              <div
+                className="ip-modal-overlay"
+                onClick={() => setShowAddDayModal(false)}
+              >
+                <div
+                  className="ip-modal-content"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="ip-modal-header">
+                    <h3 className="ip-modal-title">Add New Day</h3>
+                    <button
+                      type="button"
+                      className="ip-close-btn"
+                      onClick={() => setShowAddDayModal(false)}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
                   </div>
-
-                  <div className="ip-student-manager-meta">
-                    <span>{attachedStudents.length} attached</span>
-                    <span>{studentDirectory.length} matching students</span>
-                    <span>{selectedStudentIds.length} selected</span>
+                  <div className="ip-modal-body">
+                    <label className="ip-label" htmlFor="new-day-date">
+                      Select date for the new day
+                    </label>
+                    <input
+                      id="new-day-date"
+                      type="date"
+                      value={newDayDate}
+                      onChange={(e) => setNewDayDate(e.target.value)}
+                      className="ip-input ip-date-input"
+                    />
                   </div>
-
-                  {studentDirectory.length === 0 ? (
-                    <div className="ip-student-manager-empty">No students found.</div>
-                  ) : (
-                    <div className="ip-student-manager-list">
-                      {studentDirectory.map(({ student, studentId, studentName, studentFacultyName, studentYear, isAttached }) => (
-                        <label key={studentId || studentName} className="ip-student-manager-row">
-                          <input
-                            type="checkbox"
-                            className="ip-student-check"
-                            checked={Boolean(studentId && selectedStudentIds.includes(studentId))}
-                            onChange={() => handleToggleStudentSelection(studentId)}
-                            disabled={submitting || isAttached || !studentId}
-                            aria-label={`Select ${studentName}`}
-                          />
-                          <div className="ip-student-copy">
-                            <strong className="ip-student-name">{studentName}</strong>
-                            {studentFacultyName && <span className="ip-student-faculty">{studentFacultyName}</span>}
-                            {studentYear && <span className="ip-student-faculty">Year {studentYear}</span>}
-                          </div>
-                          <div className="ip-student-manager-actions">
-                            <span className={`ip-student-badge ${isAttached ? 'ip-student-badge--attached' : 'ip-student-badge--free'}`}>
-                              {isAttached ? 'Attached' : 'Available'}
-                            </span>
-                            {isAttached && (
-                              <button
-                                type="button"
-                                className="ip-student-action-btn"
-                                onClick={(event) => {
-                                  event.preventDefault();
-                                  handleDetachStudent(student);
-                                }}
-                                disabled={submitting}
-                              >
-                                Detach
-                              </button>
-                            )}
-                          </div>
-                        </label>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="ip-modal-footer">
-                  <button
-                    type="button"
-                    className="ip-btn ip-btn--secondary"
-                    onClick={() => setShowStudentManager(false)}
-                  >
-                    Done
-                  </button>
-                  <button
-                    type="button"
-                    className="ip-btn ip-btn--primary"
-                    onClick={handleAttachSelectedStudents}
-                    disabled={submitting || selectedStudentIds.length === 0}
-                  >
-                    {submitting ? 'Adding…' : `Add selected (${selectedStudentIds.length})`}
-                  </button>
-                </div>
-              </div>
-            </div>,
-            document.body,
-          )}
-
-          {showFinalReportModal && typeof document !== 'undefined' && createPortal(
-            <div className="ip-modal-overlay" onClick={() => setShowFinalReportModal(false)}>
-              <div className="ip-modal-content ip-modal-content--wide" onClick={(e) => e.stopPropagation()}>
-                <div className="ip-modal-header">
-                  <h3 className="ip-modal-title">AI Final Report (30 Days)</h3>
-                  <button
-                    type="button"
-                    className="ip-close-btn"
-                    onClick={() => setShowFinalReportModal(false)}
-                    aria-label="Close final report"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="18" y1="6" x2="6" y2="18"></line>
-                      <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                  </button>
-                </div>
-
-                <div className="ip-modal-body">
-                  {finalReportLoading && (
-                    <div className="ip-final-report-state">Generating report from internship data, daily texts, and photos…</div>
-                  )}
-
-                  {!finalReportLoading && finalReportError && (
-                    <div className="ip-final-report-state ip-final-report-state--error">{finalReportError}</div>
-                  )}
-
-                  {!finalReportLoading && !finalReportError && finalReportMarkdown && (
-                    <div
-                      className="ip-final-report-body"
-                      dangerouslySetInnerHTML={{ __html: renderSimpleMarkdown(finalReportMarkdown) }}
-                    ></div>
-                  )}
-                </div>
-
-                <div className="ip-modal-footer">
-                  <button
-                    type="button"
-                    className="ip-btn ip-btn--secondary"
-                    onClick={() => setShowFinalReportModal(false)}
-                  >
-                    Close
-                  </button>
-                  {finalReportError && (
+                  <div className="ip-modal-footer">
+                    <button
+                      type="button"
+                      className="ip-btn ip-btn--secondary"
+                      onClick={() => setShowAddDayModal(false)}
+                    >
+                      Cancel
+                    </button>
                     <button
                       type="button"
                       className="ip-btn ip-btn--primary"
-                      onClick={handleFinalReport}
-                      disabled={finalReportLoading}
+                      onClick={handleAddDayConfirm}
+                      disabled={submitting}
                     >
-                      Retry
+                      {submitting ? "Adding…" : "Add Day"}
                     </button>
-                  )}
-                  <button
-                    type="button"
-                    className="ip-btn ip-btn--primary"
-                    onClick={() => window.print()}
-                    disabled={finalReportLoading || !finalReportMarkdown}
-                  >
-                    Print final report
-                  </button>
+                  </div>
                 </div>
-              </div>
-            </div>,
-            document.body,
-          )}
+              </div>,
+              document.body,
+            )}
 
+          {showAttendanceEditor &&
+            typeof document !== "undefined" &&
+            createPortal(
+              <div
+                className="ip-modal-overlay"
+                onClick={() => setShowAttendanceEditor(false)}
+              >
+                <div
+                  className="ip-modal-content"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="ip-modal-header">
+                    <h3 className="ip-modal-title">
+                      {editorDay
+                        ? `Edit Day ${editorDay.dayNumber}`
+                        : "New Attendance Day"}
+                    </h3>
+                    <button
+                      type="button"
+                      className="ip-close-btn"
+                      onClick={() => setShowAttendanceEditor(false)}
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <form onSubmit={handleAttendanceEditorSave}>
+                    <div className="ip-modal-body">
+                      <label className="form-label">Date</label>
+                      <input
+                        type="date"
+                        className="ip-input"
+                        defaultValue={
+                          editorDay?.date || new Date().toISOString().slice(0, 10)
+                        }
+                        id="attendance-editor-date"
+                      />
+
+                      <div style={{ marginTop: 12 }}>
+                        <label className="form-label">Students</label>
+                        <div
+                          style={{
+                            maxHeight: 280,
+                            overflow: "auto",
+                            border: "1px solid rgba(0,0,0,.06)",
+                            borderRadius: 8,
+                            padding: 8,
+                          }}
+                        >
+                          {(attachedStudents || []).map((stu, idx) => {
+                            const sk = getStudentId(stu) || `key-${idx}`;
+                            const present = editorDay
+                              ? Boolean(
+                                  (editorDay.students || []).find(
+                                    (s) => (s.studentKey || s.studentId) == sk,
+                                  )?.present,
+                                )
+                              : false;
+                            return (
+                              <div
+                                key={sk}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                  gap: 12,
+                                  padding: "6px 8px",
+                                }}
+                              >
+                                <div>{getStudentName(stu)}</div>
+                                <div>
+                                  <label
+                                    style={{
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      gap: 8,
+                                    }}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      defaultChecked={present}
+                                      data-student-key={sk}
+                                    />{" "}
+                                    Present
+                                  </label>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="ip-modal-footer">
+                      <button
+                        type="button"
+                        className="ip-btn ip-btn--ghost"
+                        onClick={() => setShowAttendanceEditor(false)}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="ip-btn ip-btn--primary"
+                        disabled={attendanceLoading}
+                      >
+                        Save
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>,
+              document.body,
+            )}
+
+          {showStudentManager &&
+            typeof document !== "undefined" &&
+            createPortal(
+              <div
+                className="ip-modal-overlay"
+                onClick={() => setShowStudentManager(false)}
+              >
+                <div
+                  className="ip-modal-content ip-modal-content--wide"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="ip-modal-header">
+                    <h3 className="ip-modal-title">Manage students</h3>
+                    <button
+                      type="button"
+                      className="ip-close-btn"
+                      onClick={() => setShowStudentManager(false)}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div className="ip-modal-body">
+                    <label className="ip-label" htmlFor="student-search">
+                      Search students
+                    </label>
+                    <input
+                      id="student-search"
+                      type="text"
+                      value={studentSearchTerm}
+                      onChange={(e) => setStudentSearchTerm(e.target.value)}
+                      className="ip-input"
+                      placeholder="Search by name or faculty"
+                    />
+
+                    <div className="ip-student-filter-row">
+                      <div className="ip-filter-card">
+                        <label
+                          className="ip-label"
+                          htmlFor="student-faculty-filter"
+                        >
+                          Faculty
+                        </label>
+                        <CustomFilterSelect
+                          id="student-faculty-filter"
+                          value={selectedStudentFaculty}
+                          onChange={setSelectedStudentFaculty}
+                          options={facultyFilterOptions}
+                        />
+                      </div>
+
+                      <div className="ip-filter-card">
+                        <label
+                          className="ip-label"
+                          htmlFor="student-year-filter"
+                        >
+                          Faculty year
+                        </label>
+                        <CustomFilterSelect
+                          id="student-year-filter"
+                          value={selectedStudentYear}
+                          onChange={setSelectedStudentYear}
+                          options={yearFilterOptions}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="ip-student-manager-meta">
+                      <span>{attachedStudents.length} attached</span>
+                      <span>{studentDirectory.length} matching students</span>
+                      <span>{selectedStudentIds.length} selected</span>
+                    </div>
+
+                    {studentDirectory.length === 0 ? (
+                      <div className="ip-student-manager-empty">
+                        No students found.
+                      </div>
+                    ) : (
+                      <div className="ip-student-manager-list">
+                        {studentDirectory.map(
+                          ({
+                            student,
+                            studentId,
+                            studentName,
+                            studentFacultyName,
+                            studentYear,
+                            isAttached,
+                          }) => (
+                            <label
+                              key={studentId || studentName}
+                              className="ip-student-manager-row"
+                            >
+                              <input
+                                type="checkbox"
+                                className="ip-student-check"
+                                checked={Boolean(
+                                  studentId &&
+                                  selectedStudentIds.includes(studentId),
+                                )}
+                                onChange={() =>
+                                  handleToggleStudentSelection(studentId)
+                                }
+                                disabled={
+                                  submitting || isAttached || !studentId
+                                }
+                                aria-label={`Select ${studentName}`}
+                              />
+                              <div className="ip-student-copy">
+                                <strong className="ip-student-name">
+                                  {studentName}
+                                </strong>
+                                {studentFacultyName && (
+                                  <span className="ip-student-faculty">
+                                    {studentFacultyName}
+                                  </span>
+                                )}
+                                {studentYear && (
+                                  <span className="ip-student-faculty">
+                                    Year {studentYear}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="ip-student-manager-actions">
+                                <span
+                                  className={`ip-student-badge ${isAttached ? "ip-student-badge--attached" : "ip-student-badge--free"}`}
+                                >
+                                  {isAttached ? "Attached" : "Available"}
+                                </span>
+                                {isAttached && (
+                                  <button
+                                    type="button"
+                                    className="ip-student-action-btn"
+                                    onClick={(event) => {
+                                      event.preventDefault();
+                                      handleDetachStudent(student);
+                                    }}
+                                    disabled={submitting}
+                                  >
+                                    Detach
+                                  </button>
+                                )}
+                              </div>
+                            </label>
+                          ),
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="ip-modal-footer">
+                    <button
+                      type="button"
+                      className="ip-btn ip-btn--secondary"
+                      onClick={() => setShowStudentManager(false)}
+                    >
+                      Done
+                    </button>
+                    <button
+                      type="button"
+                      className="ip-btn ip-btn--primary"
+                      onClick={handleAttachSelectedStudents}
+                      disabled={submitting || selectedStudentIds.length === 0}
+                    >
+                      {submitting
+                        ? "Adding…"
+                        : `Add selected (${selectedStudentIds.length})`}
+                    </button>
+                  </div>
+                </div>
+              </div>,
+              document.body,
+            )}
+
+          {showFinalReportModal &&
+            typeof document !== "undefined" &&
+            createPortal(
+              <div
+                className="ip-modal-overlay"
+                onClick={() => setShowFinalReportModal(false)}
+              >
+                <div
+                  className="ip-modal-content ip-modal-content--wide"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="ip-modal-header">
+                    <h3 className="ip-modal-title">
+                      AI Final Report (30 Days)
+                    </h3>
+                    <button
+                      type="button"
+                      className="ip-close-btn"
+                      onClick={() => setShowFinalReportModal(false)}
+                      aria-label="Close final report"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div className="ip-modal-body">
+                    {finalReportLoading && (
+                      <div className="ip-final-report-state">
+                        Generating report from internship data, daily texts, and
+                        photos…
+                      </div>
+                    )}
+
+                    {!finalReportLoading && finalReportError && (
+                      <div className="ip-final-report-state ip-final-report-state--error">
+                        {finalReportError}
+                      </div>
+                    )}
+
+                    {!finalReportLoading &&
+                      !finalReportError &&
+                      finalReportMarkdown && (
+                        <div
+                          className="ip-final-report-body"
+                          dangerouslySetInnerHTML={{
+                            __html: renderSimpleMarkdown(finalReportMarkdown),
+                          }}
+                        ></div>
+                      )}
+                  </div>
+
+                  <div className="ip-modal-footer">
+                    <button
+                      type="button"
+                      className="ip-btn ip-btn--secondary"
+                      onClick={() => setShowFinalReportModal(false)}
+                    >
+                      Close
+                    </button>
+                    {finalReportError && (
+                      <button
+                        type="button"
+                        className="ip-btn ip-btn--primary"
+                        onClick={handleFinalReport}
+                        disabled={finalReportLoading}
+                      >
+                        Retry
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="ip-btn ip-btn--primary"
+                      onClick={() => window.print()}
+                      disabled={finalReportLoading || !finalReportMarkdown}
+                    >
+                      Print final report
+                    </button>
+                  </div>
+                </div>
+              </div>,
+              document.body,
+            )}
         </div>
       </div>
     );
@@ -3515,6 +5039,67 @@ const ipStyles = `
     border-radius: 10px;
     cursor: zoom-in;
   }
+  /* Attendance styles */
+  .ip-attendance-card {
+    margin-top: 16px;
+    background: rgba(255,255,255,.94);
+    border: 1px solid rgba(0,0,0,.06);
+    border-radius: 14px;
+    padding: 16px;
+  }
+  .ip-attendance-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .ip-attendance-actions { display:flex; gap:8px; align-items:center; }
+  .ip-attendance-body { }
+  .ip-attendance-table-wrap { display: grid; gap: 12px; }
+  .ip-attendance-day {
+    background: #fff;
+    border: 1px solid rgba(0,0,0,.04);
+    border-radius: 12px;
+    padding: 12px;
+  }
+  .ip-attendance-day-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; }
+  .ip-attendance-table { width:100%; border-collapse:collapse; margin-top:8px; }
+  .ip-attendance-table thead th { text-align:left; padding:10px 12px; font-size:12px; text-transform:uppercase; color:var(--t2,#5a6278); background: rgba(0,0,0,.03); border-bottom:1px solid rgba(0,0,0,.06); }
+  .ip-attendance-table td { padding:10px 12px; border-bottom:1px solid rgba(0,0,0,.06); font-size:14px; color:var(--t1,#0c0e18); }
+  .ip-attendance-table tbody tr:nth-child(even) { background: rgba(0,0,0,.02); }
+  .ip-attendance-radio {
+    width:18px;
+    height:18px;
+    appearance:none;
+    -webkit-appearance:none;
+    border:2px solid rgba(99,91,255,.45);
+    border-radius:999px;
+    background:#fff;
+    display:inline-grid;
+    place-content:center;
+    cursor:pointer;
+    transition:all .18s ease;
+  }
+  .ip-attendance-radio::before {
+    content:'';
+    width:8px;
+    height:8px;
+    border-radius:999px;
+    transform:scale(0);
+    transition:transform .14s ease;
+    background:var(--a1,#635bff);
+  }
+  .ip-attendance-radio:checked {
+    border-color: var(--a1,#635bff);
+    box-shadow: 0 0 0 4px rgba(99,91,255,.10);
+  }
+  .ip-attendance-radio:checked::before { transform:scale(1); }
+  .ip-attendance-radio:disabled {
+    opacity:.45;
+    cursor:not-allowed;
+  }
+
   .ip-comments { margin-top: 20px; }
   .ip-comments-title {
     font-size: 14px;
@@ -4043,6 +5628,9 @@ const ipStyles = `
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
     max-width: 400px;
     width: 90%;
+    max-height: min(90vh, 820px);
+    display: flex;
+    flex-direction: column;
     animation: slideUp .3s cubic-bezier(0.34, 1.56, 0.64, 1);
     overflow: hidden;
   }
@@ -4071,6 +5659,8 @@ const ipStyles = `
   }
   .ip-modal-body {
     padding: 24px 20px;
+    overflow: auto;
+    flex: 1 1 auto;
   }
   .ip-modal-footer {
     display: flex;
@@ -4078,6 +5668,7 @@ const ipStyles = `
     justify-content: flex-end;
     padding: 16px 20px;
     border-top: 1px solid rgba(0, 0, 0, 0.06);
+    flex-shrink: 0;
   }
   .ip-date-input {
     width: 100%;

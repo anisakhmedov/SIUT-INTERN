@@ -28,6 +28,10 @@ function normalizeTutorEntry(member) {
   };
 }
 
+function getTutorLabel(tutor) {
+  return [tutor?.name, tutor?.surname, tutor?.lastname].filter(Boolean).join(' ').trim() || 'Unnamed tutor';
+}
+
 function formatCoordsLocation(coords) {
   const lat = Number(Number(coords[0]).toFixed(6));
   const lng = Number(Number(coords[1]).toFixed(6));
@@ -771,7 +775,6 @@ export default function CreatePage({ onSubmit, onCancel, students = [], tutors: 
     duration: { start: '', end: '' },
     status: 'Pending',
     plan: '',
-    tutorID: '',
     days: []
   });
 
@@ -795,8 +798,11 @@ export default function CreatePage({ onSubmit, onCancel, students = [], tutors: 
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFaculty, setSelectedFaculty] = useState(''); // Add faculty filter state
+  const [selectedTutorIds, setSelectedTutorIds] = useState([]);
   const [tutors, setTutors] = useState([]);
   const [loadingTutors, setLoadingTutors] = useState(false);
+  const [isTutorMenuOpen, setIsTutorMenuOpen] = useState(false);
+  const tutorPickerRef = useRef(null);
   const providedTutors = useMemo(() => {
     return extractUsers(tutorCandidates)
       .map(normalizeTutorEntry)
@@ -809,6 +815,12 @@ export default function CreatePage({ onSubmit, onCancel, students = [], tutors: 
   const tutorOptions = providedTutors.length > 0
     ? providedTutors
     : tutors;
+
+  const selectedTutorEntries = useMemo(() => {
+    return selectedTutorIds
+      .map((tutorId) => tutorOptions.find((tutor) => tutor._id === tutorId))
+      .filter(Boolean);
+  }, [selectedTutorIds, tutorOptions]);
 
   // Fetch tutors and professors on component mount
   useEffect(() => {
@@ -843,6 +855,34 @@ export default function CreatePage({ onSubmit, onCancel, students = [], tutors: 
     
     fetchTutors();
   }, [providedTutors, user?.role]);
+
+  useEffect(() => {
+    setSelectedTutorIds((current) =>
+      current.filter((tutorId) => tutorOptions.some((tutor) => tutor._id === tutorId)),
+    );
+  }, [tutorOptions]);
+
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (tutorPickerRef.current && !tutorPickerRef.current.contains(event.target)) {
+        setIsTutorMenuOpen(false);
+      }
+    };
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setIsTutorMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, []);
 
   // If parent didn't provide students, fetch them here and normalize
   useEffect(() => {
@@ -984,6 +1024,8 @@ export default function CreatePage({ onSubmit, onCancel, students = [], tutors: 
       // Prepare the payload
       const payload = {
         ...formData,
+        tutorID: selectedTutorIds[0] || '',
+        tutorIDs: selectedTutorIds,
         location: formData.locationYmaps?.label || formData.location,
         locationYmaps: formData.locationYmaps.coords,
         duration: {
@@ -1007,6 +1049,18 @@ export default function CreatePage({ onSubmit, onCancel, students = [], tutors: 
       toast.error(err.message || 'Failed to create internship.');
       console.error('Error creating internship:', err);
     }
+  };
+
+  const toggleTutorSelection = (tutorId) => {
+    setSelectedTutorIds((current) => (
+      current.includes(tutorId)
+        ? current.filter((id) => id !== tutorId)
+        : [...current, tutorId]
+    ));
+  };
+
+  const removeTutorSelection = (tutorId) => {
+    setSelectedTutorIds((current) => current.filter((id) => id !== tutorId));
   };
 
   const addStudent = (student) => {
@@ -1108,6 +1162,143 @@ export default function CreatePage({ onSubmit, onCancel, students = [], tutors: 
         .form-input:focus {
           border-color: var(--a1, #635bff);
           box-shadow: 0 0 0 4px rgba(99,91,255,.14);
+        }
+        .tutor-picker {
+          position: relative;
+        }
+        .tutor-picker-trigger {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 12px 16px;
+          border-radius: 14px;
+          border: 1.5px solid rgba(0,0,0,.10);
+          background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(247,248,252,.96));
+          color: var(--t1, #0c0e18);
+          font-family: 'Epilogue', system-ui, sans-serif;
+          text-align: left;
+          cursor: pointer;
+          transition: border-color .2s ease, box-shadow .2s ease, transform .15s ease;
+          box-sizing: border-box;
+        }
+        .tutor-picker-trigger:hover:not(:disabled) {
+          border-color: rgba(99,91,255,.22);
+          box-shadow: 0 10px 24px rgba(99,91,255,.08);
+        }
+        .tutor-picker-trigger.open,
+        .tutor-picker-trigger:focus-visible {
+          border-color: var(--a1, #635bff);
+          box-shadow: 0 0 0 4px rgba(99,91,255,.14);
+          outline: none;
+        }
+        .tutor-picker-trigger:disabled {
+          cursor: not-allowed;
+          opacity: .7;
+        }
+        .tutor-picker-title {
+          font-size: 14px;
+          font-weight: 700;
+        }
+        .tutor-picker-meta {
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--t3, #9ba3bb);
+          white-space: nowrap;
+        }
+        .tutor-picker-chips {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-top: 10px;
+        }
+        .tutor-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 10px;
+          border-radius: 999px;
+          background: linear-gradient(135deg, rgba(99,91,255,.12), rgba(6,201,160,.10));
+          border: 1px solid rgba(99,91,255,.15);
+          color: var(--t1, #0c0e18);
+          font-size: 12px;
+          font-weight: 600;
+        }
+        .tutor-chip-remove {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 18px;
+          height: 18px;
+          border: none;
+          border-radius: 50%;
+          background: rgba(255,255,255,.75);
+          color: #ef4444;
+          cursor: pointer;
+          padding: 0;
+        }
+        .tutor-picker-menu {
+          position: absolute;
+          bottom: calc(100% + 10px);
+          left: 0;
+          right: 0;
+          z-index: 20;
+          max-height: 280px;
+          overflow-y: auto;
+          padding: 10px;
+          border-radius: 16px;
+          border: 1px solid rgba(0,0,0,.08);
+          background: rgba(255,255,255,.98);
+          box-shadow: 0 18px 42px rgba(99,91,255,.16);
+          backdrop-filter: blur(10px);
+        }
+        .tutor-picker-option {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 12px 14px;
+          border-radius: 12px;
+          border: 1px solid transparent;
+          background: transparent;
+          color: var(--t1, #0c0e18);
+          text-align: left;
+          cursor: pointer;
+          transition: all .18s ease;
+        }
+        .tutor-picker-option:hover {
+          background: rgba(99,91,255,.06);
+          border-color: rgba(99,91,255,.10);
+        }
+        .tutor-picker-option.selected {
+          background: linear-gradient(135deg, rgba(99,91,255,.10), rgba(6,201,160,.08));
+          border-color: rgba(99,91,255,.14);
+        }
+        .tutor-picker-option + .tutor-picker-option {
+          margin-top: 6px;
+        }
+        .tutor-picker-option-title {
+          font-size: 13px;
+          font-weight: 700;
+        }
+        .tutor-picker-option-subtitle {
+          margin-top: 2px;
+          font-size: 11px;
+          color: var(--t3, #9ba3bb);
+        }
+        .tutor-picker-option-mark {
+          font-size: 11px;
+          font-weight: 700;
+          color: var(--a1, #635bff);
+          white-space: nowrap;
+        }
+        .tutor-picker-empty {
+          padding: 14px;
+          font-size: 13px;
+          color: var(--t3, #9ba3bb);
+          text-align: center;
         }
         .form-row {
           display: grid;
@@ -1473,21 +1664,76 @@ export default function CreatePage({ onSubmit, onCancel, students = [], tutors: 
               </div>
               
               <div className="form-group">
-                <label className="form-label">Select Tutor or Professor</label>
-                <select
-                  name="tutorID"
-                  value={formData.tutorID}
-                  onChange={handleChange}
-                  className="form-input"
-                  disabled={loadingTutors}
-                >
-                  <option value="">-- Select a Tutor/Professor --</option>
-                  {tutorOptions.map(tutor => (
-                    <option key={tutor._id} value={tutor._id}>
-                      {[tutor.name, tutor.surname, tutor.lastname].filter(Boolean).join(' ')} ({tutor.role})
-                    </option>
-                  ))}
-                </select>
+                <label className="form-label">Assign Tutors or Professors</label>
+                <div className="tutor-picker" ref={tutorPickerRef}>
+                  <button
+                    type="button"
+                    className={`tutor-picker-trigger ${isTutorMenuOpen ? 'open' : ''}`}
+                    onClick={() => setIsTutorMenuOpen((current) => !current)}
+                    disabled={loadingTutors}
+                    aria-haspopup="listbox"
+                    aria-expanded={isTutorMenuOpen}
+                  >
+                    <span className="tutor-picker-title">
+                      {selectedTutorEntries.length > 0
+                        ? `${selectedTutorEntries.length} tutor${selectedTutorEntries.length === 1 ? '' : 's'} selected`
+                        : 'Choose one or more tutors'}
+                    </span>
+                    <span className="tutor-picker-meta">
+                      {loadingTutors
+                        ? 'Loading...'
+                        : `${tutorOptions.length} available`}
+                    </span>
+                  </button>
+
+                  {selectedTutorEntries.length > 0 && (
+                    <div className="tutor-picker-chips">
+                      {selectedTutorEntries.map((tutor) => (
+                        <span key={tutor._id} className="tutor-chip">
+                          <span>{getTutorLabel(tutor)}</span>
+                          <button
+                            type="button"
+                            className="tutor-chip-remove"
+                            onClick={() => removeTutorSelection(tutor._id)}
+                            aria-label={`Remove ${getTutorLabel(tutor)}`}
+                          >
+                            <X size={12} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {isTutorMenuOpen && (
+                    <div className="tutor-picker-menu" role="listbox" aria-multiselectable="true">
+                      {loadingTutors ? (
+                        <div className="tutor-picker-empty">Loading tutors...</div>
+                      ) : tutorOptions.length > 0 ? (
+                        tutorOptions.map((tutor) => {
+                          const isSelected = selectedTutorIds.includes(tutor._id);
+                          return (
+                            <button
+                              key={tutor._id}
+                              type="button"
+                              role="option"
+                              aria-selected={isSelected}
+                              className={`tutor-picker-option ${isSelected ? 'selected' : ''}`}
+                              onClick={() => toggleTutorSelection(tutor._id)}
+                            >
+                              <div>
+                                <div className="tutor-picker-option-title">{getTutorLabel(tutor)}</div>
+                                <div className="tutor-picker-option-subtitle">{tutor.role || 'Tutor'}</div>
+                              </div>
+                              <span className="tutor-picker-option-mark">{isSelected ? 'Selected' : 'Add'}</span>
+                            </button>
+                          );
+                        })
+                      ) : (
+                        <div className="tutor-picker-empty">No tutors available.</div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
               
               <div className="form-group" style={{ marginTop: '30px' }}>

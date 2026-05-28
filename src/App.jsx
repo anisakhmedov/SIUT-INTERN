@@ -3138,9 +3138,14 @@ export default function App() {
               days: Array.isArray(newFaculty.days) ? newFaculty.days : [],
               desc: newFaculty.description || newFaculty.plan,
               tutorID: newFaculty.tutorID,
+              tutorIDs: Array.isArray(newFaculty.tutorIDs)
+                ? newFaculty.tutorIDs
+                : newFaculty.tutorID
+                  ? [newFaculty.tutorID]
+                  : [],
               tutor: newFaculty.tutor,
-              ti: Number.isFinite(Number.parseInt(newFaculty.tutorID, 10))
-                ? Number.parseInt(newFaculty.tutorID, 10) % 4
+              ti: Number.isFinite(Number.parseInt(newFaculty.tutorID || newFaculty.tutorIDs?.[0], 10))
+                ? Number.parseInt(newFaculty.tutorID || newFaculty.tutorIDs?.[0], 10) % 4
                 : 0,
             };
 

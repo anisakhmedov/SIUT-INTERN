@@ -98,6 +98,15 @@ function normalizeDurationValue(value) {
   return "";
 }
 
+function getInitialsFromLabel(value) {
+  if (!value) return "U";
+  const parts = String(value)
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2);
+  return parts.map((part) => part[0]?.toUpperCase()).join("") || "U";
+}
+
 function escapeHtml(text) {
   return text
     .replace(/&/g, "&amp;")
@@ -159,13 +168,24 @@ function renderSimpleMarkdown(text) {
   return chunks.join("");
 }
 
-function CustomFilterSelect({ id, value, onChange, options = [] }) {
+function CustomFilterSelect({
+  id,
+  value,
+  onChange,
+  options = [],
+  placeholder = "Select option",
+  menuClassName = "",
+  optionClassName = "",
+  renderOptionContent,
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const rootRef = useRef(null);
 
   const selectedOption = useMemo(
-    () =>
-      options.find((option) => option.value === value) || options[0] || null,
+    () => {
+      if (!value) return null;
+      return options.find((option) => option.value === value) || null;
+    },
     [options, value],
   );
 
@@ -204,7 +224,7 @@ function CustomFilterSelect({ id, value, onChange, options = [] }) {
         onClick={() => setIsOpen((current) => !current)}
       >
         <span className="ip-custom-trigger-text">
-          {selectedOption?.label || "Select option"}
+          {selectedOption?.label || placeholder}
         </span>
         <span
           className={`ip-custom-chevron ${isOpen ? "ip-custom-chevron--open" : ""}`}
@@ -212,7 +232,11 @@ function CustomFilterSelect({ id, value, onChange, options = [] }) {
       </button>
 
       {isOpen && (
-        <div className="ip-custom-menu" role="listbox" aria-labelledby={id}>
+        <div
+          className={`ip-custom-menu ${menuClassName}`.trim()}
+          role="listbox"
+          aria-labelledby={id}
+        >
           {options.map((option) => {
             const isSelected = option.value === value;
             return (
@@ -221,13 +245,17 @@ function CustomFilterSelect({ id, value, onChange, options = [] }) {
                 type="button"
                 role="option"
                 aria-selected={isSelected}
-                className={`ip-custom-option ${isSelected ? "ip-custom-option--selected" : ""}`}
+                className={`ip-custom-option ${optionClassName} ${isSelected ? "ip-custom-option--selected" : ""}`.trim()}
                 onClick={() => {
                   onChange(option.value);
                   setIsOpen(false);
                 }}
               >
-                <span>{option.label}</span>
+                {renderOptionContent ? (
+                  renderOptionContent(option, isSelected)
+                ) : (
+                  <span>{option.label}</span>
+                )}
                 {isSelected && <span className="ip-custom-option-mark">✓</span>}
               </button>
             );
@@ -458,6 +486,104 @@ export default function InternshipPage({
     fetchFaculty();
   }, [fetchFaculty]);
 
+  // Tutors modal state and helpers
+  const [showTutorsModal, setShowTutorsModal] = useState(false);
+  const [modalAvailableTutors, setModalAvailableTutors] = useState([]);
+
+  const openTutorsModal = useCallback(async () => {
+    setShowTutorsModal(true);
+    if (modalAvailableTutors && modalAvailableTutors.length > 0) return;
+    try {
+      const list = await get("/usersInternship");
+      const filteredTutors = (Array.isArray(list) ? list : []).filter((member) => {
+        const role = String(member?.role || "")
+          .trim()
+          .toLowerCase();
+        return role === "tutor" || role === "professor";
+      });
+      setModalAvailableTutors(filteredTutors);
+    } catch (err) {
+      console.error("Failed to load tutors:", err);
+      toast.error("Failed to load tutors list.");
+    }
+  }, [modalAvailableTutors]);
+
+  const getFacultyTutorIds = useCallback(() => {
+    const ids = new Set();
+    if (Array.isArray(faculty?.tutorIDs)) {
+      faculty.tutorIDs.forEach((v) => ids.add(String(v)));
+    }
+    if (Array.isArray(faculty?.tutors)) {
+      faculty.tutors.forEach((t) => {
+        const id = String(t?._id || t?.id || t?.userId || t?.login || t?.email || t?.name || "");
+        if (id) ids.add(id);
+      });
+    }
+    // also consider single tutor fields
+    if (faculty?.tutorID) ids.add(String(faculty.tutorID));
+    if (faculty?.tutor && typeof faculty.tutor === "string") ids.add(String(faculty.tutor));
+    return Array.from(ids).filter(Boolean);
+  }, [faculty]);
+
+  const setTutorAssignment = useCallback(async (tutorId, shouldAssign) => {
+    if (!faculty) return;
+    const idStr = String(tutorId || "");
+    if (!idStr) return;
+
+    const existing = getFacultyTutorIds();
+    const alreadyAssigned = existing.includes(idStr);
+    if (shouldAssign && alreadyAssigned) {
+      return;
+    }
+    if (!shouldAssign && !alreadyAssigned) {
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const next = shouldAssign
+        ? [...existing, idStr]
+        : existing.filter((id) => id !== idStr);
+      await patch(`/faculty/${facultyId}`, {
+        tutorIDs: next,
+        tutorID: next[0] || "",
+      });
+      await fetchFaculty();
+      toast.success(shouldAssign ? "Tutor added to internship." : "Tutor removed from internship.");
+    } catch (err) {
+      toast.error(err?.message || "Failed to update tutor assignment.");
+    } finally {
+      setSubmitting(false);
+    }
+  }, [faculty, fetchFaculty, facultyId, getFacultyTutorIds]);
+
+  const removeTutorFromFaculty = useCallback(
+    async (removeId) => {
+      if (!faculty) return;
+      const existing = getFacultyTutorIds();
+      const idStr = String(removeId || "");
+      if (!existing.includes(idStr)) {
+        toast.warning("Tutor not found on this internship.");
+        return;
+      }
+      const next = existing.filter((id) => id !== idStr);
+      setSubmitting(true);
+      try {
+        await patch(`/faculty/${facultyId}`, {
+          tutorIDs: next,
+          tutorID: next[0] || "",
+        });
+        await fetchFaculty();
+        toast.success("Tutor removed from internship.");
+      } catch (err) {
+        toast.error(err?.message || "Failed to remove tutor.");
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [faculty, fetchFaculty, facultyId, getFacultyTutorIds],
+  );
+
   const getDayId = useCallback((day) => {
     if (!day) return null;
     return day._id ?? day.id ?? null;
@@ -467,6 +593,13 @@ export default function InternshipPage({
     String(r || "")
       .trim()
       .toLowerCase();
+
+  const isTutorRoleLocal = useCallback((role) => {
+    const normalizedRole = String(role || "")
+      .trim()
+      .toLowerCase();
+    return normalizedRole === "tutor" || normalizedRole === "professor";
+  }, []);
 
   const getOwnershipTokensLocal = useCallback((value) => {
     if (!value) return [];
@@ -516,9 +649,12 @@ export default function InternshipPage({
         [user?.name, user?.surname, user?.lastname].filter(Boolean).join(" "),
       ]);
       const internTokens = getOwnershipTokensLocal([
+        faculty?.tutorIDs,
         faculty?.tutorID,
         faculty?.tutor,
         faculty?.supervisor,
+        faculty?.tutors,
+        faculty?.supervisors,
       ]);
       return internTokens.some((t) => userTokens.includes(t));
     }
@@ -733,6 +869,7 @@ export default function InternshipPage({
     pushValue(value);
     return tokens;
   }, []);
+
   const canManageStudents = useMemo(() => {
     const role = String(user?.role || "")
       .trim()
@@ -750,9 +887,12 @@ export default function InternshipPage({
     if (currentUserTokens.size === 0) return false;
 
     const facultyTutorTokens = getOwnershipTokens([
+      faculty?.tutorIDs,
       faculty?.tutorID,
       faculty?.tutor,
       faculty?.supervisor,
+      faculty?.tutors,
+      faculty?.supervisors,
       faculty?.tutorID?._id,
       faculty?.tutorID?.id,
       faculty?.tutorID?.login,
@@ -941,50 +1081,68 @@ export default function InternshipPage({
     showReportForm,
   ]);
   const tutorInfo = useMemo(() => {
-    const tutorSource =
-      faculty?.tutorID || faculty?.tutor || faculty?.supervisor || null;
+    const sources = [
+      faculty?.tutorIDs,
+      faculty?.tutorID,
+      faculty?.tutor,
+      faculty?.tutors,
+    ];
 
-    const tutorName =
-      [
-        typeof tutorSource === "object" ? tutorSource?.name : "",
-        typeof tutorSource === "object" ? tutorSource?.surname : "",
-        typeof tutorSource === "object" ? tutorSource?.lastname : "",
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .trim() ||
-      faculty?.tutorName ||
-      faculty?.supervisorName ||
-      (typeof tutorSource === "string" ? tutorSource.trim() : "");
+    const items = [];
+    const addItem = (value) => {
+      if (!value) return;
+      if (Array.isArray(value)) {
+        value.forEach(addItem);
+        return;
+      }
 
-    // Calculate initials from name and surname
-    const getInitials = (name) => {
-      if (!name) return "U";
-      return (
-        name
-          .split(" ")
-          .filter(Boolean)
-          .slice(0, 2)
-          .map((part) => part[0]?.toUpperCase())
-          .join("") || "U"
-      );
+      const isObject = typeof value === "object";
+      if (isObject && !isTutorRoleLocal(value?.role)) {
+        return;
+      }
+      const name = isObject
+        ? [value?.name, value?.surname, value?.lastname]
+            .filter(Boolean)
+            .join(" ")
+            .trim()
+        : String(value).trim();
+      const contact = isObject
+        ? value?.phone || value?.email || value?.login || ""
+        : "";
+      const key = String(
+        isObject
+          ? value?._id || value?.id || value?.userId || name || contact
+          : value,
+      ).trim();
+
+      if (!key) return;
+      items.push({
+        key,
+        name: name || `Tutor ${items.length + 1}`,
+        contact,
+        initials: getInitialsFromLabel(name || key),
+      });
     };
 
-    const tutorContact =
-      (typeof tutorSource === "object"
-        ? tutorSource?.phone || tutorSource?.email || tutorSource?.login
-        : "") ||
-      faculty?.tutorContact ||
-      faculty?.supervisorContact ||
-      "";
+    sources.forEach(addItem);
+
+    const uniqueItems = Array.from(
+      new Map(items.map((item) => [item.key, item])).values(),
+    );
+
+    const primaryTutor = uniqueItems[0] || null;
+    const tutorNames = uniqueItems.map((item) => item.name).filter(Boolean);
 
     return {
-      name: tutorName,
-      contact: tutorContact,
-      initials: getInitials(tutorName),
-      hasInfo: Boolean(tutorName || tutorContact),
+      primaryTutor,
+      tutors: uniqueItems,
+      name: tutorNames.join(", "),
+      contact: primaryTutor?.contact || faculty?.tutorContact || faculty?.supervisorContact || "",
+      initials: primaryTutor?.initials || getInitialsFromLabel(tutorNames[0] || ""),
+      hasInfo: uniqueItems.length > 0,
+      count: uniqueItems.length,
     };
-  }, [faculty]);
+  }, [faculty, isTutorRoleLocal]);
 
   const internshipMapData = useMemo(() => {
     if (!faculty) return null;
@@ -1023,20 +1181,34 @@ export default function InternshipPage({
 
   // Check if current tutor is assigned to this faculty
   const isAssignedTutor = useMemo(() => {
-    if (user?.role !== "Tutor" || !faculty) return false;
-    const tutorSource =
-      faculty?.tutorID || faculty?.tutor || faculty?.supervisor;
-    if (!tutorSource) return false;
+    if (!faculty) return false;
+    const role = String(user?.role || "").trim().toLowerCase();
+    if (role !== "tutor" && role !== "professor") return false;
 
-    // Check if tutorSource matches current user
-    const tutorId =
-      typeof tutorSource === "object"
-        ? tutorSource?._id || tutorSource?.id
-        : tutorSource;
-    const userId = user?.id || user?._id;
+    const userTokens = getOwnershipTokensLocal([
+      user?.id,
+      user?._id,
+      user?.userId,
+      user?.login,
+      user?.username,
+      user?.email,
+      user?.name,
+      user?.surname,
+      user?.lastname,
+      [user?.name, user?.surname, user?.lastname].filter(Boolean).join(" "),
+    ]);
 
-    return tutorId && userId && tutorId === userId;
-  }, [user, faculty]);
+    const facultyTutorTokens = getOwnershipTokensLocal([
+      faculty?.tutorIDs,
+      faculty?.tutorID,
+      faculty?.tutor,
+      faculty?.supervisor,
+      faculty?.tutors,
+      faculty?.supervisors,
+    ]);
+
+    return facultyTutorTokens.some((token) => userTokens.includes(token));
+  }, [user, faculty, getOwnershipTokensLocal]);
 
   const canWriteReport = user?.role === "Admin" || isAssignedTutor; // Only Admin or assigned Tutor can write reports
   const canWriteComments = canViewComments; // Allow writing only when comments are viewable (assigned staff or allowed roles)
@@ -2224,56 +2396,188 @@ export default function InternshipPage({
               </div>
               <div className="ip-hero-item" aria-label="Internship tutor">
                 <div className="ip-tutor-head">
-                  <span className="ip-summary-label">Tutor</span>
-                  <span className="ip-tutor-badge">Assigned</span>
+                  <span className="ip-summary-label">
+                    {tutorInfo.count > 1 ? "Tutors" : "Tutor"}
+                  </span>
+                  <span className="ip-tutor-badge">
+                    {tutorInfo.count > 1 ? `${tutorInfo.count} tutors appended` : "Assigned"}
+                  </span>
                 </div>
                 {tutorInfo.hasInfo ? (
                   <div className="ip-tutor-body">
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "12px",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: 8,
-                          background: "linear-gradient(135deg,#635bff,#06c9a0)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontFamily: "Syne",
-                          fontWeight: 700,
-                          color: "#fff",
-                          fontSize: 13,
-                          flexShrink: 0,
-                        }}
-                      >
-                        {tutorInfo.initials}
+                    {/* When more than one tutor, show a compact typographic summary */}
+                    {tutorInfo.count > 1 ? (
+                      <div className="ip-tutor-compact" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                          <div className="ip-tutor-compact-text">
+                            <div className="ip-tutor-name-compact">{tutorInfo.count} tutors appended</div>
+                          </div>
+                        </div>
+                        <div>
+                          <button
+                            type="button"
+                            className="ip-eye-btn"
+                            onClick={openTutorsModal}
+                            aria-label="View tutors"
+                          >
+                            👁
+                          </button>
+                        </div>
                       </div>
-                      <div
-                        style={{
-                          flex: 1,
-                          flexDirection: "column",
-                          display: "flex",
-                          gap: 4,
-                        }}
-                      >
-                        <strong className="ip-tutor-name">
-                          {tutorInfo.name || "No information"}
-                        </strong>
-                        <span className="ip-tutor-contact">
-                          {tutorInfo.contact || "No contact information"}
-                        </span>
-                      </div>
-                    </div>
+                    ) : (
+                      (() => {
+                        const t = (tutorInfo.tutors && tutorInfo.tutors[0]) || { initials: tutorInfo.initials, name: tutorInfo.name, contact: tutorInfo.contact };
+                        return (
+                          <div className="ip-tutor-list" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                            <div style={{ display: "flex", gap: 12, alignItems: "center", minWidth: 0 }}>
+                              <div className="ip-tutor-avatar">{t.initials}</div>
+                              <div style={{ minWidth: 0 }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                  <strong className="ip-tutor-name" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.name || "No information"}</strong>
+                                  <span style={{ color: "var(--t2, #5a6278)", fontSize: 13 }}>{t.contact || ""}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div>
+                              <button
+                                type="button"
+                                className="ip-eye-btn"
+                                onClick={openTutorsModal}
+                                aria-label="View tutors"
+                              >
+                                👁
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })()
+                    )}
                   </div>
                 ) : (
                   <p className="ip-tutor-empty">No information available.</p>
                 )}
+                {showTutorsModal &&
+                  createPortal(
+                    <div
+                      role="dialog"
+                      aria-modal="true"
+                      style={{
+                        position: "fixed",
+                        inset: 0,
+                        background: "rgba(0,0,0,.45)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        zIndex: 2200,
+                      }}
+                      onMouseDown={(e) => {
+                        if (e.target === e.currentTarget) setShowTutorsModal(false);
+                      }}
+                    >
+                      <div
+                        className="ip-modal-content ip-modal-content--wide"
+                        style={{
+                          background: "#fff",
+                          borderRadius: 12,
+                          padding: 18,
+                          boxShadow: "0 24px 60px rgba(3,7,18,.32)",
+                          maxHeight: "86vh",
+                          overflow: "auto",
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
+                          <h3 style={{ margin: 0 }}>Assigned tutors ({tutorInfo.count})</h3>
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <button
+                              type="button"
+                              className="ip-student-action-btn ip-student-action-btn--ghost"
+                              onClick={() => setShowTutorsModal(false)}
+                            >
+                              Close
+                            </button>
+                          </div>
+                        </div>
+
+                        <div style={{ display: "grid", gap: 8 }}>
+                          {(tutorInfo.tutors || []).map((tutor) => (
+                            <div key={tutor.key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: 8, borderRadius: 10, background: "#fafafa", border: "1px solid rgba(0,0,0,.06)" }}>
+                              <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                                <div style={{ width: 40, height: 40, borderRadius: 10, background: "linear-gradient(135deg,#635bff,#06c9a0)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>{tutor.initials}</div>
+                                <div style={{ minWidth: 0 }}>
+                                  <div style={{ fontWeight: 800 }}>{tutor.name}</div>
+                                  <div style={{ fontSize: 13, color: "var(--t2, #5a6278)" }}>{tutor.contact || "No contact information"}</div>
+                                </div>
+                              </div>
+                              {user?.role === "Admin" && (
+                                <div>
+                                  <button
+                                    type="button"
+                                    className="ip-student-action-btn"
+                                    onClick={() => removeTutorFromFaculty(tutor.key)}
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+
+                        <div style={{ marginTop: 14 }}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 10 }}>
+                            <label style={{ display: "block", fontSize: 13, color: "var(--t3, #9ba3bb)" }}>Available tutors</label>
+                            <span style={{ fontSize: 12, color: "var(--t3, #9ba3bb)" }}>{modalAvailableTutors.length} total</span>
+                          </div>
+
+                          <div className="ip-student-manager-list" style={{ maxHeight: 280 }}>
+                            {(modalAvailableTutors || []).length === 0 ? (
+                              <div className="ip-student-manager-empty">No tutors available.</div>
+                            ) : (
+                              modalAvailableTutors.map((tutor) => {
+                                const tutorId = String(tutor._id || tutor.id || tutor.userId || tutor.login || tutor.email || "");
+                                const isAssigned = getFacultyTutorIds().includes(tutorId);
+                                const tutorName = String(tutor.name || tutor.login || tutor.email || tutorId || "Unnamed tutor");
+                                const tutorSub = String(tutor.phone || tutor.login || tutor.email || tutor.role || "").trim();
+
+                                return (
+                                  <label
+                                    key={tutorId || tutorName}
+                                    className={`ip-student-manager-row ${isAssigned ? "" : ""}`.trim()}
+                                    style={{ cursor: tutorId ? "pointer" : "default" }}
+                                  >
+                                    <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+                                      <input
+                                        type="checkbox"
+                                        className="ip-student-check"
+                                        checked={isAssigned}
+                                        disabled={!tutorId || submitting}
+                                        onChange={(e) => setTutorAssignment(tutorId, e.target.checked)}
+                                      />
+                                      <div style={{ width: 40, height: 40, borderRadius: 10, background: "linear-gradient(135deg,#635bff,#06c9a0)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, flexShrink: 0 }}>
+                                        {getInitialsFromLabel(tutorName)}
+                                      </div>
+                                      <div style={{ minWidth: 0 }}>
+                                        <div style={{ fontWeight: 800, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{tutorName}</div>
+                                        <div style={{ fontSize: 13, color: "var(--t2, #5a6278)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                          {tutorSub || "No contact information"}
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="ip-student-manager-actions">
+                                      <span className={`ip-student-badge ${isAssigned ? "ip-student-badge--attached" : "ip-student-badge--free"}`}>
+                                        {isAssigned ? "Assigned" : "Available"}
+                                      </span>
+                                    </div>
+                                  </label>
+                                );
+                              })
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>,
+                    document.body,
+                  )}
               </div>
               {internshipMapData && (
                 <div className="ip-hero-item" style={{ gridColumn: "1 / -1" }}>
@@ -2366,22 +2670,6 @@ export default function InternshipPage({
                           "_",
                           "_",
                           "italic",
-                        )
-                      }
-                    >
-                      Italic
-                    </button>
-                    <button
-                      type="button"
-                      className="ip-format-btn"
-                      disabled={!isInternshipEditMode}
-                      onClick={() =>
-                        applyFormatting(
-                          planEditorRef,
-                          setBaseInfoPlan,
-                          "## ",
-                          "",
-                          "Heading",
                         )
                       }
                     >
@@ -4495,6 +4783,59 @@ const ipStyles = `
     display: grid;
     gap: 4px;
   }
+  .ip-tutor-list {
+    display: grid;
+    gap: 10px;
+  }
+  .ip-tutor-compact {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,255,.98));
+    border: 1px solid rgba(99,91,255,.06);
+  }
+  .ip-tutor-compact-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .ip-tutor-avatar--compact { width: 44px; height: 44px; border-radius: 12px; font-size: 14px; }
+  .ip-tutor-compact-text { min-width: 0; }
+  .ip-tutor-name-compact { font-weight: 900; font-size: 15px; color: var(--t1, #0c0e18); }
+  .ip-tutor-sub { font-size: 13px; color: var(--t2, #5a6278); margin-top: 2px; }
+  .ip-tutor-badge { font-size: 12px; padding: 6px 12px; }
+  .ip-tutor-empty { font-style: italic; }
+  .ip-tutor-entry {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: rgba(255,255,255,.82);
+    border: 1px solid rgba(0,0,0,.06);
+  }
+  .ip-tutor-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg,#635bff,#06c9a0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', system-ui, sans-serif;
+    font-weight: 700;
+    color: #fff;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .ip-tutor-entry-body {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
   .ip-tutor-name {
     font-size: 14px;
     font-weight: 800;
@@ -4763,6 +5104,12 @@ const ipStyles = `
     overflow: auto;
     padding: 6px;
   }
+  .ip-custom-menu--tutor {
+    max-height: 300px;
+    padding: 8px;
+    border-color: rgba(6,201,160,.2);
+    background: linear-gradient(180deg, rgba(255,255,255,.99), rgba(248,250,255,.96));
+  }
   .ip-custom-option {
     width: 100%;
     border: none;
@@ -4779,12 +5126,68 @@ const ipStyles = `
     font-weight: 600;
     cursor: pointer;
   }
+  .ip-custom-option--tutor {
+    padding: 10px 12px;
+    border-radius: 14px;
+    align-items: center;
+  }
   .ip-custom-option:hover {
     background: rgba(99,91,255,.08);
   }
   .ip-custom-option--selected {
     background: linear-gradient(135deg, rgba(99,91,255,.12), rgba(6,201,160,.12));
     color: #4338ca;
+  }
+  .ip-custom-option--tutor.ip-custom-option--selected {
+    background: linear-gradient(135deg, rgba(99,91,255,.16), rgba(6,201,160,.14));
+    color: #312e81;
+  }
+  .ip-custom-option-tutor {
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .ip-custom-option-avatar {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 auto;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--a1, #635bff), var(--a2, #06c9a0));
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .04em;
+    box-shadow: 0 8px 18px rgba(99,91,255,.16);
+  }
+  .ip-custom-option-copy {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+  }
+  .ip-custom-option-title {
+    min-width: 0;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 800;
+    color: inherit;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    }
+    .ip-custom-option-subtitle {
+      text-align: left;
+    min-width: 0;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--t3, #9ba3bb);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .ip-custom-option-mark {
     font-size: 12px;
@@ -5744,7 +6147,7 @@ const ipStyles = `
     background: white;
     border-radius: 16px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-    max-width: 400px;
+    max-width: 600px;
     width: 90%;
     max-height: min(90vh, 820px);
     display: flex;

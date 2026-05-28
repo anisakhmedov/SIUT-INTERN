@@ -198,10 +198,6 @@ function formatValue(value) {
   return String(value);
 }
 
-function normalizeEvaluation(item) {
-  return item || {};
-}
-
 function StatPill({ label, value, bg, color }) {
   return (
     <span style={{ ...styles.pill, background: bg, color }}>
@@ -245,7 +241,6 @@ export default function AllEvaluationsPage() {
     total: list.length,
   }), [list.length]);
 
-  const selectedItem = normalizeEvaluation(selected);
 
   if (loading) return <div className="pp"><div className="mc">Loading evaluations…</div></div>;
   if (error) return <div className="pp"><div className="mc" style={{ color: 'red' }}>Error: {error}</div></div>;

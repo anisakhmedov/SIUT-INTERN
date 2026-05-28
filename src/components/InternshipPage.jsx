@@ -70,6 +70,34 @@ function normalizeInternshipStatus(value) {
   return "Pending";
 }
 
+function formatDurationFromDays(days) {
+  const dayList = Array.isArray(days) ? days : [];
+  const count = dayList.length;
+  if (count === 0) return "";
+
+  const dateValues = dayList
+    .map((day) => String(day?.date || "").slice(0, 10))
+    .filter(Boolean);
+  const dayLabel = count === 1 ? "day" : "days";
+
+  if (dateValues.length >= 2) {
+    return `${count} ${dayLabel} (${dateValues[0]} to ${dateValues[dateValues.length - 1]})`;
+  }
+
+  return `${count} ${dayLabel}`;
+}
+
+function normalizeDurationValue(value) {
+  if (typeof value === "string") return value.trim();
+  if (value && typeof value === "object") {
+    const start = value.start || value.startDate || "";
+    const end = value.end || value.endDate || "";
+    return [start, end].filter(Boolean).join(" - ").trim();
+  }
+
+  return "";
+}
+
 function escapeHtml(text) {
   return text
     .replace(/&/g, "&amp;")
@@ -259,7 +287,11 @@ export default function InternshipPage({
   const [selectedStudentIds, setSelectedStudentIds] = useState([]);
   const [selectedStudentFaculty, setSelectedStudentFaculty] = useState("all");
   const attendanceScrollRef = useRef(null);
-  const attendanceDragRef = useRef({ isDragging: false, startX: 0, scrollLeft: 0 });
+  const attendanceDragRef = useRef({
+    isDragging: false,
+    startX: 0,
+    scrollLeft: 0,
+  });
   const [selectedStudentYear, setSelectedStudentYear] = useState("all");
   const [showPlan, setShowPlan] = useState(true);
   const [showFinalReportModal, setShowFinalReportModal] = useState(false);
@@ -273,33 +305,36 @@ export default function InternshipPage({
   const dayCarouselRef = useRef(null);
   const dayItemRefs = useRef([]);
 
-  const fetchFaculty = useCallback(async (opts = {}) => {
-    // opts.skipIfEditing: don't overwrite local edit state when true
-    try {
-      if (!opts || typeof opts !== "object") opts = {};
-      setLoading(true);
-      const data = await get(`/faculty/${facultyId}`);
-      // If caller asked to avoid overwriting while user is editing, keep existing faculty
-      if (
-        opts.skipIfEditing &&
-        (isInternshipEditMode || showReportForm || submitting)
-      ) {
-        // still return fetched data for callers that want to inspect it
+  const fetchFaculty = useCallback(
+    async (opts = {}) => {
+      // opts.skipIfEditing: don't overwrite local edit state when true
+      try {
+        if (!opts || typeof opts !== "object") opts = {};
+        setLoading(true);
+        const data = await get(`/faculty/${facultyId}`);
+        // If caller asked to avoid overwriting while user is editing, keep existing faculty
+        if (
+          opts.skipIfEditing &&
+          (isInternshipEditMode || showReportForm || submitting)
+        ) {
+          // still return fetched data for callers that want to inspect it
+          setError("");
+          return data;
+        }
+
+        setFaculty(data);
         setError("");
         return data;
+      } catch (err) {
+        setError(err.message);
+        console.error("Error fetching faculty:", err);
+        return null;
+      } finally {
+        setLoading(false);
       }
-
-      setFaculty(data);
-      setError("");
-      return data;
-    } catch (err) {
-      setError(err.message);
-      console.error("Error fetching faculty:", err);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, [facultyId, isInternshipEditMode, showReportForm, submitting]);
+    },
+    [facultyId, isInternshipEditMode, showReportForm, submitting],
+  );
 
   const fetchAttendance = useCallback(async () => {
     if (!facultyId) return;
@@ -443,49 +478,15 @@ export default function InternshipPage({
       event.preventDefault();
     };
 
-    container.addEventListener('wheel', handleWheel, { passive: false });
+    container.addEventListener("wheel", handleWheel, { passive: false });
     return () => {
-      container.removeEventListener('wheel', handleWheel);
+      container.removeEventListener("wheel", handleWheel);
     };
   }, [attendance?.attendance?.length]);
 
   useEffect(() => {
     fetchFaculty();
   }, [fetchFaculty]);
-
-  // Periodically poll server for changes to shared internship days
-  useEffect(() => {
-    if (!facultyId) return undefined;
-
-    const intervalMs = 15000; // 15s
-    let mounted = true;
-
-    const tick = async () => {
-      try {
-        // Don't overwrite local edits while user is interacting
-        await fetchFaculty({ skipIfEditing: true });
-      } catch (e) {
-        // ignore polling errors
-      }
-    };
-
-    const id = setInterval(() => {
-      if (!mounted) return;
-      tick();
-    }, intervalMs);
-
-    const handleVisibility = () => {
-      if (document.visibilityState === "visible") tick();
-    };
-
-    document.addEventListener("visibilitychange", handleVisibility);
-
-    return () => {
-      mounted = false;
-      clearInterval(id);
-      document.removeEventListener("visibilitychange", handleVisibility);
-    };
-  }, [facultyId, fetchFaculty]);
 
   const getDayId = useCallback((day) => {
     if (!day) return null;
@@ -676,11 +677,12 @@ export default function InternshipPage({
             .filter(Boolean)
             .join(" - ")
       : "";
+    const syncedDurationValue = formatDurationFromDays(facultySnapshot?.days);
 
     setBaseInfoName(facultySnapshot.name || "");
     setBaseInfoCompany(facultySnapshot.company || "");
     setBaseInfoLocation(facultySnapshot.location || "");
-    setBaseInfoDuration(durationValue);
+    setBaseInfoDuration(syncedDurationValue || durationValue);
     setBaseInfoStatus(normalizeInternshipStatus(facultySnapshot.status));
     setBaseInfoProgressAll(
       facultySnapshot.progressAll != null
@@ -1330,11 +1332,6 @@ export default function InternshipPage({
     updateStudentAssignments,
   ]);
 
-  useEffect(() => {
-    if (!faculty || isInternshipEditMode) return;
-    initBaseInfoFields(faculty);
-  }, [faculty, isInternshipEditMode, initBaseInfoFields]);
-
   const syncFacultyProgress = useCallback(
     async (facultySnapshot) => {
       if (!facultySnapshot) return;
@@ -1371,6 +1368,56 @@ export default function InternshipPage({
     [facultyId],
   );
 
+  const syncFacultyDuration = useCallback(
+    async (facultySnapshot) => {
+      if (!facultySnapshot) return facultySnapshot;
+
+      const expectedDuration = formatDurationFromDays(facultySnapshot.days);
+      if (!expectedDuration) return facultySnapshot;
+
+      const currentDuration = normalizeDurationValue(facultySnapshot.duration);
+      if (currentDuration === expectedDuration) {
+        if (!isInternshipEditMode) {
+          setBaseInfoDuration(expectedDuration);
+        }
+        return facultySnapshot;
+      }
+
+      try {
+        await patch(`/faculty/${facultyId}`, {
+          ...facultySnapshot,
+          duration: expectedDuration,
+        });
+
+        const syncedFaculty = {
+          ...facultySnapshot,
+          duration: expectedDuration,
+        };
+
+        setFaculty((prev) =>
+          prev && normalizeDurationValue(prev.duration) !== expectedDuration
+            ? { ...prev, duration: expectedDuration }
+            : prev,
+        );
+        if (!isInternshipEditMode) {
+          setBaseInfoDuration(expectedDuration);
+        }
+
+        return syncedFaculty;
+      } catch (err) {
+        console.error("Failed to sync internship duration:", err);
+        return facultySnapshot;
+      }
+    },
+    [facultyId, isInternshipEditMode],
+  );
+
+  useEffect(() => {
+    if (!faculty || isInternshipEditMode) return;
+    initBaseInfoFields(faculty);
+    syncFacultyDuration(faculty);
+  }, [faculty, isInternshipEditMode, initBaseInfoFields, syncFacultyDuration]);
+
   const updateDay = useCallback(
     async (day, payload, index = null) => {
       const dayId = getDayId(day) ?? (index != null ? String(index) : null);
@@ -1381,7 +1428,10 @@ export default function InternshipPage({
       setSubmitting(true);
       try {
         await patch(`/faculty/${facultyId}/days/${dayId}`, payload);
-        await fetchFaculty(); // Refresh the data
+        const refreshedFaculty = await fetchFaculty(); // Refresh the data
+        await syncFacultyDuration(refreshedFaculty);
+        await attendanceApi.syncAttendance(facultyId);
+        await fetchAttendance();
         toast.success("Saved.");
       } catch (err) {
         toast.error(err.message || "Something went wrong.");
@@ -1389,7 +1439,7 @@ export default function InternshipPage({
         setSubmitting(false);
       }
     },
-    [facultyId, getDayId, fetchFaculty],
+    [facultyId, fetchAttendance, fetchFaculty, getDayId, syncFacultyDuration],
   );
 
   const handleBaseInfoSubmit = useCallback(
@@ -1403,7 +1453,8 @@ export default function InternshipPage({
         const nextName = baseInfoName.trim();
         const nextCompany = baseInfoCompany.trim();
         const nextLocation = baseInfoLocation.trim();
-        const nextDuration = baseInfoDuration.trim();
+        const nextDuration =
+          formatDurationFromDays(faculty?.days) || baseInfoDuration.trim();
         const nextStatus = normalizeInternshipStatus(baseInfoStatus);
         const nextProgressAll = baseInfoProgressAll.trim();
         const nextPlan = baseInfoPlan.trim();
@@ -1430,6 +1481,7 @@ export default function InternshipPage({
         await patch(`/faculty/${facultyId}`, payload);
         const refreshedFaculty = await fetchFaculty();
         await syncFacultyProgress(refreshedFaculty);
+        await syncFacultyDuration(refreshedFaculty);
         toast.success("Internship information saved.");
         setIsInternshipEditMode(false);
       } catch (err) {
@@ -1450,6 +1502,7 @@ export default function InternshipPage({
       baseInfoPlan,
       fetchFaculty,
       syncFacultyProgress,
+      syncFacultyDuration,
     ],
   );
 
@@ -1789,9 +1842,12 @@ export default function InternshipPage({
       await post(`/faculty/${facultyId}/days`, newDay);
       const refreshedFaculty = await fetchFaculty(); // Refresh the data
       await syncFacultyProgress(refreshedFaculty);
+      await syncFacultyDuration(refreshedFaculty);
       await attendanceApi.syncAttendance(facultyId);
       await fetchAttendance();
-      setDayIndex(Math.max(0, (refreshedFaculty?.days?.length || days.length || 1) - 1));
+      setDayIndex(
+        Math.max(0, (refreshedFaculty?.days?.length || days.length || 1) - 1),
+      );
       toast.success("Day added.");
       setShowAddDayModal(false);
       setNewDayDate(new Date().toISOString().slice(0, 10));
@@ -1800,30 +1856,47 @@ export default function InternshipPage({
     } finally {
       setSubmitting(false);
     }
-  }, [facultyId, days.length, newDayDate, fetchAttendance, fetchFaculty, syncFacultyProgress]);
+  }, [
+    facultyId,
+    days.length,
+    newDayDate,
+    fetchAttendance,
+    fetchFaculty,
+    syncFacultyDuration,
+    syncFacultyProgress,
+  ]);
 
-  const handleAttendanceEditorSave = useCallback(async (event) => {
-    event.preventDefault();
-    const dateEl = document.getElementById("attendance-editor-date");
-    const dateVal = dateEl ? dateEl.value : null;
-    const studentCheckboxes = Array.from(
-      document.querySelectorAll("[data-student-key]"),
-    );
-    const studentsPayload = studentCheckboxes.map((el) => ({
-      studentKey: el.getAttribute("data-student-key"),
-      present: Boolean(el.checked),
-    }));
-    const payload = {
-      id: editorDay?.id,
-      date: dateVal,
-      dayNumber:
-        editorDay?.dayNumber || (attendance?.attendance?.length || 0) + 1,
-      students: studentsPayload,
-    };
-    await handleSaveAttendanceDay(payload);
-    await attendanceApi.syncAttendance(facultyId);
-    await fetchAttendance();
-  }, [attendance?.attendance?.length, editorDay, facultyId, fetchAttendance, handleSaveAttendanceDay]);
+  const handleAttendanceEditorSave = useCallback(
+    async (event) => {
+      event.preventDefault();
+      const dateEl = document.getElementById("attendance-editor-date");
+      const dateVal = dateEl ? dateEl.value : null;
+      const studentCheckboxes = Array.from(
+        document.querySelectorAll("[data-student-key]"),
+      );
+      const studentsPayload = studentCheckboxes.map((el) => ({
+        studentKey: el.getAttribute("data-student-key"),
+        present: Boolean(el.checked),
+      }));
+      const payload = {
+        id: editorDay?.id,
+        date: dateVal,
+        dayNumber:
+          editorDay?.dayNumber || (attendance?.attendance?.length || 0) + 1,
+        students: studentsPayload,
+      };
+      await handleSaveAttendanceDay(payload);
+      await attendanceApi.syncAttendance(facultyId);
+      await fetchAttendance();
+    },
+    [
+      attendance?.attendance?.length,
+      editorDay,
+      facultyId,
+      fetchAttendance,
+      handleSaveAttendanceDay,
+    ],
+  );
 
   const allComments = useMemo(() => {
     if (!faculty || !faculty.days) return [];
@@ -2165,6 +2238,89 @@ export default function InternshipPage({
                   ))}
                 </select>
               </div>
+              <div className="ip-hero-item">
+                <span className="ip-hero-label">Progress</span>
+                <div className="ip-progress-stack">
+                  <span
+                    className="ip-progress-chip"
+                    style={{
+                      color: `hsl(${progressHue} 76% 30%)`,
+                      borderColor: `hsla(${progressHue}, 75%, 45%, .35)`,
+                      background: `linear-gradient(135deg, hsla(${Math.max(0, progressHue - 25)}, 95%, 92%, .95), hsla(${Math.min(120, progressHue + 20)}, 95%, 88%, .95))`,
+                    }}
+                  >
+                    {computedProgressLabel}
+                  </span>
+                  <div
+                    className="ip-progress-track"
+                    aria-label={`Internship progress ${computedProgressLabel}`}
+                  >
+                    <div
+                      className="ip-progress-fill"
+                      style={{
+                        width: `${progressPercent}%`,
+                        background: `linear-gradient(90deg, hsl(${Math.max(0, progressHue - 24)} 82% 56%), hsl(${Math.min(120, progressHue + 12)} 80% 44%))`,
+                      }}
+                    ></div>
+                  </div>
+                  <span className="ip-progress-meta">
+                    {reportedDaysCount}/{days.length || 0} days reported
+                  </span>
+                </div>
+              </div>
+              <div className="ip-hero-item" aria-label="Internship tutor">
+                <div className="ip-tutor-head">
+                  <span className="ip-summary-label">Tutor</span>
+                  <span className="ip-tutor-badge">Assigned</span>
+                </div>
+                {tutorInfo.hasInfo ? (
+                  <div className="ip-tutor-body">
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 8,
+                          background: "linear-gradient(135deg,#635bff,#06c9a0)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontFamily: "Syne",
+                          fontWeight: 700,
+                          color: "#fff",
+                          fontSize: 13,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {tutorInfo.initials}
+                      </div>
+                      <div
+                        style={{
+                          flex: 1,
+                          flexDirection: "column",
+                          display: "flex",
+                          gap: 4,
+                        }}
+                      >
+                        <strong className="ip-tutor-name">
+                          {tutorInfo.name || "No information"}
+                        </strong>
+                        <span className="ip-tutor-contact">
+                          {tutorInfo.contact || "No contact information"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="ip-tutor-empty">No information available.</p>
+                )}
+              </div>
               {internshipMapData && (
                 <div className="ip-hero-item" style={{ gridColumn: "1 / -1" }}>
                   <span className="ip-hero-label">Location map</span>
@@ -2209,36 +2365,6 @@ export default function InternshipPage({
                   </a>
                 </div>
               )}
-              <div className="ip-hero-item">
-                <span className="ip-hero-label">Progress</span>
-                <div className="ip-progress-stack">
-                  <span
-                    className="ip-progress-chip"
-                    style={{
-                      color: `hsl(${progressHue} 76% 30%)`,
-                      borderColor: `hsla(${progressHue}, 75%, 45%, .35)`,
-                      background: `linear-gradient(135deg, hsla(${Math.max(0, progressHue - 25)}, 95%, 92%, .95), hsla(${Math.min(120, progressHue + 20)}, 95%, 88%, .95))`,
-                    }}
-                  >
-                    {computedProgressLabel}
-                  </span>
-                  <div
-                    className="ip-progress-track"
-                    aria-label={`Internship progress ${computedProgressLabel}`}
-                  >
-                    <div
-                      className="ip-progress-fill"
-                      style={{
-                        width: `${progressPercent}%`,
-                        background: `linear-gradient(90deg, hsl(${Math.max(0, progressHue - 24)} 82% 56%), hsl(${Math.min(120, progressHue + 12)} 80% 44%))`,
-                      }}
-                    ></div>
-                  </div>
-                  <span className="ip-progress-meta">
-                    {reportedDaysCount}/{days.length || 0} days reported
-                  </span>
-                </div>
-              </div>
             </div>
 
             <div className="ip-plan-card" aria-label="Internship plan">
@@ -2344,60 +2470,6 @@ export default function InternshipPage({
                     )}
                   </div>
                 </>
-              )}
-            </div>
-
-            <div className="ip-tutor-card" aria-label="Internship tutor">
-              <div className="ip-tutor-head">
-                <span className="ip-summary-label">Tutor</span>
-                <span className="ip-tutor-badge">Assigned</span>
-              </div>
-              {tutorInfo.hasInfo ? (
-                <div className="ip-tutor-body">
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: 8,
-                        background: "linear-gradient(135deg,#635bff,#06c9a0)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontFamily: "Syne",
-                        fontWeight: 700,
-                        color: "#fff",
-                        fontSize: 13,
-                        flexShrink: 0,
-                      }}
-                    >
-                      {tutorInfo.initials}
-                    </div>
-                    <div
-                      style={{
-                        flex: 1,
-                        flexDirection: "column",
-                        display: "flex",
-                        gap: 4,
-                      }}
-                    >
-                      <strong className="ip-tutor-name">
-                        {tutorInfo.name || "No information"}
-                      </strong>
-                      <span className="ip-tutor-contact">
-                        {tutorInfo.contact || "No contact information"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <p className="ip-tutor-empty">No information available.</p>
               )}
             </div>
 
@@ -2573,16 +2645,17 @@ export default function InternshipPage({
                       <div className="ip-attendance-day-head">
                         <div>
                           <strong>Attendance matrix</strong>
-                          <div className="ip-muted">
-                            Dates across top, students on rows
-                          </div>
                         </div>
                         <div />
                       </div>
 
                       <div
                         ref={attendanceScrollRef}
-                        style={{ overflowX: "auto", cursor: "grab", userSelect: "none" }}
+                        style={{
+                          overflowX: "auto",
+                          cursor: "grab",
+                          userSelect: "none",
+                        }}
                         onMouseDown={handleAttendanceMouseDown}
                         onMouseMove={handleAttendanceMouseMove}
                         onMouseUp={stopAttendanceDrag}
@@ -2645,7 +2718,7 @@ export default function InternshipPage({
                                         : false,
                                     );
                                     return (
-                                      <td key={`${day.id || day.date}-${sk}`}>
+                                      <td key={`${day.id || day.date}-${sk}`} style={{ textAlign: "center" }}>
                                         <input
                                           type="checkbox"
                                           className="ip-attendance-radio"
@@ -3551,7 +3624,8 @@ export default function InternshipPage({
                         type="date"
                         className="ip-input"
                         defaultValue={
-                          editorDay?.date || new Date().toISOString().slice(0, 10)
+                          editorDay?.date ||
+                          new Date().toISOString().slice(0, 10)
                         }
                         id="attendance-editor-date"
                       />

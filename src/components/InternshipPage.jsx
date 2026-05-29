@@ -304,7 +304,7 @@ export default function InternshipPage({
   const [attendanceDraft, setAttendanceDraft] = useState(null);
   const [attendanceSaving, setAttendanceSaving] = useState(false);
   const [showAttendanceEditor, setShowAttendanceEditor] = useState(false);
-  const [editorDay, setEditorDay] = useState(null); // null -> create
+  const [editorDay, _setEditorDay] = useState(null); // null -> create
   const [highlightedCommentKey, setHighlightedCommentKey] = useState("");
   const [showStudents, setShowStudents] = useState(false);
   const [showStudentManager, setShowStudentManager] = useState(false);
@@ -345,9 +345,9 @@ export default function InternshipPage({
         const data = await get(`/faculty/${facultyId}`);
         // If caller asked to avoid overwriting while user is editing, keep existing faculty
         if (
-          opts.skipIfEditing &&
-          (isInternshipEditMode || showReportForm || submitting)
-        ) {
+              opts.skipIfEditing &&
+              (isInternshipEditMode || submitting)
+            ) {
           // still return fetched data for callers that want to inspect it
           setError("");
           return data;
@@ -364,7 +364,7 @@ export default function InternshipPage({
         setLoading(false);
       }
     },
-    [facultyId, isInternshipEditMode, showReportForm, submitting],
+    [facultyId, isInternshipEditMode, submitting],
   );
 
   const fetchAttendance = useCallback(async () => {
@@ -386,25 +386,6 @@ export default function InternshipPage({
     if (!faculty) return;
     fetchAttendance();
   }, [faculty, fetchAttendance]);
-
-  const handleSyncRoster = useCallback(async () => {
-    if (!facultyId) return;
-    setAttendanceLoading(true);
-    try {
-      await attendanceApi.syncAttendance(facultyId);
-      await fetchAttendance();
-      toast.success("Roster synced.");
-    } catch (err) {
-      toast.error(err?.message || "Failed to sync roster.");
-    } finally {
-      setAttendanceLoading(false);
-    }
-  }, [facultyId, fetchAttendance]);
-
-  const openAttendanceEditor = useCallback((day = null) => {
-    setEditorDay(day);
-    setShowAttendanceEditor(true);
-  }, []);
 
   const handleSaveAttendanceDay = useCallback(
     async (payload) => {
@@ -936,8 +917,13 @@ export default function InternshipPage({
 
   const mobileStudents = useMemo(() => {
     return (attachedStudents || []).map((stu, sidx) => {
-      const sk = (typeof getStudentId === "function" ? getStudentId(stu) : null) || `key-${sidx}`;
-      const studentName = typeof getStudentName === "function" ? getStudentName(stu) : (stu?.name || `${stu?.surname || ""}`);
+      const sk =
+        (typeof getStudentId === "function" ? getStudentId(stu) : null) ||
+        `key-${sidx}`;
+      const studentName =
+        typeof getStudentName === "function"
+          ? getStudentName(stu)
+          : stu?.name || `${stu?.surname || ""}`;
       return { key: sk, name: studentName };
     });
   }, [attachedStudents, getStudentId, getStudentName]);
@@ -1765,6 +1751,13 @@ export default function InternshipPage({
     setShowReportForm(true);
   }, [createReportFormSnapshot, currentDay]);
 
+  // Safe click handler to prevent default navigation or form submit
+  const handleWriteReportOpenClick = useCallback((e) => {
+    if (e && typeof e.preventDefault === "function") e.preventDefault();
+    if (e && typeof e.stopPropagation === "function") e.stopPropagation();
+    handleWriteReportOpen();
+  }, [handleWriteReportOpen]);
+
   const handleReportSubmit = useCallback(
     async (e) => {
       e.preventDefault();
@@ -1898,32 +1891,39 @@ export default function InternshipPage({
         }
 
         await patch(`/faculty/${facultyId}/days/${dayId}`, reportPayload);
+        // Step 3: Update local state optimistically to avoid full refresh
+        // If uploadedUrls were present, we already verified them after upload.
+        // Apply the patched day to local `faculty.days` to keep UI stable.
+        try {
+          const updatedFaculty = faculty
+            ? {
+                ...faculty,
+                days: Array.isArray(faculty.days)
+                  ? faculty.days.map((d) => {
+                      const existingId = d?._id ?? d?.id ?? null;
+                      if (existingId === dayId) return { ...d, ...reportPayload };
+                      return d;
+                    })
+                  : [reportPayload],
+              }
+            : null;
 
-        // Step 3: Verify images remain after normal update flow
-        if (uploadedUrls.length > 0) {
-          const verifyAfterUpdateFaculty = await get(`/faculty/${facultyId}`);
-          const verifyDayAfterUpdate = (
-            verifyAfterUpdateFaculty?.days || []
-          ).find((d) => (d?._id ?? d?.id ?? null) === dayId);
-          if (!verifyDayAfterUpdate)
-            throw new Error("Post-update verification failed: day not found.");
-
-          const urlsAfterUpdate = extractImageUrls(verifyDayAfterUpdate);
-          const allUploadedUrlsRemain = uploadedUrls.every((url) =>
-            urlsAfterUpdate.includes(url),
-          );
-          if (!allUploadedUrlsRemain) {
-            throw new Error(
-              "Image was uploaded but did not remain after report update.",
-            );
+          if (updatedFaculty) {
+            setFaculty(updatedFaculty);
+            // Sync progress field if needed (may patch progressAll on server)
+            await syncFacultyProgress(updatedFaculty);
           }
-        }
 
-        const refreshedFaculty = await fetchFaculty(); // Refresh the data
-        await syncFacultyProgress(refreshedFaculty);
-        toast.success(`Day saved with ${finalImageUrls.length} image(s).`);
-        setReportFormSnapshot(null);
-        resetDayForm();
+          toast.success(`Day saved with ${finalImageUrls.length} image(s).`);
+          setReportFormSnapshot(null);
+          resetDayForm();
+        } catch (stateErr) {
+          // Fallback: still succeed but log the issue
+          console.error("Failed to update local faculty state:", stateErr);
+          toast.success(`Day saved with ${finalImageUrls.length} image(s).`);
+          setReportFormSnapshot(null);
+          resetDayForm();
+        }
       } catch (err) {
         toast.error(err.message || "Something went wrong.");
       } finally {
@@ -3177,24 +3177,6 @@ export default function InternshipPage({
                     {attendance?.attendance?.length || 0} days
                   </strong>
                 </div>
-                <div className="ip-attendance-actions">
-                  <button
-                    type="button"
-                    className="ip-btn ip-btn--secondary"
-                    onClick={handleSyncRoster}
-                    disabled={attendanceLoading}
-                  >
-                    {attendanceLoading ? "Syncing…" : "Sync roster"}
-                  </button>
-                  <button
-                    type="button"
-                    className="ip-btn ip-btn--primary"
-                    onClick={() => openAttendanceEditor(null)}
-                    disabled={attendanceLoading}
-                  >
-                    New day
-                  </button>
-                </div>
               </div>
 
               <div className="ip-attendance-body">
@@ -3208,17 +3190,16 @@ export default function InternshipPage({
                   <div className="ip-empty-state">
                     No attendance recorded yet.
                   </div>
+                ) : isMobile ? (
+                  <AttendanceMobile
+                    students={mobileStudents}
+                    days={attendanceDays}
+                    onTogglePresent={handleTogglePresent}
+                    onSave={handleSaveAttendanceChanges}
+                    saving={attendanceSaving}
+                    hasChanges={attendanceHasChanges}
+                  />
                 ) : (
-                  isMobile ? (
-                    <AttendanceMobile
-                      students={mobileStudents}
-                      days={attendanceDays}
-                      onTogglePresent={handleTogglePresent}
-                      onSave={handleSaveAttendanceChanges}
-                      saving={attendanceSaving}
-                      hasChanges={attendanceHasChanges}
-                    />
-                  ) : (
                   <div className="ip-attendance-table-wrap">
                     <div className="ip-attendance-day">
                       <div
@@ -3369,7 +3350,7 @@ export default function InternshipPage({
                       </div>
                     </div>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </header>
@@ -3872,7 +3853,7 @@ export default function InternshipPage({
                         <button
                           type="button"
                           className="ip-day-edit-btn"
-                          onClick={handleWriteReportOpen}
+                          onClick={handleWriteReportOpenClick}
                           disabled={submitting}
                         >
                           <svg
@@ -6580,4 +6561,129 @@ const ipStyles = `
     .ip-plan-card { padding: 16px; }
     .ip-plan-text { font-size: 14px; line-height: 1.7; }
   }
-`;  
+  /* Extra small screen tuning */
+  @media (max-width: 480px) {
+    .ip-page { padding: 12px; }
+    .ip-shell { padding: 0 6px; }
+    .ip-hero { padding: 16px; border-radius: 14px; }
+    .ip-hero-title { font-size: 20px; }
+    .ip-hero-copy { font-size: 13px; }
+
+    .ip-carousel { padding: 6px; }
+    .ip-carousel-item { min-width: 120px; max-width: 140px; flex: 0 0 120px; padding: 10px; }
+    .ip-carousel-track { gap: 8px; }
+
+    .ip-actions { position: static; padding: 8px; border-radius: 12px; gap: 8px; box-shadow: none; }
+    .ip-btn { padding: 10px; font-size: 14px; }
+
+    /* Make attendance table collapse gracefully and allow mobile component to be used */
+    .ip-attendance-table-frame, .ip-attendance-table { min-width: 100% !important; width: 100% !important; }
+    .ip-attendance-table thead th:first-child, .ip-attendance-table tbody td:first-child { min-width: 140px !important; width: 140px !important; }
+    .ip-attendance-table thead th:not(:first-child), .ip-attendance-table tbody td:not(:first-child) { min-width: 80px !important; width: 80px !important; }
+
+    .ip-modal-content { width: 100%; height: 100%; border-radius: 0; max-height: 100vh; }
+    .ip-modal-body { padding: 16px; }
+    .ip-modal-footer { padding: 12px; }
+
+    .ip-image-preview-item { aspect-ratio: 1 / 1; }
+    .ip-report-form-wrapper { max-width: 100%; padding: 0 6px; }
+    .ip-report-form-card { padding: 14px; border-radius: 12px; }
+    .ip-plan-editor { min-height: 160px; }
+    .ip-day-card { padding: 12px; border-radius: 12px; }
+    .ip-comment-form { flex-direction: column; gap: 8px; }
+
+    /* Make image modal adapt to screen and allow pinch/zoom gestures */
+    .ip-image-modal { padding: 12px; }
+    .ip-image-modal-content { max-width: 100%; max-height: 100%; width: auto; height: auto; }
+
+    /* Make buttons block on very small screens to improve tap targets */
+    .ip-modal-footer { flex-direction: column-reverse; gap: 10px; align-items: stretch; }
+    .ip-modal-footer .ip-btn, .ip-actions .ip-btn { width: 100%; }
+
+    /* Attendance mobile list cards */
+    .attendance-mobile-root { padding: 6px 0; }
+    .attendance-mobile-card { margin-bottom: 12px; padding: 10px; border-radius: 12px; }
+  }
+  /* AttendanceMobile component styles (mobile-first) */
+  .attendance-mobile-root {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .attendance-mobile-list { display: flex; flex-direction: column; gap: 12px; }
+  .attendance-mobile-card {
+    background: rgba(255,255,255,.95);
+    border: 1px solid rgba(0,0,0,.06);
+    border-radius: 12px;
+    padding: 12px;
+  }
+  .attendance-mobile-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .attendance-mobile-initials {
+    width: 44px; height: 44px; border-radius: 10px; background: linear-gradient(135deg,#635bff,#06c9a0);
+    color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800;
+  }
+  .attendance-mobile-name { font-weight: 800; color: var(--t1,#0c0e18); font-size: 14px; }
+  .attendance-mobile-days { display: flex; gap: 8px; overflow: auto; padding-bottom: 6px; }
+  .attendance-mobile-day-badge {
+    min-width: 72px; padding: 8px; border-radius: 10px; border: 1px solid rgba(0,0,0,.06);
+    background: #fff; display: flex; flex-direction: column; gap: 4px; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .attendance-mobile-day-badge.present {
+    border-color: var(--a1,#635bff); background: linear-gradient(135deg, rgba(99,91,255,.06), rgba(6,201,160,.03)); color: var(--a1,#635bff);
+  }
+  .attendance-mobile-day-label { font-size: 11px; color: var(--t3,#9ba3bb); white-space: nowrap; }
+  .attendance-mobile-day-state { font-size: 16px; font-weight: 800; }
+  .attendance-mobile-footer { display: flex; gap: 8px; }
+
+/* Mobile clean theme overrides: remove heavy backgrounds, reduce paddings */
+@media (max-width: 760px) {
+  .ip-page { background: #fff !important; padding: 8px !important; }
+  .ip-shell { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+
+  .ip-hero,
+  .ip-report-form-card,
+  .ip-day-card,
+  .ip-summary-card,
+  .ip-students-card,
+  .ip-tutor-card,
+  .ip-attendance-card,
+  .ip-plan-card,
+  .ip-image-upload-area,
+  .ip-student-manager-row,
+  .ip-modal-content {
+    background: #fff !important;
+    border-radius: 8px !important;
+    padding: 8px !important;
+    box-shadow: none !important;
+    border: 1px solid rgba(0,0,0,.06) !important;
+    backdrop-filter: none !important;
+  }
+
+  .ip-hero::before { display: none !important; }
+  .ip-actions { background: transparent !important; box-shadow: none !important; padding: 6px !important; gap: 6px !important; }
+  .ip-btn { padding: 10px 12px !important; }
+  .ip-form-actions { padding-top: 10px !important; margin-top: 10px !important; }
+  .ip-hero-title { font-size: 20px !important; }
+  .ip-hero-copy { font-size: 13px !important; }
+  .ip-hero-grid, .ip-hero-item { gap: 8px !important; }
+  .ip-report-form-wrapper { padding: 0 6px !important; }
+  .ip-carousel-item { padding: 6px 8px !important; min-width: 100px !important; max-width: 120px !important; }
+  .ip-modal-content { width: 100% !important; max-width: 100% !important; border-radius: 0 !important; }
+}
+
+@media (max-width: 480px) {
+  .ip-page { background: #fff !important; padding: 6px !important; }
+  .ip-shell { padding: 0 !important; }
+  .ip-hero, .ip-day-card, .ip-report-form-card { padding: 6px !important; border-radius: 8px !important; box-shadow: none !important; }
+  .ip-hero::before { display: none !important; }
+  .ip-hero-title { font-size: 18px !important; }
+  .ip-hero-copy { font-size: 12px !important; }
+  .ip-plan-editor { min-height: 120px !important; }
+  .ip-actions { padding: 6px !important; gap: 6px !important; background: transparent !important; box-shadow: none !important; border: none !important; }
+  .ip-modal-content { border-radius: 0 !important; }
+  .ip-report-form-card { margin-bottom: 10px !important; }
+  .ip-report-form-wrapper { padding: 0 !important; }
+  .ip-student-manager-list { max-height: 46vh !important; }
+  .attendance-mobile-day-badge { min-width: 64px !important; padding: 6px !important; }
+}
+`;

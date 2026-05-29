@@ -3447,22 +3447,14 @@ export default function App() {
         
         <div className="main">
           <div className="tbar">
-            <div className="sbox">
-              <Search color="var(--t2)" size={16} />
-              <input
-                type="text"
-                placeholder={searchPlaceholder}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
+            <div className="av" style={{ background: "linear-gradient(135deg,#635bff,#06c9a0)" }}>
+                {userInitials}
+              </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <button className="hmb bi" onClick={handleOpenSidebar}>
                 <Menu size={16} />
               </button>
-              <div className="av" style={{ background: "linear-gradient(135deg,#635bff,#06c9a0)" }}>
-                {userInitials}
-              </div>
+              
             </div>
           </div>
           

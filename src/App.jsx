@@ -66,6 +66,7 @@ import StudentDocumentsPage from "./components/StudentDocumentsPage";
 import UserEducationPage from "./components/UserEducationPage";
 import ToastViewport from "./components/ToastViewport";
 import PageState from "./components/PageState";
+import ErrorPage from "./components/ErrorPage";
 import PublicEvaluationForm from "./components/PublicEvaluationForm";
 import AllEvaluationsPage from "./components/AllEvaluationsPage";
 
@@ -2730,12 +2731,37 @@ export default function App() {
   const [routeModalOpen, setRouteModalOpen] = useState(false);
   const [dd, setDd] = useState(false);
   const [sbOpen, setSbOpen] = useState(false);
-  const [search, setSearch] = useState("");
+  const [search] = useState("");
   const [showCreatePage, setShowCreatePage] = useState(false);
+  const [systemError, setSystemError] = useState(null);
   const [students, setStudents] = useState([]); // Add students state
   const [openCommentTarget, setOpenCommentTarget] = useState(null);
   const [sessionMessage, setSessionMessage] = useState("");
   const userInitials = useMemo(() => user?.initials || getUserInitials(user), [user]);
+
+  const openSystemError = useCallback((status, overrides = {}) => {
+    setSystemError({
+      status,
+      title: overrides.title,
+      message: overrides.message,
+      details: overrides.details,
+      causes: overrides.causes,
+    });
+    setLoading(false);
+    setShowCreatePage(false);
+    setOpenIntern(null);
+    setRouteModalOpen(false);
+    setSbOpen(false);
+    setDd(false);
+    setPage("error");
+  }, []);
+
+  const retryFromError = useCallback(() => {
+    setSystemError(null);
+    setLoading(true);
+    setPage(user ? "dashboard" : "login");
+    window.location.reload();
+  }, [user]);
 
   // Convenience wrapper functions for state updates
   const handleCloseSidebar = () => setSbOpen(false);
@@ -2855,6 +2881,12 @@ export default function App() {
             setSessionMessage('Session expired. Please login again.');
             setUser(null);
             setPage('login');
+          } else if ([404, 500, 502, 503, 504].includes(error?.status) || error?.status >= 500) {
+            openSystemError(error?.status || 500, {
+              title: error?.status === 404 ? 'Requested resource was not found' : undefined,
+              message: error?.message,
+              details: error?.status ? `HTTP ${error.status}` : 'Unexpected server response',
+            });
           } else {
             console.error('Session restore error:', error);
           }
@@ -2895,7 +2927,7 @@ export default function App() {
     };
 
     fetchData();
-  }, []);
+  }, [openSystemError]);
 
   useEffect(() => onAuthSessionExpired(() => {
     setSessionMessage('Session expired. Please login again.');
@@ -2963,13 +2995,6 @@ export default function App() {
       return currentId === updatedId ? { ...student, ...updatedStudent } : student;
     }));
   }, []);
-
-  const searchPlaceholder =
-    nav === "Students"
-      ? "Search students..."
-      : nav === "User Education"
-        ? "Search onboarding..."
-        : "Search internships...";
 
   const currentUserRole = normalizeRole(user?.role);
 
@@ -3108,12 +3133,29 @@ export default function App() {
 
   const pageTransitionKey = useMemo(() => {
     if (loading) return "loading";
+    if (systemError) return `error-${systemError.status || 'unknown'}`;
     if (showCreatePage) return "create-page";
     if (openIntern) return `internship-${openIntern}`;
     return `nav-${nav}`;
-  }, [loading, nav, openIntern, showCreatePage]);
+  }, [loading, nav, openIntern, showCreatePage, systemError]);
 
   const contentNode = useMemo(() => {
+    if (systemError) {
+      return (
+        <ErrorPage
+          status={systemError.status || 500}
+          title={systemError.title}
+          message={systemError.message}
+          details={systemError.details}
+          causes={systemError.causes}
+          onPrimaryAction={retryFromError}
+          onSecondaryAction={() => setPage(user ? 'dashboard' : 'login')}
+          primaryActionLabel="Retry"
+          secondaryActionLabel={user ? 'Open dashboard' : 'Go to login'}
+        />
+      );
+    }
+
     if (loading) {
       return (
         <div className="pp">
@@ -3300,10 +3342,18 @@ export default function App() {
 
     return (
       <div className="pp">
-        <PageState variant="empty" title="Page not found" message="This section is unavailable for your account." />
+        <ErrorPage
+          status={404}
+          message="This section is unavailable for your account or does not exist in the current workspace."
+          onPrimaryAction={() => setNav(fallbackNav)}
+          onSecondaryAction={() => setPage(user ? 'dashboard' : 'login')}
+          primaryActionLabel="Go to dashboard"
+          secondaryActionLabel={user ? 'Back to login' : 'Open login'}
+        />
       </div>
     );
   }, [
+    systemError,
     loading,
     showCreatePage,
     students,
@@ -3316,8 +3366,19 @@ export default function App() {
     commentFeedbacks,
     handleOpenCommentFromFeedback,
     TUTORS,
+    retryFromError,
+    fallbackNav,
     
   ]);
+
+  if (page === "error")
+    return (
+      <>
+        <style>{CSS}</style>
+        {contentNode}
+        <ToastViewport />
+      </>
+    );
 
   if (page === "login")
     return (

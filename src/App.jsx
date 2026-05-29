@@ -52,6 +52,10 @@ import {
   handleStoredTokenExpiry,
   onAuthSessionExpired,
 } from "./utils/apiClient";
+import { toast } from "./utils/toast";
+import { useSiteStatus } from "./hooks/useSiteStatus";
+import SiteStatusBanner from "./components/SiteStatusBanner";
+import { updateSiteStatus } from "./utils/siteStatusApi";
 
 
 
@@ -69,6 +73,7 @@ import PageState from "./components/PageState";
 import ErrorPage from "./components/ErrorPage";
 import PublicEvaluationForm from "./components/PublicEvaluationForm";
 import AllEvaluationsPage from "./components/AllEvaluationsPage";
+import SiteMaintenancePage from "./components/SiteMaintenancePage";
 
 /* ═══════════════════════════════════════════════
    STYLES
@@ -131,6 +136,16 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);}
 .spf{margin:auto 12px 12px;padding:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.055);border-radius:12px;display:flex;align-items:center;gap:8px;cursor:pointer;transition:all .18s;position:relative;}
 .spf:hover{background:rgba(255,255,255,.07);}
 .av{width:35px;height:35px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;font-weight:700;font-size:12px;flex-shrink:0;}
+.sb-toggle{margin:0 12px 12px;padding:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.055);border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.sb-toggle__copy{min-width:0;display:flex;flex-direction:column;gap:2px;}
+.sb-toggle__label{font-size:12px;font-weight:700;color:#fff;}
+.sb-toggle__hint{font-size:11px;color:rgba(255,255,255,.48);}
+.sb-switch{position:relative;width:46px;height:26px;border:none;border-radius:999px;padding:2px;cursor:pointer;display:inline-flex;align-items:center;transition:background .2s ease, box-shadow .2s ease;flex-shrink:0;}
+.sb-switch::after{content:'';width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.22);transform:translateX(0);transition:transform .2s ease;}
+.sb-switch.on{background:linear-gradient(135deg,var(--a1),var(--a2));box-shadow:0 0 0 3px rgba(99,91,255,.18);}
+.sb-switch.on::after{transform:translateX(20px);}
+.sb-switch.off{background:rgba(255,255,255,.12);}
+.sb-switch:disabled{opacity:.65;cursor:not-allowed;}
 .sdd{position:absolute;bottom:50px;left:0;right:0;background:#171b2e;border:1px solid rgba(255,255,255,.085);border-radius:10px;overflow:hidden;animation:scaleIn .17s ease;z-index:100;}
 .sddi{display:flex;align-items:center;gap:9px;padding:10px 13px;color:rgba(255,255,255,.58);font-size:12.5px;cursor:pointer;transition:all .17s;}
 .sddi:hover{background:rgba(255,255,255,.06);color:#fff;}
@@ -283,6 +298,13 @@ textarea.fi{resize:vertical;min-height:80px;}
 
 /* approve banner */
 .ab{display:flex;align-items:center;gap:11px;padding:11px 18px;background:rgba(6,201,160,.08);border-bottom:1px solid rgba(6,201,160,.15);animation:fadeUp .28s ease;flex-shrink:0;}
+.site-status-banner{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;background:linear-gradient(135deg,rgba(245,166,35,.16),rgba(255,95,160,.08));border-bottom:1px solid rgba(245,166,35,.2);color:#2c1f06;backdrop-filter:blur(10px);animation:fadeUp .24s ease;}
+.site-status-banner__icon{width:34px;height:34px;border-radius:10px;background:rgba(245,166,35,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#f5a623;}
+.site-status-banner__content{min-width:0;display:flex;flex-direction:column;gap:3px;}
+.site-status-banner__title{font-size:13px;font-weight:800;letter-spacing:.01em;}
+.site-status-banner__message{font-size:12px;line-height:1.45;color:rgba(12,14,24,.84);}
+.site-status-banner__meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px;}
+.site-status-banner__pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.56);font-size:10.5px;font-weight:700;color:rgba(12,14,24,.72);text-transform:uppercase;letter-spacing:.06em;}
 
 /* comments panel */
 .cp{position:fixed;top:0;right:0;bottom:0;width:clamp(280px,75vw,388px);background:#fff;box-shadow:-6px 0 38px rgba(0,0,0,.13);z-index:200;display:flex;flex-direction:column;animation:panelIn .33s cubic-bezier(.22,1,.36,1) both;}
@@ -2738,6 +2760,10 @@ export default function App() {
   const [openCommentTarget, setOpenCommentTarget] = useState(null);
   const [sessionMessage, setSessionMessage] = useState("");
   const userInitials = useMemo(() => user?.initials || getUserInitials(user), [user]);
+  const siteStatus = useSiteStatus(60000);
+  const [siteStatusSaving, setSiteStatusSaving] = useState(false);
+  const currentUserRole = normalizeRole(user?.role);
+  const canManageSiteStatus = currentUserRole === 'admin' || currentUserRole === 'developer';
 
   const openSystemError = useCallback((status, overrides = {}) => {
     setSystemError({
@@ -2789,6 +2815,30 @@ export default function App() {
   const handleOpenSidebar = () => setSbOpen(true);
 
   const openFeedback = () => handleNavigate("Feedback");
+
+  const handleToggleSiteStatus = useCallback(async () => {
+    if (!canManageSiteStatus || siteStatusSaving) return;
+
+    const nextLive = !siteStatus.live;
+    setSiteStatusSaving(true);
+
+    try {
+      const nextStatus = await updateSiteStatus({
+        live: nextLive,
+        message: nextLive ? '' : 'Сайт на разработке',
+      });
+
+      if (typeof siteStatus.setStatus === 'function') {
+        siteStatus.setStatus({ ...nextStatus, loading: false });
+      }
+
+      toast.success(nextLive ? 'Site status set to LIVE.' : 'Site status set to MAINTENANCE.');
+    } catch (error) {
+      toast.error(error?.message || 'Failed to update site status.');
+    } finally {
+      setSiteStatusSaving(false);
+    }
+  }, [canManageSiteStatus, siteStatus, siteStatusSaving]);
 
   // Fetch data from API on mount
   useEffect(() => {
@@ -2996,8 +3046,6 @@ export default function App() {
     }));
   }, []);
 
-  const currentUserRole = normalizeRole(user?.role);
-
   const getOwnershipTokens = useCallback((value) => {
     if (!value) return [];
 
@@ -3138,6 +3186,27 @@ export default function App() {
     if (openIntern) return `internship-${openIntern}`;
     return `nav-${nav}`;
   }, [loading, nav, openIntern, showCreatePage, systemError]);
+
+  const isMaintenanceLocked = useMemo(() => {
+    if (siteStatus.loading) return false;
+    if (siteStatus.live) return false;
+    return !canManageSiteStatus;
+  }, [canManageSiteStatus, siteStatus.live, siteStatus.loading]);
+
+  const maintenanceNode = useMemo(
+    () => <SiteMaintenancePage message={siteStatus.message} env={siteStatus.env} />,
+    [siteStatus.env, siteStatus.message],
+  );
+
+  if (isMaintenanceLocked) {
+    return (
+      <>
+        <style>{CSS}</style>
+        {maintenanceNode}
+        <ToastViewport />
+      </>
+    );
+  }
 
   const contentNode = useMemo(() => {
     if (systemError) {
@@ -3375,6 +3444,7 @@ export default function App() {
     return (
       <>
         <style>{CSS}</style>
+        <SiteStatusBanner status={siteStatus} />
         {contentNode}
         <ToastViewport />
       </>
@@ -3384,6 +3454,7 @@ export default function App() {
     return (
       <>
         <style>{CSS}</style>
+        <SiteStatusBanner status={siteStatus} />
         <LoginPage
           onLogin={() => {
             setSessionMessage('');
@@ -3418,6 +3489,7 @@ export default function App() {
         }}
       >
         <style>{CSS}</style>
+        <SiteStatusBanner status={siteStatus} />
         <div style={{ width: '100%', maxWidth: 1180, margin: '0 auto', padding: '32px 16px' }}>
           <PublicEvaluationForm />
         </div>
@@ -3474,6 +3546,24 @@ export default function App() {
               </div>
             ))}
           </div>
+
+          {canManageSiteStatus && (
+            <div className="sb-toggle">
+              <div className="sb-toggle__copy">
+                <div className="sb-toggle__label">Site status</div>
+                <div className="sb-toggle__hint">{siteStatus.live ? 'Live' : 'Maintenance'}</div>
+              </div>
+              <button
+                type="button"
+                className={`sb-switch ${siteStatus.live ? 'on' : 'off'}`}
+                onClick={handleToggleSiteStatus}
+                disabled={siteStatusSaving}
+                aria-label={siteStatus.live ? 'Turn maintenance on' : 'Turn site live'}
+                role="switch"
+                aria-checked={siteStatus.live}
+              />
+            </div>
+          )}
           
           <div className="spf" onClick={handleToggleDd}>
             <div className="av" style={{ background: user?.avatarBg || "linear-gradient(135deg,#635bff,#06c9a0)" }}>
@@ -3507,6 +3597,7 @@ export default function App() {
         </div>
         
         <div className="main">
+          <SiteStatusBanner status={siteStatus} />
           <div className="tbar">
             <div className="av" style={{ background: "linear-gradient(135deg,#635bff,#06c9a0)" }}>
                 {userInitials}

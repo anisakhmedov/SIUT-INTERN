@@ -2922,67 +2922,51 @@ export default function InternshipPage({
                                       cursor: tutorId ? "pointer" : "default",
                                     }}
                                   >
-                                    <div
-                                      style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 12,
-                                        minWidth: 0,
-                                      }}
+                                    <input
+                                      type="checkbox"
+                                      className="ip-student-check"
+                                      checked={isAssigned}
+                                      disabled={
+                                        !tutorId ||
+                                        submitting ||
+                                        !canManageTutors
+                                      }
+                                      onChange={(e) =>
+                                        setTutorAssignment(
+                                          tutorId,
+                                          e.target.checked,
+                                        )
+                                      }
+                                    />
+                                    <span
+                                      className={`ip-student-check-box ${isAssigned ? "ip-student-check-box--checked" : ""}`.trim()}
+                                      aria-hidden="true"
                                     >
-                                      <input
-                                        type="checkbox"
-                                        className="ip-student-check"
-                                        checked={isAssigned}
-                                        disabled={
-                                          !tutorId ||
-                                          submitting ||
-                                          !canManageTutors
-                                        }
-                                        onChange={(e) =>
-                                          setTutorAssignment(
-                                            tutorId,
-                                            e.target.checked,
-                                          )
-                                        }
-                                      />
-                                      <div
-                                        style={{
-                                          width: 40,
-                                          height: 40,
-                                          borderRadius: 10,
-                                          background:
-                                            "linear-gradient(135deg,#635bff,#06c9a0)",
-                                          color: "#fff",
-                                          display: "flex",
-                                          alignItems: "center",
-                                          justifyContent: "center",
-                                          fontWeight: 700,
-                                          flexShrink: 0,
-                                        }}
-                                      >
+                                      {isAssigned && (
+                                        <svg
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          width="12"
+                                          height="12"
+                                          viewBox="0 0 24 24"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          strokeWidth="3"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        >
+                                          <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                      )}
+                                    </span>
+                                    <div className="ip-student-copy ip-student-copy--tutor">
+                                      <div className="ip-student-avatar">
                                         {getInitialsFromLabel(tutorName)}
                                       </div>
-                                      <div style={{ minWidth: 0 }}>
-                                        <div
-                                          style={{
-                                            fontWeight: 800,
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            whiteSpace: "nowrap",
-                                          }}
-                                        >
+                                      <div className="ip-student-copy-text">
+                                        <div className="ip-student-name">
                                           {tutorName}
                                         </div>
-                                        <div
-                                          style={{
-                                            fontSize: 13,
-                                            color: "var(--t2, #5a6278)",
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            whiteSpace: "nowrap",
-                                          }}
-                                        >
+                                        <div className="ip-student-faculty">
                                           {tutorSub || "No contact information"}
                                         </div>
                                       </div>
@@ -4546,63 +4530,86 @@ export default function InternshipPage({
                             studentFacultyName,
                             studentYear,
                             isAttached,
-                          }) => (
-                            <label
-                              key={studentId || studentName}
-                              className="ip-student-manager-row"
-                            >
-                              <input
-                                type="checkbox"
-                                className="ip-student-check"
-                                checked={Boolean(
-                                  studentId &&
-                                  selectedStudentIds.includes(studentId),
-                                )}
-                                onChange={() =>
-                                  handleToggleStudentSelection(studentId)
-                                }
-                                disabled={
-                                  submitting || isAttached || !studentId
-                                }
-                                aria-label={`Select ${studentName}`}
-                              />
-                              <div className="ip-student-copy">
-                                <strong className="ip-student-name">
-                                  {studentName}
-                                </strong>
-                                {studentFacultyName && (
-                                  <span className="ip-student-faculty">
-                                    {studentFacultyName}
-                                  </span>
-                                )}
-                                {studentYear && (
-                                  <span className="ip-student-faculty">
-                                    Year {studentYear}
-                                  </span>
-                                )}
-                              </div>
-                              <div className="ip-student-manager-actions">
+                          }) => {
+                            const isStudentSelected =
+                              Boolean(studentId) &&
+                              selectedStudentIds.includes(studentId);
+
+                            return (
+                              <label
+                                key={studentId || studentName}
+                                className="ip-student-manager-row"
+                              >
+                                <input
+                                  type="checkbox"
+                                  className="ip-student-check"
+                                  checked={isStudentSelected}
+                                  onChange={() =>
+                                    handleToggleStudentSelection(studentId)
+                                  }
+                                  disabled={
+                                    submitting || isAttached || !studentId
+                                  }
+                                  aria-label={`Select ${studentName}`}
+                                />
                                 <span
-                                  className={`ip-student-badge ${isAttached ? "ip-student-badge--attached" : "ip-student-badge--free"}`}
+                                  className={`ip-student-check-box ${isStudentSelected ? "ip-student-check-box--checked" : ""}`.trim()}
+                                  aria-hidden="true"
                                 >
-                                  {isAttached ? "Attached" : "Available"}
+                                  {isStudentSelected && (
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      width="12"
+                                      height="12"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      strokeWidth="3"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    >
+                                      <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                  )}
                                 </span>
-                                {isAttached && (
-                                  <button
-                                    type="button"
-                                    className="ip-student-action-btn"
-                                    onClick={(event) => {
-                                      event.preventDefault();
-                                      handleDetachStudent(student);
-                                    }}
-                                    disabled={submitting}
+                                <div className="ip-student-copy ip-student-copy--student">
+                                  <strong className="ip-student-name">
+                                    {studentName}
+                                  </strong>
+                                  {studentFacultyName && (
+                                    <span className="ip-student-faculty">
+                                      {studentFacultyName}
+                                    </span>
+                                  )}
+                                  {studentYear && (
+                                    <span className="ip-student-faculty">
+                                      Year {studentYear}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="ip-student-manager-actions">
+                                  <span
+                                    className={`ip-student-badge ${isAttached ? "ip-student-badge--attached" : "ip-student-badge--free"}`}
                                   >
-                                    Detach
-                                  </button>
-                                )}
-                              </div>
-                            </label>
-                          ),
+                                    {isAttached ? "Attached" : "Available"}
+                                  </span>
+                                  {isAttached && (
+                                    <button
+                                      type="button"
+                                      className="ip-student-action-btn"
+                                      onClick={(event) => {
+                                        event.preventDefault();
+                                        handleDetachStudent(student);
+                                      }}
+                                      disabled={submitting}
+                                    >
+                                      Detach
+                                    </button>
+                                  )}
+                                </div>
+                              </label>
+                            );
+                          },
                         )}
                       </div>
                     )}
@@ -5677,7 +5684,7 @@ const ipStyles = `
   .ip-student-manager-row {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
     gap: 12px;
     padding: 12px 14px;
     border-radius: 14px;
@@ -5689,17 +5696,80 @@ const ipStyles = `
     box-shadow: 0 0 0 3px rgba(99,91,255,.08);
   }
   .ip-student-check {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .ip-student-check-box {
     width: 18px;
     height: 18px;
-    accent-color: var(--a1, #635bff);
-    cursor: pointer;
+    border-radius: 6px;
+    border: 1.5px solid rgba(99,91,255,.32);
+    background: rgba(255,255,255,.94);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
+    box-shadow: inset 0 1px 2px rgba(255,255,255,.9);
+    transition: all .2s ease;
+    cursor: pointer;
+  }
+  .ip-student-check-box--checked {
+    border-color: rgba(6,201,160,.45);
+    background: linear-gradient(135deg, var(--a1, #635bff), var(--a2, #06c9a0));
+    box-shadow: 0 8px 18px rgba(99,91,255,.18);
+  }
+  .ip-student-check:focus-visible + .ip-student-check-box {
+    box-shadow: 0 0 0 4px rgba(99,91,255,.18), inset 0 1px 2px rgba(255,255,255,.9);
+  }
+  .ip-student-check:disabled + .ip-student-check-box {
+    opacity: .5;
+    cursor: not-allowed;
+  }
+  .ip-student-check-box svg {
+    width: 12px;
+    height: 12px;
+  }
+  .ip-student-copy {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+  }
+  .ip-student-copy--tutor {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .ip-student-copy--student {
+    gap: 3px;
+  }
+  .ip-student-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg,#635bff,#06c9a0);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .ip-student-copy-text {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
   }
   .ip-student-manager-actions {
     display: flex;
     align-items: center;
     gap: 10px;
     flex-shrink: 0;
+    margin-left: auto;
   }
   .ip-student-badge {
     display: inline-flex;

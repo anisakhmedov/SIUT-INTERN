@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import InternshipEvaluationSchema from "../utils/evaluationSchema";
 import { postEvaluation } from "../utils/evaluationApi";
 
@@ -6,7 +6,7 @@ const styles = {
   page: {
     maxWidth: 1180,
     margin: "0 auto",
-    padding: "clamp(16px, 3vw, 32px)",
+    padding: "12px clamp(16px, 3vw, 32px) 32px",
   },
   hero: {
     marginBottom: 24,
@@ -53,6 +53,99 @@ const styles = {
     borderRadius: 22,
     display: "grid",
     gap: 22,
+  },
+  successShell: {
+    minHeight: "calc(100vh - 80px)",
+    display: "grid",
+    placeItems: "center",
+    padding: "clamp(16px, 4vw, 40px) 0",
+  },
+  successCard: {
+    width: "100%",
+    maxWidth: 760,
+    borderRadius: 32,
+    padding: "clamp(28px, 5vw, 48px)",
+    background:
+      "linear-gradient(180deg, rgba(255,255,255,.98), rgba(247,249,255,.98))",
+    border: "1px solid rgba(99,91,255,.14)",
+    boxShadow: "0 24px 70px rgba(12,14,24,.12)",
+    position: "relative",
+    overflow: "hidden",
+  },
+  successGlow: {
+    position: "absolute",
+    inset: "auto -120px -120px auto",
+    width: 260,
+    height: 260,
+    borderRadius: "50%",
+    background: "radial-gradient(circle, rgba(6,201,160,.16), transparent 70%)",
+    pointerEvents: "none",
+  },
+  successBadge: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 10,
+    padding: "7px 14px",
+    borderRadius: 999,
+    background: "rgba(34,197,94,.10)",
+    border: "1px solid rgba(34,197,94,.18)",
+    color: "#166534",
+    fontSize: 12,
+    fontWeight: 800,
+    letterSpacing: ".08em",
+    textTransform: "uppercase",
+    marginBottom: 18,
+  },
+  successMark: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
+    display: "grid",
+    placeItems: "center",
+    background: "linear-gradient(135deg, #635bff, #06c9a0)",
+    color: "#fff",
+    fontSize: 30,
+    boxShadow: "0 16px 32px rgba(99,91,255,.28)",
+    marginBottom: 18,
+  },
+  successTitle: {
+    margin: 0,
+    fontSize: "clamp(30px, 5vw, 52px)",
+    lineHeight: 1,
+    color: "var(--t1)",
+  },
+  successText: {
+    margin: "14px 0 0",
+    maxWidth: 620,
+    color: "var(--t2)",
+    fontSize: "clamp(14px, 2vw, 17px)",
+    lineHeight: 1.7,
+  },
+  successMeta: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+    gap: 12,
+    marginTop: 28,
+  },
+  successMetaItem: {
+    padding: "14px 16px",
+    borderRadius: 18,
+    background: "rgba(99,91,255,.05)",
+    border: "1px solid rgba(99,91,255,.10)",
+  },
+  successMetaLabel: {
+    display: "block",
+    fontSize: 11,
+    fontWeight: 800,
+    letterSpacing: ".12em",
+    textTransform: "uppercase",
+    color: "var(--t2)",
+    marginBottom: 6,
+  },
+  successMetaValue: {
+    fontSize: 14,
+    fontWeight: 700,
+    color: "var(--t1)",
   },
   sectionTitle: {
     fontSize: 12,
@@ -223,7 +316,7 @@ const styles = {
   },
   pickerField: {
     position: "relative",
-    marginBottom: 14,
+    // marginBottom: 14,
   },
   pickerButton: {
     width: "100%",
@@ -373,7 +466,7 @@ const styles = {
   },
   calendarPanel: {
     position: "absolute",
-    top: "calc(100% + 8px)",
+    bottom: "calc(100% + 8px)",
     left: 0,
     zIndex: 25,
     width: "min(100%, 360px)",
@@ -479,6 +572,77 @@ const styles = {
   },
 };
 
+function createInitialForm() {
+  return {
+    studentInformation: {
+      fullname: "",
+      studentID: "",
+      degreeProgram: "",
+      yearOfStudy: "",
+      internshipStartDate: "",
+      internshipEndDate: "",
+    },
+    companyInformation: {
+      companyName: "",
+      department: "",
+      supervisorContact: "",
+    },
+    professionalism: {
+      punctualityAndAttendance: "",
+      dressCodeAndAppearance: "",
+      adherenceToCompanyPolicies: "",
+      comments: "",
+    },
+    workEthic: {
+      initiativeAndProactiveness: "",
+      timeManagement: "",
+      abilityToMeetDeadlines: "",
+      comments: "",
+    },
+    technicalSkills: {
+      applicationOfAcademicKnowledge: "",
+      abilityToLearnNewSkillsTools: "",
+      qualityOfWorkOutput: "",
+      comments: "",
+    },
+    communicationSkills: {
+      verbalCommunication: "",
+      writtenCommunication: "",
+      teamCollaboration: "",
+      comments: "",
+    },
+    problemSolvingSkills: {
+      analyticalThinking: "",
+      creativityAndInnovation: "",
+      abilityToHandleChallenges: "",
+      comments: "",
+    },
+    overallPerformance: {
+      contributionToTheTeam: "",
+      alignmentWithCompanyGoals: "",
+      potentialForFutureEmployment: "",
+      comments: "",
+    },
+    openEndedQuestions: {
+      strengths: "",
+      areasOfImprovement: "",
+      projectTaskFeedback: "",
+      learningAndGrowth: "",
+      teamDynamics: "",
+      adaptability: "",
+      feedbackForStudent: "",
+      feedbackForUniversity: "",
+    },
+    finalRecommendation: {
+      finalRating: "",
+      supervisorRecommendation: "",
+      declarationAccepted: false,
+      supervisorFullName: "",
+      date: "",
+    },
+  };
+}
+
 function RequiredLabel({ children }) {
   return (
     <label className="fl">
@@ -486,6 +650,23 @@ function RequiredLabel({ children }) {
       <span style={styles.requiredStar}>*</span>
     </label>
   );
+}
+
+function arePropsEqualIgnoringKeys(prevProps, nextProps, ignoredKeys = []) {
+  const prevKeys = Object.keys(prevProps).filter(
+    (key) => !ignoredKeys.includes(key),
+  );
+  const nextKeys = Object.keys(nextProps).filter(
+    (key) => !ignoredKeys.includes(key),
+  );
+
+  if (prevKeys.length !== nextKeys.length) return false;
+
+  for (const key of prevKeys) {
+    if (!Object.is(prevProps[key], nextProps[key])) return false;
+  }
+
+  return true;
 }
 
 function DebouncedInput({ value, onChange, debounce = 250, ...props }) {
@@ -517,7 +698,11 @@ function DebouncedInput({ value, onChange, debounce = 250, ...props }) {
   );
 }
 
-const MemoDebouncedInput = React.memo(DebouncedInput);
+const MemoDebouncedInput = React.memo(
+  DebouncedInput,
+  (prevProps, nextProps) =>
+    arePropsEqualIgnoringKeys(prevProps, nextProps, ["onChange"]),
+);
 
 function DebouncedTextarea({ value, onChange, debounce = 300, ...props }) {
   const textareaRef = useRef(null);
@@ -548,7 +733,11 @@ function DebouncedTextarea({ value, onChange, debounce = 300, ...props }) {
   );
 }
 
-const MemoDebouncedTextarea = React.memo(DebouncedTextarea);
+const MemoDebouncedTextarea = React.memo(
+  DebouncedTextarea,
+  (prevProps, nextProps) =>
+    arePropsEqualIgnoringKeys(prevProps, nextProps, ["onChange"]),
+);
 
 function updateNestedValue(source, pathParts, value) {
   const [head, ...rest] = pathParts;
@@ -689,7 +878,11 @@ function FancySelect({
   );
 }
 
-const MemoFancySelect = React.memo(FancySelect);
+const MemoFancySelect = React.memo(
+  FancySelect,
+  (prevProps, nextProps) =>
+    arePropsEqualIgnoringKeys(prevProps, nextProps, ["onChange"]),
+);
 
 function formatDateLabel(date) {
   if (!date) return "Choose a date";
@@ -892,7 +1085,11 @@ function FancyDateField({ label, value, onChange, hint, error, required, errorKe
   );
 }
 
-const MemoFancyDateField = React.memo(FancyDateField);
+const MemoFancyDateField = React.memo(
+  FancyDateField,
+  (prevProps, nextProps) =>
+    arePropsEqualIgnoringKeys(prevProps, nextProps, ["onChange"]),
+);
 
 function RatingTable({
   title,
@@ -1034,7 +1231,11 @@ function RatingTable({
   );
 }
 
-const MemoRatingTable = React.memo(RatingTable);
+const MemoRatingTable = React.memo(
+  RatingTable,
+  (prevProps, nextProps) =>
+    arePropsEqualIgnoringKeys(prevProps, nextProps, ["onChange", "onCommentChange"]),
+);
 
 const ERROR_ANCHOR_ORDER = [
   "studentInformation.fullname",
@@ -1093,79 +1294,86 @@ function focusFirstError(errorMap) {
 }
 
 export default function PublicEvaluationForm() {
-  const [form, setForm] = useState(() => ({
-    studentInformation: {
-      fullname: "",
-      studentID: "",
-      degreeProgram: "",
-      yearOfStudy: "",
-      internshipStartDate: "",
-      internshipEndDate: "",
-    },
-    companyInformation: {
-      companyName: "",
-      department: "",
-      supervisorContact: "",
-    },
-    professionalism: {
-      punctualityAndAttendance: "",
-      dressCodeAndAppearance: "",
-      adherenceToCompanyPolicies: "",
-      comments: "",
-    },
-    workEthic: {
-      initiativeAndProactiveness: "",
-      timeManagement: "",
-      abilityToMeetDeadlines: "",
-      comments: "",
-    },
-    technicalSkills: {
-      applicationOfAcademicKnowledge: "",
-      abilityToLearnNewSkillsTools: "",
-      qualityOfWorkOutput: "",
-      comments: "",
-    },
-    communicationSkills: {
-      verbalCommunication: "",
-      writtenCommunication: "",
-      teamCollaboration: "",
-      comments: "",
-    },
-    problemSolvingSkills: {
-      analyticalThinking: "",
-      creativityAndInnovation: "",
-      abilityToHandleChallenges: "",
-      comments: "",
-    },
-    overallPerformance: {
-      contributionToTheTeam: "",
-      alignmentWithCompanyGoals: "",
-      potentialForFutureEmployment: "",
-      comments: "",
-    },
-    openEndedQuestions: {
-      strengths: "",
-      areasOfImprovement: "",
-      projectTaskFeedback: "",
-      learningAndGrowth: "",
-      teamDynamics: "",
-      adaptability: "",
-      feedbackForStudent: "",
-      feedbackForUniversity: "",
-    },
-    finalRecommendation: {
-      finalRating: "",
-      supervisorRecommendation: "",
-      declarationAccepted: false,
-      supervisorFullName: "",
-      date: "",
-    },
-  }));
+  const [form, setForm] = useState(() => createInitialForm());
 
   const [errors, setErrors] = useState({});
   const [sending, setSending] = useState(false);
   const [success, setSuccess] = useState(null);
   const [serverError, setServerError] = useState(null);
+
+  const handleAutoFill = useCallback(() => {
+    setSuccess(null);
+    setServerError(null);
+    setErrors({});
+    setForm({
+      studentInformation: {
+        fullname: "Amina Rahman",
+        studentID: "SIUT-2026-0142",
+        degreeProgram: "Software Engineering",
+        yearOfStudy: 3,
+        internshipStartDate: "2026-01-12",
+        internshipEndDate: "2026-05-08",
+      },
+      companyInformation: {
+        companyName: "FutureTech Labs",
+        department: "Product Engineering",
+        supervisorContact: "+92 300 1234567",
+      },
+      professionalism: {
+        punctualityAndAttendance: 5,
+        dressCodeAndAppearance: 4,
+        adherenceToCompanyPolicies: 5,
+        comments: "Consistently punctual, professional, and well prepared.",
+      },
+      workEthic: {
+        initiativeAndProactiveness: 5,
+        timeManagement: 4,
+        abilityToMeetDeadlines: 5,
+        comments: "Shows strong ownership and reliably meets deadlines.",
+      },
+      technicalSkills: {
+        applicationOfAcademicKnowledge: 4,
+        abilityToLearnNewSkillsTools: 5,
+        qualityOfWorkOutput: 4,
+        comments: "Quickly adapts to new tools and produces solid work.",
+      },
+      communicationSkills: {
+        verbalCommunication: 4,
+        writtenCommunication: 4,
+        teamCollaboration: 5,
+        comments: "Communicates clearly and works well with the team.",
+      },
+      problemSolvingSkills: {
+        analyticalThinking: 4,
+        creativityAndInnovation: 4,
+        abilityToHandleChallenges: 5,
+        comments: "Approaches blockers calmly and proposes useful solutions.",
+      },
+      overallPerformance: {
+        contributionToTheTeam: 5,
+        alignmentWithCompanyGoals: 4,
+        potentialForFutureEmployment: 5,
+        comments: "A strong candidate for future placement opportunities.",
+      },
+      openEndedQuestions: {
+        strengths: "Reliable, proactive, and eager to learn.",
+        areasOfImprovement: "Can continue building deeper domain expertise.",
+        projectTaskFeedback: "Completed tasks thoughtfully and with good attention to detail.",
+        learningAndGrowth: "Made clear progress throughout the internship.",
+        teamDynamics: "Positive impact on team communication and collaboration.",
+        adaptability: "Adjusted quickly to changing requirements and tools.",
+        feedbackForStudent: "Keep challenging yourself with larger technical tasks.",
+        feedbackForUniversity: "Great candidate with strong practical readiness.",
+      },
+      finalRecommendation: {
+        finalRating: "3-4",
+        supervisorRecommendation: "recommend-future-opportunities",
+        declarationAccepted: true,
+        supervisorFullName: "Muhammad Ali",
+        date: "2026-05-29",
+      },
+    });
+  }, []);
 
   const finalRatingOptions = useMemo(
     () => [
@@ -1201,44 +1409,164 @@ export default function PublicEvaluationForm() {
     [],
   );
 
-  const setPath = (path, value) => {
+  const professionalismRows = useMemo(
+    () => [
+      {
+        key: "punctualityAndAttendance",
+        label: "Punctuality and attendance",
+      },
+      {
+        key: "dressCodeAndAppearance",
+        label: "Dress code and appearance",
+      },
+      {
+        key: "adherenceToCompanyPolicies",
+        label: "Adherence to company policies",
+      },
+    ],
+    [],
+  );
+
+  const workEthicRows = useMemo(
+    () => [
+      {
+        key: "initiativeAndProactiveness",
+        label: "Initiative and proactiveness",
+      },
+      { key: "timeManagement", label: "Time management" },
+      {
+        key: "abilityToMeetDeadlines",
+        label: "Ability to meet deadlines",
+      },
+    ],
+    [],
+  );
+
+  const technicalSkillsRows = useMemo(
+    () => [
+      {
+        key: "applicationOfAcademicKnowledge",
+        label: "Application of academic knowledge",
+      },
+      {
+        key: "abilityToLearnNewSkillsTools",
+        label: "Ability to learn new skills/tools",
+      },
+      { key: "qualityOfWorkOutput", label: "Quality of work output" },
+    ],
+    [],
+  );
+
+  const communicationSkillsRows = useMemo(
+    () => [
+      { key: "verbalCommunication", label: "Verbal communication" },
+      { key: "writtenCommunication", label: "Written communication" },
+      { key: "teamCollaboration", label: "Team collaboration" },
+    ],
+    [],
+  );
+
+  const problemSolvingSkillsRows = useMemo(
+    () => [
+      { key: "analyticalThinking", label: "Analytical thinking" },
+      {
+        key: "creativityAndInnovation",
+        label: "Creativity and innovation",
+      },
+      {
+        key: "abilityToHandleChallenges",
+        label: "Ability to handle challenges",
+      },
+    ],
+    [],
+  );
+
+  const overallPerformanceRows = useMemo(
+    () => [
+      {
+        key: "contributionToTheTeam",
+        label: "Contribution to the team",
+      },
+      {
+        key: "alignmentWithCompanyGoals",
+        label: "Alignment with company goals",
+      },
+      {
+        key: "potentialForFutureEmployment",
+        label: "Potential for future employment",
+      },
+    ],
+    [],
+  );
+
+  const professionalismErrors = useMemo(
+    () => ({
+      punctualityAndAttendance: errors["professionalism.punctualityAndAttendance"],
+      dressCodeAndAppearance: errors["professionalism.dressCodeAndAppearance"],
+      adherenceToCompanyPolicies:
+        errors["professionalism.adherenceToCompanyPolicies"],
+    }),
+    [errors],
+  );
+
+  const workEthicErrors = useMemo(
+    () => ({
+      initiativeAndProactiveness:
+        errors["workEthic.initiativeAndProactiveness"],
+      timeManagement: errors["workEthic.timeManagement"],
+      abilityToMeetDeadlines: errors["workEthic.abilityToMeetDeadlines"],
+    }),
+    [errors],
+  );
+
+  const technicalSkillsErrors = useMemo(
+    () => ({
+      applicationOfAcademicKnowledge:
+        errors["technicalSkills.applicationOfAcademicKnowledge"],
+      abilityToLearnNewSkillsTools:
+        errors["technicalSkills.abilityToLearnNewSkillsTools"],
+      qualityOfWorkOutput: errors["technicalSkills.qualityOfWorkOutput"],
+    }),
+    [errors],
+  );
+
+  const communicationSkillsErrors = useMemo(
+    () => ({
+      verbalCommunication: errors["communicationSkills.verbalCommunication"],
+      writtenCommunication: errors["communicationSkills.writtenCommunication"],
+      teamCollaboration: errors["communicationSkills.teamCollaboration"],
+    }),
+    [errors],
+  );
+
+  const problemSolvingSkillsErrors = useMemo(
+    () => ({
+      analyticalThinking: errors["problemSolvingSkills.analyticalThinking"],
+      creativityAndInnovation:
+        errors["problemSolvingSkills.creativityAndInnovation"],
+      abilityToHandleChallenges:
+        errors["problemSolvingSkills.abilityToHandleChallenges"],
+    }),
+    [errors],
+  );
+
+  const overallPerformanceErrors = useMemo(
+    () => ({
+      contributionToTheTeam: errors["overallPerformance.contributionToTheTeam"],
+      alignmentWithCompanyGoals:
+        errors["overallPerformance.alignmentWithCompanyGoals"],
+      potentialForFutureEmployment:
+        errors["overallPerformance.potentialForFutureEmployment"],
+    }),
+    [errors],
+  );
+
+  const setPath = useCallback((path, value) => {
     const parts = path.split(".");
     setForm((current) => updateNestedValue(current, parts, value));
-    setErrors((current) => {
-      if (!current || Object.keys(current).length === 0) return current;
+  }, []);
 
-      const next = { ...current };
-      let changed = false;
-
-      if (path in next) {
-        delete next[path];
-        changed = true;
-      }
-
-      if ("_form" in next) {
-        delete next._form;
-        changed = true;
-      }
-
-      if (
-        path === "studentInformation.internshipStartDate" ||
-        path === "studentInformation.internshipEndDate"
-      ) {
-        if ("studentInformation.internshipStartDate" in next) {
-          delete next["studentInformation.internshipStartDate"];
-          changed = true;
-        }
-        if ("studentInformation.internshipEndDate" in next) {
-          delete next["studentInformation.internshipEndDate"];
-          changed = true;
-        }
-      }
-
-      return changed ? next : current;
-    });
-  };
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
     setServerError(null);
     try {
@@ -1246,8 +1574,7 @@ export default function PublicEvaluationForm() {
       setErrors({});
       setSending(true);
       await postEvaluation(parsed);
-      setSuccess("Evaluation submitted — thank you.");
-      setForm((f) => ({ ...f }));
+      setSuccess("Evaluation submitted successfully.");
     } catch (err) {
       if (err?.issues) {
         const map = {};
@@ -1263,86 +1590,38 @@ export default function PublicEvaluationForm() {
     } finally {
       setSending(false);
     }
-  };
+  }, [form]);
 
-  const handleAutoFill = () => {
-    setForm({
-      studentInformation: {
-        fullname: "John Doe",
-        studentID: "20240001",
-        degreeProgram: "Computer Science",
-        yearOfStudy: 3,
-        internshipStartDate: "2026-01-10",
-        internshipEndDate: "2026-03-10",
-      },
-      companyInformation: {
-        companyName: "Example Company",
-        department: "Software Engineering",
-        supervisorContact: "+998901234567",
-      },
-      professionalism: {
-        punctualityAndAttendance: 5,
-        dressCodeAndAppearance: 4,
-        adherenceToCompanyPolicies: 5,
-        comments: "Always on time and professional.",
-      },
-      workEthic: {
-        initiativeAndProactiveness: 5,
-        timeManagement: 4,
-        abilityToMeetDeadlines: 5,
-        comments: "Completed tasks independently and on schedule.",
-      },
-      technicalSkills: {
-        applicationOfAcademicKnowledge: 4,
-        abilityToLearnNewSkillsTools: 5,
-        qualityOfWorkOutput: 4,
-        comments: "Learned the stack quickly and delivered solid work.",
-      },
-      communicationSkills: {
-        verbalCommunication: 4,
-        writtenCommunication: 4,
-        teamCollaboration: 5,
-        comments: "Communicated clearly with the team.",
-      },
-      problemSolvingSkills: {
-        analyticalThinking: 4,
-        creativityAndInnovation: 4,
-        abilityToHandleChallenges: 5,
-        comments: "Handled new tasks well and adapted fast.",
-      },
-      overallPerformance: {
-        contributionToTheTeam: 5,
-        alignmentWithCompanyGoals: 5,
-        potentialForFutureEmployment: 5,
-        comments: "Strong overall performance and future potential.",
-      },
-      openEndedQuestions: {
-        strengths: "Quick learner and dependable team member.",
-        areasOfImprovement: "Can keep improving confidence in presentations.",
-        projectTaskFeedback:
-          "Handled assigned tasks carefully and delivered on time.",
-        learningAndGrowth:
-          "Showed steady improvement throughout the internship.",
-        teamDynamics:
-          "Worked well with the team and accepted feedback positively.",
-        adaptability: "Adapted quickly to new tools and changing requirements.",
-        feedbackForStudent:
-          "Keep building confidence and continue practicing communication.",
-        feedbackForUniversity:
-          "Practical exposure and more project-based coursework would be helpful.",
-      },
-      finalRecommendation: {
-        finalRating: "3-4",
-        supervisorRecommendation: "recommend-future-opportunities",
-        declarationAccepted: true,
-        supervisorFullName: "Jane Smith",
-        date: "2026-05-27",
-      },
-    });
-    setErrors({});
-    setServerError(null);
-    setSuccess(null);
-  };
+  if (success) {
+    return (
+      <div className="pp">
+        <div style={styles.page}>
+          <div style={styles.successShell}>
+            <div style={styles.successCard}>
+              <div style={styles.successGlow} />
+              <div style={styles.successBadge}>Success</div>
+              <div style={styles.successMark}>✓</div>
+              <h1 style={styles.successTitle}>Your evaluation was submitted.</h1>
+              <p style={styles.successText}>
+                Thank you. The student internship evaluation has been received and saved successfully.
+              </p>
+
+              <div style={styles.successMeta}>
+                <div style={styles.successMetaItem}>
+                  <span style={styles.successMetaLabel}>Status</span>
+                  <div style={styles.successMetaValue}>Completed</div>
+                </div>
+                <div style={styles.successMetaItem}>
+                  <span style={styles.successMetaLabel}>Next step</span>
+                  <div style={styles.successMetaValue}>You may close this page</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="pp">
@@ -1496,20 +1775,7 @@ export default function PublicEvaluationForm() {
               title="Professionalism"
               required
               errorKey="__group.professionalism"
-              rows={[
-                {
-                  key: "punctualityAndAttendance",
-                  label: "Punctuality and attendance",
-                },
-                {
-                  key: "dressCodeAndAppearance",
-                  label: "Dress code and appearance",
-                },
-                {
-                  key: "adherenceToCompanyPolicies",
-                  label: "Adherence to company policies",
-                },
-              ]}
+              rows={professionalismRows}
               values={form.professionalism}
               onChange={(key, value) =>
                 setPath(`professionalism.${key}`, value)
@@ -1519,60 +1785,27 @@ export default function PublicEvaluationForm() {
               onCommentChange={(value) =>
                 setPath("professionalism.comments", value)
               }
-              errorPrefix={{
-                punctualityAndAttendance:
-                  errors["professionalism.punctualityAndAttendance"],
-                dressCodeAndAppearance:
-                  errors["professionalism.dressCodeAndAppearance"],
-                adherenceToCompanyPolicies:
-                  errors["professionalism.adherenceToCompanyPolicies"],
-              }}
+              errorPrefix={professionalismErrors}
             />
 
             <MemoRatingTable
               title="Work Ethic"
               required
               errorKey="__group.workEthic"
-              rows={[
-                {
-                  key: "initiativeAndProactiveness",
-                  label: "Initiative and proactiveness",
-                },
-                { key: "timeManagement", label: "Time management" },
-                {
-                  key: "abilityToMeetDeadlines",
-                  label: "Ability to meet deadlines",
-                },
-              ]}
+              rows={workEthicRows}
               values={form.workEthic}
               onChange={(key, value) => setPath(`workEthic.${key}`, value)}
               commentLabel="Comment on work ethic"
               commentValue={form.workEthic.comments}
               onCommentChange={(value) => setPath("workEthic.comments", value)}
-              errorPrefix={{
-                initiativeAndProactiveness:
-                  errors["workEthic.initiativeAndProactiveness"],
-                timeManagement: errors["workEthic.timeManagement"],
-                abilityToMeetDeadlines:
-                  errors["workEthic.abilityToMeetDeadlines"],
-              }}
+              errorPrefix={workEthicErrors}
             />
 
             <MemoRatingTable
               title="Technical Skills"
               required
               errorKey="__group.technicalSkills"
-              rows={[
-                {
-                  key: "applicationOfAcademicKnowledge",
-                  label: "Application of academic knowledge",
-                },
-                {
-                  key: "abilityToLearnNewSkillsTools",
-                  label: "Ability to learn new skills/tools",
-                },
-                { key: "qualityOfWorkOutput", label: "Quality of work output" },
-              ]}
+              rows={technicalSkillsRows}
               values={form.technicalSkills}
               onChange={(key, value) =>
                 setPath(`technicalSkills.${key}`, value)
@@ -1582,25 +1815,14 @@ export default function PublicEvaluationForm() {
               onCommentChange={(value) =>
                 setPath("technicalSkills.comments", value)
               }
-              errorPrefix={{
-                applicationOfAcademicKnowledge:
-                  errors["technicalSkills.applicationOfAcademicKnowledge"],
-                abilityToLearnNewSkillsTools:
-                  errors["technicalSkills.abilityToLearnNewSkillsTools"],
-                qualityOfWorkOutput:
-                  errors["technicalSkills.qualityOfWorkOutput"],
-              }}
+              errorPrefix={technicalSkillsErrors}
             />
 
             <MemoRatingTable
               title="Communication Skills"
               required
               errorKey="__group.communicationSkills"
-              rows={[
-                { key: "verbalCommunication", label: "Verbal communication" },
-                { key: "writtenCommunication", label: "Written communication" },
-                { key: "teamCollaboration", label: "Team collaboration" },
-              ]}
+              rows={communicationSkillsRows}
               values={form.communicationSkills}
               onChange={(key, value) =>
                 setPath(`communicationSkills.${key}`, value)
@@ -1610,31 +1832,14 @@ export default function PublicEvaluationForm() {
               onCommentChange={(value) =>
                 setPath("communicationSkills.comments", value)
               }
-              errorPrefix={{
-                verbalCommunication:
-                  errors["communicationSkills.verbalCommunication"],
-                writtenCommunication:
-                  errors["communicationSkills.writtenCommunication"],
-                teamCollaboration:
-                  errors["communicationSkills.teamCollaboration"],
-              }}
+              errorPrefix={communicationSkillsErrors}
             />
 
             <MemoRatingTable
               title="Problem-Solving Skills"
               required
               errorKey="__group.problemSolvingSkills"
-              rows={[
-                { key: "analyticalThinking", label: "Analytical thinking" },
-                {
-                  key: "creativityAndInnovation",
-                  label: "Creativity and innovation",
-                },
-                {
-                  key: "abilityToHandleChallenges",
-                  label: "Ability to handle challenges",
-                },
-              ]}
+              rows={problemSolvingSkillsRows}
               values={form.problemSolvingSkills}
               onChange={(key, value) =>
                 setPath(`problemSolvingSkills.${key}`, value)
@@ -1644,34 +1849,14 @@ export default function PublicEvaluationForm() {
               onCommentChange={(value) =>
                 setPath("problemSolvingSkills.comments", value)
               }
-              errorPrefix={{
-                analyticalThinking:
-                  errors["problemSolvingSkills.analyticalThinking"],
-                creativityAndInnovation:
-                  errors["problemSolvingSkills.creativityAndInnovation"],
-                abilityToHandleChallenges:
-                  errors["problemSolvingSkills.abilityToHandleChallenges"],
-              }}
+              errorPrefix={problemSolvingSkillsErrors}
             />
 
             <MemoRatingTable
               title="Overall Performance"
               required
               errorKey="__group.overallPerformance"
-              rows={[
-                {
-                  key: "contributionToTheTeam",
-                  label: "Contribution to the team",
-                },
-                {
-                  key: "alignmentWithCompanyGoals",
-                  label: "Alignment with company goals",
-                },
-                {
-                  key: "potentialForFutureEmployment",
-                  label: "Potential for future employment",
-                },
-              ]}
+              rows={overallPerformanceRows}
               values={form.overallPerformance}
               onChange={(key, value) =>
                 setPath(`overallPerformance.${key}`, value)
@@ -1681,14 +1866,7 @@ export default function PublicEvaluationForm() {
               onCommentChange={(value) =>
                 setPath("overallPerformance.comments", value)
               }
-              errorPrefix={{
-                contributionToTheTeam:
-                  errors["overallPerformance.contributionToTheTeam"],
-                alignmentWithCompanyGoals:
-                  errors["overallPerformance.alignmentWithCompanyGoals"],
-                potentialForFutureEmployment:
-                  errors["overallPerformance.potentialForFutureEmployment"],
-              }}
+              errorPrefix={overallPerformanceErrors}
             />
           </section>
 
@@ -1773,7 +1951,7 @@ export default function PublicEvaluationForm() {
             </div>
           </section>
 
-          <section style={styles.card}>
+          <section style={styles.card, { marginBottom: 0 }}>
             <h3 style={styles.sectionTitle}>Final Recommendation</h3>
             <MemoFancySelect
               label="Final Rating"
@@ -1866,22 +2044,10 @@ export default function PublicEvaluationForm() {
 
           <div style={styles.actions}>
             <button className="bg" type="button" onClick={handleAutoFill}>
-              Auto fill
+              Autofill
             </button>
             <button className="bp" type="submit" disabled={sending}>
               {sending ? "Submitting…" : "Submit Evaluation"}
-            </button>
-            <button
-              className="bg"
-              type="button"
-              onClick={() => {
-                setForm((f) => ({ ...f }));
-                setErrors({});
-                setSuccess(null);
-                setServerError(null);
-              }}
-            >
-              Reset
             </button>
           </div>
         </form>

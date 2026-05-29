@@ -195,7 +195,23 @@ textarea.fi{resize:vertical;min-height:80px;}
   .hmb{display:flex;}
   .tbar{padding:10px 12px;gap:8px;}
   .sbox{width:100%;max-width:140px;font-size:12px;}
-  .pp{padding:12px 12px 28px;}
+  .pp{padding:10px 12px 20px;}
+  /* Make tables and rating grids responsive on small screens */
+  .pp table {
+    min-width: 0 !important;
+    width: 100% !important;
+    table-layout: auto !important;
+  }
+  .pp .tableWrap {
+    overflow-x: auto;
+    border-radius: 12px !important;
+    padding: 6px !important;
+  }
+  .pp .headCell, .pp .rowLabel, .pp .ratingCell {
+    padding: 10px 8px !important;
+    font-size: 12px !important;
+  }
+  .pp .fi { padding: 10px 12px !important; }
   .lcard{padding:32px 20px;border-radius:20px;max-width:calc(100vw - 24px);}
   .linput{font-size:13px;padding:11px 14px;}
   .lbtn{padding:12px;font-size:14px;}
@@ -2926,6 +2942,7 @@ export default function App() {
   useEffect(() => {
     if (openIntern) return;
     const isAlwaysRoute = NAV_ALWAYS.some((item) => item.label === nav);
+    if (nav === "Public Evaluation") return;
     if (canAccessNav(user?.role, nav) || isAlwaysRoute) return;
     setNav(fallbackNav);
   }, [fallbackNav, nav, openIntern, user?.role, NAV_ALWAYS]);
@@ -3313,10 +3330,38 @@ export default function App() {
           }}
           onUserSet={setUser}
           sessionMessage={sessionMessage}
-          onOpenPublicEvaluation={() => { setPage('dashboard'); setNav('Public Evaluation'); }}
+          onOpenPublicEvaluation={() => {
+            setPage('public-evaluation');
+          }}
         />
         <ToastViewport />
       </>
+    );
+
+  if (page === "public-evaluation")
+    return (
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: '100%',
+          height: '100%',
+          display: 'block',
+          padding: 0,
+          overflowY: 'auto',
+          background: 'var(--bg)',
+          WebkitOverflowScrolling: 'touch',
+        }}
+      >
+        <style>{CSS}</style>
+        <div style={{ width: '100%', maxWidth: 1180, margin: '0 auto', padding: '32px 16px' }}>
+          <PublicEvaluationForm />
+        </div>
+        <ToastViewport />
+      </div>
     );
 
   return (

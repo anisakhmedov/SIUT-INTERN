@@ -100,10 +100,7 @@ function normalizeDurationValue(value) {
 
 function getInitialsFromLabel(value) {
   if (!value) return "U";
-  const parts = String(value)
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2);
+  const parts = String(value).split(" ").filter(Boolean).slice(0, 2);
   return parts.map((part) => part[0]?.toUpperCase()).join("") || "U";
 }
 
@@ -181,13 +178,10 @@ function CustomFilterSelect({
   const [isOpen, setIsOpen] = useState(false);
   const rootRef = useRef(null);
 
-  const selectedOption = useMemo(
-    () => {
-      if (!value) return null;
-      return options.find((option) => option.value === value) || null;
-    },
-    [options, value],
-  );
+  const selectedOption = useMemo(() => {
+    if (!value) return null;
+    return options.find((option) => option.value === value) || null;
+  }, [options, value]);
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -274,7 +268,7 @@ export default function InternshipPage({
   focusCommentKey,
   students = [],
 }) {
-  const REPORT_DESCRIPTION_MIN_LENGTH = 150;
+  const REPORT_DESCRIPTION_MIN_WORDS = 150;
 
   const [faculty, setFaculty] = useState(null);
   const [dayIndex, setDayIndex] = useState(0);
@@ -306,6 +300,8 @@ export default function InternshipPage({
   const [attendance, setAttendance] = useState(null);
   const [attendanceLoading, setAttendanceLoading] = useState(false);
   const [attendanceError, setAttendanceError] = useState("");
+  const [attendanceDraft, setAttendanceDraft] = useState(null);
+  const [attendanceSaving, setAttendanceSaving] = useState(false);
   const [showAttendanceEditor, setShowAttendanceEditor] = useState(false);
   const [editorDay, setEditorDay] = useState(null); // null -> create
   const [highlightedCommentKey, setHighlightedCommentKey] = useState("");
@@ -366,6 +362,7 @@ export default function InternshipPage({
     try {
       const data = await attendanceApi.getAttendance(facultyId);
       setAttendance(data || null);
+      setAttendanceDraft(data ? JSON.parse(JSON.stringify(data)) : null);
     } catch (err) {
       setAttendanceError(err?.message || String(err));
     } finally {
@@ -391,19 +388,6 @@ export default function InternshipPage({
       setAttendanceLoading(false);
     }
   }, [facultyId, fetchAttendance]);
-
-  const isSameCalendarDay = useCallback((dateValue) => {
-    if (!dateValue) return false;
-    try {
-      const d = new Date(dateValue);
-      const now = new Date();
-      d.setHours(0, 0, 0, 0);
-      now.setHours(0, 0, 0, 0);
-      return d.getTime() === now.getTime();
-    } catch {
-      return false;
-    }
-  }, []);
 
   const openAttendanceEditor = useCallback((day = null) => {
     setEditorDay(day);
@@ -436,35 +420,103 @@ export default function InternshipPage({
     [facultyId, fetchAttendance],
   );
 
+  const attendanceHasChanges = useMemo(() => {
+    const original = JSON.stringify(attendance?.attendance || []);
+    const draft = JSON.stringify(attendanceDraft?.attendance || []);
+    return original !== draft;
+  }, [attendance, attendanceDraft]);
+
   const handleTogglePresent = useCallback(
-    async (dayId, studentKey, present) => {
-      if (!facultyId) return;
-      // Prevent toggling for days that are not the current calendar day
-      try {
-        const day = (attendance?.attendance || []).find(
-          (d) => String(d.id || d._id || d.dayNumber) === String(dayId),
-        );
-        if (day && !isSameCalendarDay(day.date)) {
-          toast.warning("Attendance can only be changed on the actual day.");
-          return;
-        }
-      } catch {
-        // ignore and continue
-      }
-      try {
-        await attendanceApi.toggleAttendanceStudent(
-          facultyId,
-          dayId,
-          studentKey,
-          present,
-        );
-        await fetchAttendance();
-      } catch (err) {
-        toast.error(err?.message || "Failed to update attendance.");
-      }
+    (dayId, studentKey, present) => {
+      const targetDayId = String(dayId || "").trim();
+      const targetStudentKey = String(studentKey || "").trim();
+      if (!targetDayId || !targetStudentKey) return;
+
+      setAttendanceDraft((current) => {
+        const source = Array.isArray(current?.attendance)
+          ? current
+          : attendance
+            ? JSON.parse(JSON.stringify(attendance))
+            : null;
+        if (!source || !Array.isArray(source.attendance)) return current;
+
+        return {
+          ...source,
+          attendance: source.attendance.map((day) => {
+            const resolvedDayId = String(
+              day?.id ?? day?._id ?? day?.dayNumber ?? "",
+            ).trim();
+            if (resolvedDayId !== targetDayId) return day;
+
+            const students = Array.isArray(day.students) ? day.students : [];
+            let matched = false;
+            const nextStudents = students.map((student) => {
+              const resolvedStudentKey = String(
+                student?.studentKey ?? student?.studentId ?? student?.id ?? "",
+              ).trim();
+              if (resolvedStudentKey !== targetStudentKey) return student;
+              matched = true;
+              return {
+                ...student,
+                studentKey: student?.studentKey || targetStudentKey,
+                present,
+              };
+            });
+
+            if (!matched) {
+              nextStudents.push({ studentKey: targetStudentKey, present });
+            }
+
+            return {
+              ...day,
+              students: nextStudents,
+            };
+          }),
+        };
+      });
     },
-    [facultyId, fetchAttendance, attendance, isSameCalendarDay],
+    [attendance],
   );
+
+  const handleSaveAttendanceChanges = useCallback(async () => {
+    if (!facultyId) return;
+    const draftDays = Array.isArray(attendanceDraft?.attendance)
+      ? attendanceDraft.attendance
+      : [];
+    if (draftDays.length === 0) return;
+
+    setAttendanceSaving(true);
+    try {
+      for (const day of draftDays) {
+        const dayId = day?.id ?? day?._id;
+        if (!dayId) {
+          throw new Error("Attendance day could not be identified.");
+        }
+
+        const students = Array.isArray(day.students) ? day.students : [];
+        const payload = {
+          id: dayId,
+          date: day?.date,
+          dayNumber: day?.dayNumber,
+          students: students.map((student) => ({
+            studentKey: String(
+              student?.studentKey ?? student?.studentId ?? student?.id ?? "",
+            ).trim(),
+            present: Boolean(student?.present),
+          })),
+        };
+
+        await attendanceApi.updateAttendanceDay(facultyId, dayId, payload);
+      }
+
+      await fetchAttendance();
+      toast.success("Attendance saved.");
+    } catch (err) {
+      toast.error(err?.message || "Failed to save attendance.");
+    } finally {
+      setAttendanceSaving(false);
+    }
+  }, [attendanceDraft, facultyId, fetchAttendance]);
 
   useEffect(() => {
     const container = attendanceScrollRef.current;
@@ -495,12 +547,14 @@ export default function InternshipPage({
     if (modalAvailableTutors && modalAvailableTutors.length > 0) return;
     try {
       const list = await get("/usersInternship");
-      const filteredTutors = (Array.isArray(list) ? list : []).filter((member) => {
-        const role = String(member?.role || "")
-          .trim()
-          .toLowerCase();
-        return role === "tutor" || role === "professor";
-      });
+      const filteredTutors = (Array.isArray(list) ? list : []).filter(
+        (member) => {
+          const role = String(member?.role || "")
+            .trim()
+            .toLowerCase();
+          return role === "tutor" || role === "professor";
+        },
+      );
       setModalAvailableTutors(filteredTutors);
     } catch (err) {
       console.error("Failed to load tutors:", err);
@@ -515,47 +569,71 @@ export default function InternshipPage({
     }
     if (Array.isArray(faculty?.tutors)) {
       faculty.tutors.forEach((t) => {
-        const id = String(t?._id || t?.id || t?.userId || t?.login || t?.email || t?.name || "");
+        const id = String(
+          t?._id || t?.id || t?.userId || t?.login || t?.email || t?.name || "",
+        );
         if (id) ids.add(id);
       });
     }
     // also consider single tutor fields
     if (faculty?.tutorID) ids.add(String(faculty.tutorID));
-    if (faculty?.tutor && typeof faculty.tutor === "string") ids.add(String(faculty.tutor));
+    if (faculty?.tutor && typeof faculty.tutor === "string")
+      ids.add(String(faculty.tutor));
     return Array.from(ids).filter(Boolean);
   }, [faculty]);
 
-  const setTutorAssignment = useCallback(async (tutorId, shouldAssign) => {
-    if (!faculty) return;
-    const idStr = String(tutorId || "");
-    if (!idStr) return;
+  const normalizeRoleLocal = (r) =>
+    String(r || "")
+      .trim()
+      .toLowerCase();
 
-    const existing = getFacultyTutorIds();
-    const alreadyAssigned = existing.includes(idStr);
-    if (shouldAssign && alreadyAssigned) {
-      return;
-    }
-    if (!shouldAssign && !alreadyAssigned) {
-      return;
-    }
+  const canManageTutors = useMemo(() => {
+    const role = normalizeRoleLocal(user?.role);
+    return role === "admin" || role === "developer";
+  }, [user]);
 
-    setSubmitting(true);
-    try {
-      const next = shouldAssign
-        ? [...existing, idStr]
-        : existing.filter((id) => id !== idStr);
-      await patch(`/faculty/${facultyId}`, {
-        tutorIDs: next,
-        tutorID: next[0] || "",
-      });
-      await fetchFaculty();
-      toast.success(shouldAssign ? "Tutor added to internship." : "Tutor removed from internship.");
-    } catch (err) {
-      toast.error(err?.message || "Failed to update tutor assignment.");
-    } finally {
-      setSubmitting(false);
-    }
-  }, [faculty, fetchFaculty, facultyId, getFacultyTutorIds]);
+  const setTutorAssignment = useCallback(
+    async (tutorId, shouldAssign) => {
+      if (!canManageTutors) {
+        toast.warning("Only admins and developers can append tutors.");
+        return;
+      }
+      if (!faculty) return;
+      const idStr = String(tutorId || "");
+      if (!idStr) return;
+
+      const existing = getFacultyTutorIds();
+      const alreadyAssigned = existing.includes(idStr);
+      if (shouldAssign && alreadyAssigned) {
+        return;
+      }
+      if (!shouldAssign && !alreadyAssigned) {
+        return;
+      }
+
+      setSubmitting(true);
+      try {
+        const next = shouldAssign
+          ? [...existing, idStr]
+          : existing.filter((id) => id !== idStr);
+        await patch(`/faculty/${facultyId}`, {
+          tutorIDs: next,
+          tutorID: next[0] || "",
+        });
+        await fetchFaculty();
+        toast.success(
+          shouldAssign
+            ? "Tutor added to internship."
+            : "Tutor removed from internship.",
+        );
+      } catch (err) {
+        toast.error(err?.message || "Failed to update tutor assignment.");
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [canManageTutors, faculty, fetchFaculty, facultyId, getFacultyTutorIds],
+  );
 
   const removeTutorFromFaculty = useCallback(
     async (removeId) => {
@@ -588,11 +666,6 @@ export default function InternshipPage({
     if (!day) return null;
     return day._id ?? day.id ?? null;
   }, []);
-
-  const normalizeRoleLocal = (r) =>
-    String(r || "")
-      .trim()
-      .toLowerCase();
 
   const isTutorRoleLocal = useCallback((role) => {
     const normalizedRole = String(role || "")
@@ -829,9 +902,11 @@ export default function InternshipPage({
   );
 
   const days = useMemo(() => faculty?.days || [], [faculty]);
-  const attendanceDays = Array.isArray(attendance?.attendance)
-    ? attendance.attendance
-    : [];
+  const attendanceDays = Array.isArray(attendanceDraft?.attendance)
+    ? attendanceDraft.attendance
+    : Array.isArray(attendance?.attendance)
+      ? attendance.attendance
+      : [];
   const attendanceTableWidth = 700;
   const attendanceNameColumnWidth = 260;
   const attendanceDayColumnWidth = 132;
@@ -848,6 +923,7 @@ export default function InternshipPage({
   }, [attachedStudents, getStudentId]);
   const getOwnershipTokens = useCallback((value) => {
     const tokens = new Set();
+
     const pushValue = (item) => {
       if (item == null) return;
       const token = String(item).trim();
@@ -1060,9 +1136,12 @@ export default function InternshipPage({
     () => extractImageUrls(currentDay),
     [extractImageUrls, currentDay],
   );
-  const reportDescriptionLength = reportDescription.length;
+  const reportDescriptionWordCount = useMemo(() => {
+    const words = reportDescription.trim().match(/\S+/g);
+    return words ? words.length : 0;
+  }, [reportDescription]);
   const isReportDescriptionLongEnough =
-    reportDescription.trim().length >= REPORT_DESCRIPTION_MIN_LENGTH;
+    reportDescriptionWordCount >= REPORT_DESCRIPTION_MIN_WORDS;
   const reportFormDirty = useMemo(() => {
     if (!showReportForm || !reportFormSnapshot) return false;
 
@@ -1137,8 +1216,13 @@ export default function InternshipPage({
       primaryTutor,
       tutors: uniqueItems,
       name: tutorNames.join(", "),
-      contact: primaryTutor?.contact || faculty?.tutorContact || faculty?.supervisorContact || "",
-      initials: primaryTutor?.initials || getInitialsFromLabel(tutorNames[0] || ""),
+      contact:
+        primaryTutor?.contact ||
+        faculty?.tutorContact ||
+        faculty?.supervisorContact ||
+        "",
+      initials:
+        primaryTutor?.initials || getInitialsFromLabel(tutorNames[0] || ""),
       hasInfo: uniqueItems.length > 0,
       count: uniqueItems.length,
     };
@@ -1182,7 +1266,9 @@ export default function InternshipPage({
   // Check if current tutor is assigned to this faculty
   const isAssignedTutor = useMemo(() => {
     if (!faculty) return false;
-    const role = String(user?.role || "").trim().toLowerCase();
+    const role = String(user?.role || "")
+      .trim()
+      .toLowerCase();
     if (role !== "tutor" && role !== "professor") return false;
 
     const userTokens = getOwnershipTokensLocal([
@@ -1666,7 +1752,7 @@ export default function InternshipPage({
 
       if (!isReportDescriptionLongEnough) {
         toast.error(
-          `Description must be at least ${REPORT_DESCRIPTION_MIN_LENGTH} characters.`,
+          `Description must be at least ${REPORT_DESCRIPTION_MIN_WORDS} words.`,
         );
         return;
       }
@@ -2400,17 +2486,34 @@ export default function InternshipPage({
                     {tutorInfo.count > 1 ? "Tutors" : "Tutor"}
                   </span>
                   <span className="ip-tutor-badge">
-                    {tutorInfo.count > 1 ? `${tutorInfo.count} tutors appended` : "Assigned"}
+                    {tutorInfo.count > 1
+                      ? `${tutorInfo.count} tutors appended`
+                      : "Assigned"}
                   </span>
                 </div>
                 {tutorInfo.hasInfo ? (
                   <div className="ip-tutor-body">
                     {/* When more than one tutor, show a compact typographic summary */}
                     {tutorInfo.count > 1 ? (
-                      <div className="ip-tutor-compact" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div
+                        className="ip-tutor-compact"
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 12,
+                          }}
+                        >
                           <div className="ip-tutor-compact-text">
-                            <div className="ip-tutor-name-compact">{tutorInfo.count} tutors appended</div>
+                            <div className="ip-tutor-name-compact">
+                              {tutorInfo.count} tutors appended
+                            </div>
                           </div>
                         </div>
                         <div>
@@ -2426,15 +2529,57 @@ export default function InternshipPage({
                       </div>
                     ) : (
                       (() => {
-                        const t = (tutorInfo.tutors && tutorInfo.tutors[0]) || { initials: tutorInfo.initials, name: tutorInfo.name, contact: tutorInfo.contact };
+                        const t = (tutorInfo.tutors && tutorInfo.tutors[0]) || {
+                          initials: tutorInfo.initials,
+                          name: tutorInfo.name,
+                          contact: tutorInfo.contact,
+                        };
                         return (
-                          <div className="ip-tutor-list" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                            <div style={{ display: "flex", gap: 12, alignItems: "center", minWidth: 0 }}>
-                              <div className="ip-tutor-avatar">{t.initials}</div>
+                          <div
+                            className="ip-tutor-list"
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                gap: 12,
+                                alignItems: "center",
+                                minWidth: 0,
+                              }}
+                            >
+                              <div className="ip-tutor-avatar">
+                                {t.initials}
+                              </div>
                               <div style={{ minWidth: 0 }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                  <strong className="ip-tutor-name" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.name || "No information"}</strong>
-                                  <span style={{ color: "var(--t2, #5a6278)", fontSize: 13 }}>{t.contact || ""}</span>
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 8,
+                                  }}
+                                >
+                                  <strong
+                                    className="ip-tutor-name"
+                                    style={{
+                                      whiteSpace: "nowrap",
+                                      overflow: "hidden",
+                                      textOverflow: "ellipsis",
+                                    }}
+                                  >
+                                    {t.name || "No information"}
+                                  </strong>
+                                  <span
+                                    style={{
+                                      color: "var(--t2, #5a6278)",
+                                      fontSize: 13,
+                                    }}
+                                  >
+                                    {t.contact || ""}
+                                  </span>
                                 </div>
                               </div>
                             </div>
@@ -2453,7 +2598,7 @@ export default function InternshipPage({
                       })()
                     )}
                   </div>
-                ) : (
+                ) : canManageTutors ? (
                   <button
                     type="button"
                     className="ip-student-action-btn"
@@ -2461,6 +2606,8 @@ export default function InternshipPage({
                   >
                     Append tutor +
                   </button>
+                ) : (
+                  <p className="ip-tutor-empty">No tutor assigned.</p>
                 )}
                 {showTutorsModal &&
                   createPortal(
@@ -2477,7 +2624,8 @@ export default function InternshipPage({
                         zIndex: 2200,
                       }}
                       onMouseDown={(e) => {
-                        if (e.target === e.currentTarget) setShowTutorsModal(false);
+                        if (e.target === e.currentTarget)
+                          setShowTutorsModal(false);
                       }}
                     >
                       <div
@@ -2491,8 +2639,18 @@ export default function InternshipPage({
                           overflow: "auto",
                         }}
                       >
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
-                          <h3 style={{ margin: 0 }}>Assigned tutors ({tutorInfo.count})</h3>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: 12,
+                            marginBottom: 12,
+                          }}
+                        >
+                          <h3 style={{ margin: 0 }}>
+                            Assigned tutors ({tutorInfo.count})
+                          </h3>
                           <div style={{ display: "flex", gap: 8 }}>
                             <button
                               type="button"
@@ -2506,20 +2664,64 @@ export default function InternshipPage({
 
                         <div style={{ display: "grid", gap: 8 }}>
                           {(tutorInfo.tutors || []).map((tutor) => (
-                            <div key={tutor.key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: 8, borderRadius: 10, background: "#fafafa", border: "1px solid rgba(0,0,0,.06)" }}>
-                              <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                                <div style={{ width: 40, height: 40, borderRadius: 10, background: "linear-gradient(135deg,#635bff,#06c9a0)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>{tutor.initials}</div>
+                            <div
+                              key={tutor.key}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                gap: 12,
+                                padding: 8,
+                                borderRadius: 10,
+                                background: "#fafafa",
+                                border: "1px solid rgba(0,0,0,.06)",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  display: "flex",
+                                  gap: 12,
+                                  alignItems: "center",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    width: 40,
+                                    height: 40,
+                                    borderRadius: 10,
+                                    background:
+                                      "linear-gradient(135deg,#635bff,#06c9a0)",
+                                    color: "#fff",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    fontWeight: 700,
+                                  }}
+                                >
+                                  {tutor.initials}
+                                </div>
                                 <div style={{ minWidth: 0 }}>
-                                  <div style={{ fontWeight: 800 }}>{tutor.name}</div>
-                                  <div style={{ fontSize: 13, color: "var(--t2, #5a6278)" }}>{tutor.contact || "No contact information"}</div>
+                                  <div style={{ fontWeight: 800 }}>
+                                    {tutor.name}
+                                  </div>
+                                  <div
+                                    style={{
+                                      fontSize: 13,
+                                      color: "var(--t2, #5a6278)",
+                                    }}
+                                  >
+                                    {tutor.contact || "No contact information"}
+                                  </div>
                                 </div>
                               </div>
-                              {user?.role === "Admin" && (
+                              {canManageTutors && (
                                 <div>
                                   <button
                                     type="button"
                                     className="ip-student-action-btn"
-                                    onClick={() => removeTutorFromFaculty(tutor.key)}
+                                    onClick={() =>
+                                      removeTutorFromFaculty(tutor.key)
+                                    }
                                   >
                                     Remove
                                   </button>
@@ -2530,47 +2732,146 @@ export default function InternshipPage({
                         </div>
 
                         <div style={{ marginTop: 14 }}>
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 10 }}>
-                            <label style={{ display: "block", fontSize: 13, color: "var(--t3, #9ba3bb)" }}>Available tutors</label>
-                            <span style={{ fontSize: 12, color: "var(--t3, #9ba3bb)" }}>{modalAvailableTutors.length} total</span>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: 12,
+                              marginBottom: 10,
+                            }}
+                          >
+                            <label
+                              style={{
+                                display: "block",
+                                fontSize: 13,
+                                color: "var(--t3, #9ba3bb)",
+                              }}
+                            >
+                              Available tutors
+                            </label>
+                            <span
+                              style={{
+                                fontSize: 12,
+                                color: "var(--t3, #9ba3bb)",
+                              }}
+                            >
+                              {modalAvailableTutors.length} total
+                            </span>
                           </div>
 
-                          <div className="ip-student-manager-list" style={{ maxHeight: 280 }}>
+                          <div
+                            className="ip-student-manager-list"
+                            style={{ maxHeight: 280 }}
+                          >
                             {(modalAvailableTutors || []).length === 0 ? (
-                              <div className="ip-student-manager-empty">No tutors available.</div>
+                              <div className="ip-student-manager-empty">
+                                No tutors available.
+                              </div>
                             ) : (
                               modalAvailableTutors.map((tutor) => {
-                                const tutorId = String(tutor._id || tutor.id || tutor.userId || tutor.login || tutor.email || "");
-                                const isAssigned = getFacultyTutorIds().includes(tutorId);
-                                const tutorName = String(tutor.name || tutor.login || tutor.email || tutorId || "Unnamed tutor");
-                                const tutorSub = String(tutor.phone || tutor.login || tutor.email || tutor.role || "").trim();
+                                const tutorId = String(
+                                  tutor._id ||
+                                    tutor.id ||
+                                    tutor.userId ||
+                                    tutor.login ||
+                                    tutor.email ||
+                                    "",
+                                );
+                                const isAssigned =
+                                  getFacultyTutorIds().includes(tutorId);
+                                const tutorName = String(
+                                  tutor.name ||
+                                    tutor.login ||
+                                    tutor.email ||
+                                    tutorId ||
+                                    "Unnamed tutor",
+                                );
+                                const tutorSub = String(
+                                  tutor.phone ||
+                                    tutor.login ||
+                                    tutor.email ||
+                                    tutor.role ||
+                                    "",
+                                ).trim();
 
                                 return (
                                   <label
                                     key={tutorId || tutorName}
                                     className={`ip-student-manager-row ${isAssigned ? "" : ""}`.trim()}
-                                    style={{ cursor: tutorId ? "pointer" : "default" }}
+                                    style={{
+                                      cursor: tutorId ? "pointer" : "default",
+                                    }}
                                   >
-                                    <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 12,
+                                        minWidth: 0,
+                                      }}
+                                    >
                                       <input
                                         type="checkbox"
                                         className="ip-student-check"
                                         checked={isAssigned}
-                                        disabled={!tutorId || submitting}
-                                        onChange={(e) => setTutorAssignment(tutorId, e.target.checked)}
+                                        disabled={
+                                          !tutorId ||
+                                          submitting ||
+                                          !canManageTutors
+                                        }
+                                        onChange={(e) =>
+                                          setTutorAssignment(
+                                            tutorId,
+                                            e.target.checked,
+                                          )
+                                        }
                                       />
-                                      <div style={{ width: 40, height: 40, borderRadius: 10, background: "linear-gradient(135deg,#635bff,#06c9a0)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, flexShrink: 0 }}>
+                                      <div
+                                        style={{
+                                          width: 40,
+                                          height: 40,
+                                          borderRadius: 10,
+                                          background:
+                                            "linear-gradient(135deg,#635bff,#06c9a0)",
+                                          color: "#fff",
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          fontWeight: 700,
+                                          flexShrink: 0,
+                                        }}
+                                      >
                                         {getInitialsFromLabel(tutorName)}
                                       </div>
                                       <div style={{ minWidth: 0 }}>
-                                        <div style={{ fontWeight: 800, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{tutorName}</div>
-                                        <div style={{ fontSize: 13, color: "var(--t2, #5a6278)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                        <div
+                                          style={{
+                                            fontWeight: 800,
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                            whiteSpace: "nowrap",
+                                          }}
+                                        >
+                                          {tutorName}
+                                        </div>
+                                        <div
+                                          style={{
+                                            fontSize: 13,
+                                            color: "var(--t2, #5a6278)",
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                            whiteSpace: "nowrap",
+                                          }}
+                                        >
                                           {tutorSub || "No contact information"}
                                         </div>
                                       </div>
                                     </div>
                                     <div className="ip-student-manager-actions">
-                                      <span className={`ip-student-badge ${isAssigned ? "ip-student-badge--attached" : "ip-student-badge--free"}`}>
+                                      <span
+                                        className={`ip-student-badge ${isAssigned ? "ip-student-badge--attached" : "ip-student-badge--free"}`}
+                                      >
                                         {isAssigned ? "Assigned" : "Available"}
                                       </span>
                                     </div>
@@ -2997,9 +3298,6 @@ export default function InternshipPage({
                                             type="checkbox"
                                             className="ip-attendance-radio"
                                             checked={present}
-                                            disabled={
-                                              !isSameCalendarDay(day.date)
-                                            }
                                             onChange={(e) =>
                                               handleTogglePresent(
                                                 day.id,
@@ -3007,11 +3305,7 @@ export default function InternshipPage({
                                                 e.target.checked,
                                               )
                                             }
-                                            title={
-                                              isSameCalendarDay(day.date)
-                                                ? "Toggle presence"
-                                                : "Only editable on the day itself"
-                                            }
+                                            title="Toggle presence"
                                           />
                                         </td>
                                       );
@@ -3022,6 +3316,26 @@ export default function InternshipPage({
                             </tbody>
                           </table>
                         </div>
+                      </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          marginTop: 12,
+                        }}
+                      >
+                        <button
+                          type="button"
+                          className="ip-btn ip-btn--primary"
+                          onClick={handleSaveAttendanceChanges}
+                          disabled={
+                            !attendanceHasChanges ||
+                            attendanceSaving ||
+                            attendanceLoading
+                          }
+                        >
+                          {attendanceSaving ? "Saving…" : "Save attendance"}
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -3212,7 +3526,6 @@ export default function InternshipPage({
                       onChange={(e) => setReportDescription(e.target.value)}
                       className="ip-input ip-textarea"
                       placeholder="What was done today?"
-                      minLength={REPORT_DESCRIPTION_MIN_LENGTH}
                       rows={5}
                     />
                     <div
@@ -3220,7 +3533,8 @@ export default function InternshipPage({
                       style={{ textAlign: "end" }}
                       aria-live="polite"
                     >
-                      {reportDescriptionLength}/{REPORT_DESCRIPTION_MIN_LENGTH}
+                      {reportDescriptionWordCount}/
+                      {REPORT_DESCRIPTION_MIN_WORDS} words
                     </div>
                   </div>
                 </div>
@@ -6236,4 +6550,4 @@ const ipStyles = `
     .ip-plan-card { padding: 16px; }
     .ip-plan-text { font-size: 14px; line-height: 1.7; }
   }
-`;
+`;  

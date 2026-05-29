@@ -140,12 +140,40 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
 
   const getFacultyId = (faculty) => faculty?._id ?? faculty?.id ?? null;
 
-  const getSupervisorLabel = (faculty) => {
-    const supervisor =
-      faculty?.tutorID || faculty?.tutor || faculty?.supervisor;
+  const normalizeIdentityValue = (value) => String(value || "").trim().toLowerCase();
 
-    if (typeof supervisor === "string" && supervisor.trim()) {
-      const linkedUser = usersById[supervisor];
+  const collectTutorEntries = (value) => {
+    if (Array.isArray(value)) {
+      return value.flatMap(collectTutorEntries);
+    }
+
+    if (!value) return [];
+
+    return [value];
+  };
+
+  const getTutorIdentityValues = (tutor) => {
+    if (!tutor) return [];
+
+    if (typeof tutor === "string") {
+      const trimmed = tutor.trim();
+      return trimmed ? [trimmed] : [];
+    }
+
+    return [
+      tutor._id,
+      tutor.id,
+      tutor.userId,
+      tutor.login,
+      tutor.email,
+    ].filter(Boolean);
+  };
+
+  const getTutorDisplayLabel = (tutor) => {
+    if (!tutor) return "";
+
+    if (typeof tutor === "string") {
+      const linkedUser = usersById[tutor];
       if (linkedUser) {
         const linkedName = [
           linkedUser.name,
@@ -158,22 +186,81 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
         if (linkedName) return linkedName;
         if (linkedUser.login) return linkedUser.login;
       }
-      return supervisor;
+
+      return tutor.trim();
     }
 
-    if (supervisor && typeof supervisor === "object") {
-      const fullName = [
-        supervisor.name,
-        supervisor.surname,
-        supervisor.lastname,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .trim();
-      if (fullName) return fullName;
-      if (supervisor.login) return supervisor.login;
-      if (supervisor.email) return supervisor.email;
-    }
+    const fullName = [tutor.name, tutor.surname, tutor.lastname]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+    if (fullName) return fullName;
+    if (tutor.login) return tutor.login;
+    if (tutor.email) return tutor.email;
+    if (tutor._id) return String(tutor._id);
+    if (tutor.id) return String(tutor.id);
+
+    return "";
+  };
+
+  const getFacultyTutors = (faculty) => {
+    const tutors = [];
+    const seen = new Set();
+
+    [
+      faculty?.tutorIDs,
+      faculty?.tutors,
+      faculty?.tutorID,
+      faculty?.tutor,
+      faculty?.supervisor,
+    ]
+      .flatMap(collectTutorEntries)
+      .forEach((tutor) => {
+        const identityKey = normalizeIdentityValue(
+          typeof tutor === "string"
+            ? tutor
+            : tutor?._id || tutor?.id || tutor?.userId || tutor?.login || tutor?.email,
+        );
+
+        if (!identityKey || seen.has(identityKey)) return;
+        seen.add(identityKey);
+        tutors.push(tutor);
+      });
+
+    return tutors;
+  };
+
+  const getFacultyTutorIds = (faculty) => {
+    const ids = new Set();
+
+    getFacultyTutors(faculty).forEach((tutor) => {
+      getTutorIdentityValues(tutor).forEach((identityValue) => {
+        const normalized = normalizeIdentityValue(identityValue);
+        if (normalized) ids.add(normalized);
+      });
+    });
+
+    return Array.from(ids);
+  };
+
+  const getFacultyTutorLabels = (faculty) => {
+    const labels = [];
+    const seen = new Set();
+
+    getFacultyTutors(faculty).forEach((tutor) => {
+      const label = getTutorDisplayLabel(tutor).trim();
+      const normalized = normalizeIdentityValue(label);
+      if (!label || seen.has(normalized)) return;
+      seen.add(normalized);
+      labels.push(label);
+    });
+
+    return labels;
+  };
+
+  const getSupervisorLabel = (faculty) => {
+    const tutorLabels = getFacultyTutorLabels(faculty);
+    if (tutorLabels.length > 0) return tutorLabels.join(", ");
 
     const tutorName = [faculty?.tutorName, faculty?.supervisorName]
       .filter(Boolean)
@@ -185,13 +272,12 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
   };
 
   const getSupervisorRecord = (faculty) => {
-    const supervisor =
-      faculty?.tutorID || faculty?.tutor || faculty?.supervisor;
+    const tutor = getFacultyTutors(faculty)[0];
 
-    if (supervisor && typeof supervisor === "object") return supervisor;
+    if (tutor && typeof tutor === "object") return tutor;
 
-    if (typeof supervisor === "string" && supervisor.trim()) {
-      return usersById[supervisor] || null;
+    if (typeof tutor === "string" && tutor.trim()) {
+      return usersById[tutor] || null;
     }
 
     return null;
@@ -213,7 +299,8 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
   };
 
   const getSupervisorInitials = (faculty) => {
-    const supervisorLabel = getSupervisorLabel(faculty);
+    const tutorLabels = getFacultyTutorLabels(faculty);
+    const supervisorLabel = tutorLabels[0] || getSupervisorLabel(faculty);
     if (!supervisorLabel || supervisorLabel === "Not assigned") return "U";
     
     return supervisorLabel
@@ -293,33 +380,11 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
         user?._id,
         user?.id,
         user?.userId,
-      ].filter(Boolean).map(id => String(id).trim().toLowerCase());
-      
-      // Get tutor ID from faculty (could be string, object, or ID)
-      let facultyTutorIds = [];
-      const tutorId = faculty?.tutorID;
-      
-      if (tutorId) {
-        if (typeof tutorId === 'object' && tutorId._id) {
-          facultyTutorIds.push(String(tutorId._id).trim().toLowerCase());
-        } else if (typeof tutorId === 'object' && tutorId.id) {
-          facultyTutorIds.push(String(tutorId.id).trim().toLowerCase());
-        } else {
-          facultyTutorIds.push(String(tutorId).trim().toLowerCase());
-        }
-      }
-      
-      // Also check tutor field
-      const tutor = faculty?.tutor;
-      if (tutor) {
-        if (typeof tutor === 'object' && tutor._id) {
-          facultyTutorIds.push(String(tutor._id).trim().toLowerCase());
-        } else if (typeof tutor === 'object' && tutor.id) {
-          facultyTutorIds.push(String(tutor.id).trim().toLowerCase());
-        } else {
-          facultyTutorIds.push(String(tutor).trim().toLowerCase());
-        }
-      }
+        user?.login,
+        user?.email,
+      ].map((id) => normalizeIdentityValue(id)).filter(Boolean);
+
+      const facultyTutorIds = getFacultyTutorIds(faculty);
       
       // Check if any user ID matches any faculty tutor ID
       const hasMatch = userIds.some(userId => facultyTutorIds.includes(userId));
@@ -330,8 +395,7 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
           userIds,
           facultyTutorIds,
           hasMatch,
-          tutorId,
-          tutor,
+          tutors: getFacultyTutors(faculty),
         });
       }
       
@@ -829,6 +893,11 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
               const shortProgress = getShortProgress(faculty);
               const progressHue = Math.round((shortProgress / 100) * 120);
               const normalizedStatus = normalizeStatus(faculty.status);
+              const tutorLabels = getFacultyTutorLabels(faculty);
+              const hasMultipleTutors = tutorLabels.length > 1;
+              const tutorLabelText = hasMultipleTutors
+                ? `${tutorLabels.length} tutors appended`
+                : getSupervisorLabel(faculty);
               const statusClass =
                 normalizedStatus === "Pending"
                     ? "dw-card-badge--pending"
@@ -870,27 +939,33 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
                         </div>
                         <div className="dw-card-row">
                           Who:
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                            <div
-                              style={{
-                                width: 28,
-                                height: 28,
-                                borderRadius: 6,
-                                background: 'linear-gradient(135deg,#635bff,#06c9a0)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontFamily: 'Syne',
-                                fontWeight: 700,
-                                color: '#fff',
-                                fontSize: 11,
-                                flexShrink: 0,
-                              }}
-                            >
-                              {getSupervisorInitials(faculty)}
+                          {hasMultipleTutors ? (
+                            <strong style={{ display: 'block', marginTop: '4px' }}>
+                              {tutorLabelText}
+                            </strong>
+                          ) : (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                              <div
+                                style={{
+                                  width: 28,
+                                  height: 28,
+                                  borderRadius: 6,
+                                  background: 'linear-gradient(135deg,#635bff,#06c9a0)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontFamily: 'Syne',
+                                  fontWeight: 700,
+                                  color: '#fff',
+                                  fontSize: 11,
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {getSupervisorInitials(faculty)}
+                              </div>
+                              <strong>{tutorLabelText}</strong>
                             </div>
-                            <strong>{getSupervisorLabel(faculty)}</strong>
-                          </div>
+                          )}
                         </div>
                         <div className="dw-card-row">
                           Where:

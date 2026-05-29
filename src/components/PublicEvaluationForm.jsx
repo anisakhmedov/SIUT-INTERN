@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import InternshipEvaluationSchema from "../utils/evaluationSchema";
 import { postEvaluation } from "../utils/evaluationApi";
 
@@ -1561,9 +1561,17 @@ export default function PublicEvaluationForm() {
     [errors],
   );
 
-  const setPath = useCallback((path, value) => {
+  const [isPending, startTransition] = useTransition();
+
+  const setPath = useCallback((path, value, options = { lowPriority: true }) => {
     const parts = path.split(".");
-    setForm((current) => updateNestedValue(current, parts, value));
+    if (options.lowPriority) {
+      startTransition(() => {
+        setForm((current) => updateNestedValue(current, parts, value));
+      });
+    } else {
+      setForm((current) => updateNestedValue(current, parts, value));
+    }
   }, []);
 
   const handleSubmit = useCallback(async (e) => {
@@ -1639,7 +1647,7 @@ export default function PublicEvaluationForm() {
               <MemoDebouncedInput
                 className="fi"
                 value={form.studentInformation.fullname}
-                onChange={(v) => setPath("studentInformation.fullname", v)}
+                onChange={(v) => setPath("studentInformation.fullname", v, { lowPriority: true })}
               />
               {errors["studentInformation.fullname"] && (
                 <div style={{ color: "red" }}>
@@ -1653,7 +1661,7 @@ export default function PublicEvaluationForm() {
               <MemoDebouncedInput
                 className="fi"
                 value={form.studentInformation.studentID}
-                onChange={(v) => setPath("studentInformation.studentID", v)}
+                onChange={(v) => setPath("studentInformation.studentID", v, { lowPriority: true })}
               />
               {errors["studentInformation.studentID"] && (
                 <div style={{ color: "red" }}>
@@ -1667,7 +1675,7 @@ export default function PublicEvaluationForm() {
               <MemoDebouncedInput
                 className="fi"
                 value={form.studentInformation.degreeProgram}
-                onChange={(v) => setPath("studentInformation.degreeProgram", v)}
+                onChange={(v) => setPath("studentInformation.degreeProgram", v, { lowPriority: true })}
               />
               {errors["studentInformation.degreeProgram"] && (
                 <div style={{ color: "red" }}>
@@ -1683,7 +1691,7 @@ export default function PublicEvaluationForm() {
                 className="fi"
                 value={form.studentInformation.yearOfStudy}
                 onChange={(v) =>
-                  setPath("studentInformation.yearOfStudy", Number(v || 0))
+                  setPath("studentInformation.yearOfStudy", Number(v || 0), { lowPriority: true })
                 }
               />
               {errors["studentInformation.yearOfStudy"] && (
@@ -1699,7 +1707,7 @@ export default function PublicEvaluationForm() {
               errorKey="studentInformation.internshipStartDate"
               value={form.studentInformation.internshipStartDate}
               onChange={(nextValue) =>
-                setPath("studentInformation.internshipStartDate", nextValue)
+                setPath("studentInformation.internshipStartDate", nextValue, { lowPriority: true })
               }
               hint="Pick the first day of the internship period."
               error={errors["studentInformation.internshipStartDate"]}
@@ -1711,7 +1719,7 @@ export default function PublicEvaluationForm() {
               errorKey="studentInformation.internshipEndDate"
               value={form.studentInformation.internshipEndDate}
               onChange={(nextValue) =>
-                setPath("studentInformation.internshipEndDate", nextValue)
+                setPath("studentInformation.internshipEndDate", nextValue, { lowPriority: true })
               }
               hint="Pick the last day of the internship period."
               error={errors["studentInformation.internshipEndDate"]}
@@ -1725,7 +1733,7 @@ export default function PublicEvaluationForm() {
               <MemoDebouncedInput
                 className="fi"
                 value={form.companyInformation.companyName}
-                onChange={(v) => setPath("companyInformation.companyName", v)}
+                onChange={(v) => setPath("companyInformation.companyName", v, { lowPriority: true })}
               />
               {errors["companyInformation.companyName"] && (
                 <div style={{ color: "red" }}>
@@ -1739,7 +1747,7 @@ export default function PublicEvaluationForm() {
               <MemoDebouncedInput
                 className="fi"
                 value={form.companyInformation.department}
-                onChange={(v) => setPath("companyInformation.department", v)}
+                onChange={(v) => setPath("companyInformation.department", v, { lowPriority: true })}
               />
               {errors["companyInformation.department"] && (
                 <div style={{ color: "red" }}>
@@ -1754,7 +1762,7 @@ export default function PublicEvaluationForm() {
                 className="fi"
                 value={form.companyInformation.supervisorContact}
                 onChange={(v) =>
-                  setPath("companyInformation.supervisorContact", v)
+                  setPath("companyInformation.supervisorContact", v, { lowPriority: true })
                 }
               />
               {errors["companyInformation.supervisorContact"] && (
@@ -1783,7 +1791,7 @@ export default function PublicEvaluationForm() {
               commentLabel="Comments on professionalism"
               commentValue={form.professionalism.comments}
               onCommentChange={(value) =>
-                setPath("professionalism.comments", value)
+                setPath("professionalism.comments", value, { lowPriority: true })
               }
               errorPrefix={professionalismErrors}
             />
@@ -1797,7 +1805,7 @@ export default function PublicEvaluationForm() {
               onChange={(key, value) => setPath(`workEthic.${key}`, value)}
               commentLabel="Comment on work ethic"
               commentValue={form.workEthic.comments}
-              onCommentChange={(value) => setPath("workEthic.comments", value)}
+              onCommentChange={(value) => setPath("workEthic.comments", value, { lowPriority: true })}
               errorPrefix={workEthicErrors}
             />
 
@@ -1813,7 +1821,7 @@ export default function PublicEvaluationForm() {
               commentLabel="Comments on technical skills"
               commentValue={form.technicalSkills.comments}
               onCommentChange={(value) =>
-                setPath("technicalSkills.comments", value)
+                setPath("technicalSkills.comments", value, { lowPriority: true })
               }
               errorPrefix={technicalSkillsErrors}
             />
@@ -1830,7 +1838,7 @@ export default function PublicEvaluationForm() {
               commentLabel="Comments on communication skills"
               commentValue={form.communicationSkills.comments}
               onCommentChange={(value) =>
-                setPath("communicationSkills.comments", value)
+                setPath("communicationSkills.comments", value, { lowPriority: true })
               }
               errorPrefix={communicationSkillsErrors}
             />
@@ -1847,7 +1855,7 @@ export default function PublicEvaluationForm() {
               commentLabel="Comments on problem-solving skills"
               commentValue={form.problemSolvingSkills.comments}
               onCommentChange={(value) =>
-                setPath("problemSolvingSkills.comments", value)
+                setPath("problemSolvingSkills.comments", value, { lowPriority: true })
               }
               errorPrefix={problemSolvingSkillsErrors}
             />
@@ -1864,7 +1872,7 @@ export default function PublicEvaluationForm() {
               commentLabel="Comments on overall performance"
               commentValue={form.overallPerformance.comments}
               onCommentChange={(value) =>
-                setPath("overallPerformance.comments", value)
+                setPath("overallPerformance.comments", value, { lowPriority: true })
               }
               errorPrefix={overallPerformanceErrors}
             />
@@ -1880,7 +1888,7 @@ export default function PublicEvaluationForm() {
               <MemoDebouncedTextarea
                 className="fi"
                 value={form.openEndedQuestions.strengths || ""}
-                onChange={(v) => setPath("openEndedQuestions.strengths", v)}
+                onChange={(v) => setPath("openEndedQuestions.strengths", v, { lowPriority: true })}
               />
             </div>
             <div style={styles.fieldLast}>
@@ -1889,7 +1897,7 @@ export default function PublicEvaluationForm() {
                 className="fi"
                 value={form.openEndedQuestions.areasOfImprovement || ""}
                 onChange={(v) =>
-                  setPath("openEndedQuestions.areasOfImprovement", v)
+                  setPath("openEndedQuestions.areasOfImprovement", v, { lowPriority: true })
                 }
               />
             </div>
@@ -1899,7 +1907,7 @@ export default function PublicEvaluationForm() {
                 className="fi"
                 value={form.openEndedQuestions.projectTaskFeedback || ""}
                 onChange={(v) =>
-                  setPath("openEndedQuestions.projectTaskFeedback", v)
+                  setPath("openEndedQuestions.projectTaskFeedback", v, { lowPriority: true })
                 }
               />
             </div>
@@ -1909,7 +1917,7 @@ export default function PublicEvaluationForm() {
                 className="fi"
                 value={form.openEndedQuestions.learningAndGrowth || ""}
                 onChange={(v) =>
-                  setPath("openEndedQuestions.learningAndGrowth", v)
+                  setPath("openEndedQuestions.learningAndGrowth", v, { lowPriority: true })
                 }
               />
             </div>
@@ -1918,7 +1926,7 @@ export default function PublicEvaluationForm() {
               <MemoDebouncedTextarea
                 className="fi"
                 value={form.openEndedQuestions.teamDynamics || ""}
-                onChange={(v) => setPath("openEndedQuestions.teamDynamics", v)}
+                onChange={(v) => setPath("openEndedQuestions.teamDynamics", v, { lowPriority: true })}
               />
             </div>
             <div style={styles.field}>
@@ -1926,7 +1934,7 @@ export default function PublicEvaluationForm() {
               <MemoDebouncedTextarea
                 className="fi"
                 value={form.openEndedQuestions.adaptability || ""}
-                onChange={(v) => setPath("openEndedQuestions.adaptability", v)}
+                onChange={(v) => setPath("openEndedQuestions.adaptability", v, { lowPriority: true })}
               />
             </div>
             <div style={styles.field}>
@@ -1935,7 +1943,7 @@ export default function PublicEvaluationForm() {
                 className="fi"
                 value={form.openEndedQuestions.feedbackForStudent || ""}
                 onChange={(v) =>
-                  setPath("openEndedQuestions.feedbackForStudent", v)
+                  setPath("openEndedQuestions.feedbackForStudent", v, { lowPriority: true })
                 }
               />
             </div>
@@ -1945,7 +1953,7 @@ export default function PublicEvaluationForm() {
                 className="fi"
                 value={form.openEndedQuestions.feedbackForUniversity || ""}
                 onChange={(v) =>
-                  setPath("openEndedQuestions.feedbackForUniversity", v)
+                  setPath("openEndedQuestions.feedbackForUniversity", v, { lowPriority: true })
                 }
               />
             </div>

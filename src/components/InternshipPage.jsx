@@ -13,6 +13,7 @@ import { generateFinalReport } from "../utils/finalReportApi";
 import { getAuthTokenFromStorage } from "../utils/storageUtils";
 import PageState from "./PageState";
 import { TextAlignEnd } from "lucide-react";
+import AttendanceMobile from "./AttendanceMobile";
 
 const INTERNSHIP_STATUS_OPTIONS = ["Pending", "In Progress", "Completed"];
 
@@ -311,6 +312,17 @@ export default function InternshipPage({
   const [selectedStudentIds, setSelectedStudentIds] = useState([]);
   const [selectedStudentFaculty, setSelectedStudentFaculty] = useState("all");
   const attendanceScrollRef = useRef(null);
+
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const onResize = () => {
+      setIsMobile(typeof window !== "undefined" && window.innerWidth <= 760);
+    };
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
   const [selectedStudentYear, setSelectedStudentYear] = useState("all");
   const [showPlan, setShowPlan] = useState(true);
   const [showFinalReportModal, setShowFinalReportModal] = useState(false);
@@ -921,6 +933,14 @@ export default function InternshipPage({
       attachedStudents.map((student) => getStudentId(student)).filter(Boolean),
     );
   }, [attachedStudents, getStudentId]);
+
+  const mobileStudents = useMemo(() => {
+    return (attachedStudents || []).map((stu, sidx) => {
+      const sk = (typeof getStudentId === "function" ? getStudentId(stu) : null) || `key-${sidx}`;
+      const studentName = typeof getStudentName === "function" ? getStudentName(stu) : (stu?.name || `${stu?.surname || ""}`);
+      return { key: sk, name: studentName };
+    });
+  }, [attachedStudents, getStudentId, getStudentName]);
   const getOwnershipTokens = useCallback((value) => {
     const tokens = new Set();
 
@@ -3189,6 +3209,16 @@ export default function InternshipPage({
                     No attendance recorded yet.
                   </div>
                 ) : (
+                  isMobile ? (
+                    <AttendanceMobile
+                      students={mobileStudents}
+                      days={attendanceDays}
+                      onTogglePresent={handleTogglePresent}
+                      onSave={handleSaveAttendanceChanges}
+                      saving={attendanceSaving}
+                      hasChanges={attendanceHasChanges}
+                    />
+                  ) : (
                   <div className="ip-attendance-table-wrap">
                     <div className="ip-attendance-day">
                       <div
@@ -3339,7 +3369,7 @@ export default function InternshipPage({
                       </div>
                     </div>
                   </div>
-                )}
+                ))}
               </div>
             </div>
           </header>

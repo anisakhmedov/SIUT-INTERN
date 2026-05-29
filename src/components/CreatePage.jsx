@@ -978,7 +978,7 @@ export default function CreatePage({ onSubmit, onCancel, students = [], tutors: 
       days.push({
         dayNumber: String(i + 1),
         date: dateString,
-        approved: false,
+        approved: 1,
         shortReport: null,
         comments: [],
         images: []
@@ -1646,7 +1646,7 @@ export default function CreatePage({ onSubmit, onCancel, students = [], tutors: 
                         days.push({
                           dayNumber: String(i + 1),
                           date: dateString,
-                          approved: false,
+                          approved: 1,
                           shortReport: null,
                           comments: [],
                           images: []

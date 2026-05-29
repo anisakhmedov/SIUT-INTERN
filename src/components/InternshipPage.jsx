@@ -41,6 +41,91 @@ function hasReportContent(day) {
   );
 }
 
+function normalizeApprovalCode(value) {
+  const numericValue = Number(value);
+  if (numericValue === 2 || value === true) return 2;
+  if (numericValue === 3) return 3;
+
+  const rawValue = String(value || "").trim().toLowerCase();
+  if (rawValue === "approved") return 2;
+  if (rawValue === "rejected" || rawValue === "declined" || rawValue === "not approved") {
+    return 3;
+  }
+
+  return 1;
+}
+
+function isApprovedDay(day) {
+  return normalizeApprovalCode(day?.approved) === 2;
+}
+
+function isRejectedDay(day) {
+  return normalizeApprovalCode(day?.approved) === 3;
+}
+
+function normalizeFacultyDays(faculty) {
+  if (!faculty) return faculty;
+
+  return {
+    ...faculty,
+    days: Array.isArray(faculty.days)
+      ? faculty.days.map((day) => ({
+          ...day,
+          approved: normalizeApprovalCode(day?.approved),
+        }))
+      : faculty.days,
+  };
+}
+
+function getLocalDateKey(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function isMissedDay(day) {
+  const dayDate = String(day?.date || "").slice(0, 10);
+  if (!dayDate) return false;
+
+  return dayDate < getLocalDateKey();
+}
+
+function getDayReportStatus(day) {
+  if (isApprovedDay(day)) return "approved";
+  if (isRejectedDay(day)) return "rejected";
+
+  const rejectionFlags = [
+    day?.rejected,
+    day?.isRejected,
+    day?.reportRejected,
+    day?.shortReport?.rejected,
+    day?.shortReport?.isRejected,
+  ];
+  const rejectionStatusValues = [
+    day?.status,
+    day?.reportStatus,
+    day?.reviewStatus,
+    day?.shortReport?.status,
+    day?.shortReport?.approvalStatus,
+  ]
+    .map((value) => String(value || "").trim().toLowerCase())
+    .filter(Boolean);
+
+  if (
+    rejectionFlags.some(Boolean) ||
+    rejectionStatusValues.some(
+      (value) => value === "rejected" || value === "declined",
+    )
+  ) {
+    return "rejected";
+  }
+
+  if (hasReportContent(day)) return "submitted";
+  if (isMissedDay(day)) return "missed";
+  return "empty";
+}
+
 function calculateProgressPercent(days) {
   const dayList = Array.isArray(days) ? days : [];
   if (dayList.length === 0) return 0;
@@ -353,7 +438,7 @@ export default function InternshipPage({
           return data;
         }
 
-        setFaculty(data);
+        setFaculty(normalizeFacultyDays(data));
         setError("");
         return data;
       } catch (err) {
@@ -367,7 +452,7 @@ export default function InternshipPage({
     [facultyId, isInternshipEditMode, submitting],
   );
 
-  const fetchAttendance = useCallback(async () => {
+  const fetchAttendance = useCallback(async () => { 
     if (!facultyId) return;
     setAttendanceLoading(true);
     setAttendanceError("");
@@ -1138,6 +1223,10 @@ export default function InternshipPage({
     [progressPercent],
   );
   const currentDay = days[dayIndex];
+  const currentDayApprovalCode = useMemo(
+    () => normalizeApprovalCode(currentDay?.approved),
+    [currentDay],
+  );
   const currentDayImageUrls = useMemo(
     () => extractImageUrls(currentDay),
     [extractImageUrls, currentDay],
@@ -1389,7 +1478,7 @@ export default function InternshipPage({
       return {
         dayNumber: day?.dayNumber || index + 1,
         date: day?.date || null,
-        approved: Boolean(day?.approved),
+        approved: normalizeApprovalCode(day?.approved),
         shortReport: {
           title:
             typeof day?.shortReport?.title === "string"
@@ -1594,8 +1683,9 @@ export default function InternshipPage({
       }
 
       try {
+        const normalizedFacultySnapshot = normalizeFacultyDays(facultySnapshot);
         await patch(`/faculty/${facultyId}`, {
-          ...facultySnapshot,
+          ...normalizedFacultySnapshot,
           progressAll: expectedLabel,
         });
         setFaculty((prev) =>
@@ -1682,7 +1772,7 @@ export default function InternshipPage({
         if (!nextLocation) throw new Error("Location is required.");
 
         const payload = {
-          ...faculty,
+          ...normalizeFacultyDays(faculty),
           name: nextName,
           company: nextCompany,
           location: nextLocation,
@@ -1868,7 +1958,7 @@ export default function InternshipPage({
           ...currentDay,
           dayNumber: currentDay.dayNumber,
           date: normalizedDayDate,
-          approved: currentDay.approved,
+          approved: normalizeApprovalCode(currentDay.approved),
           images: finalImageUrls,
         };
 
@@ -1996,7 +2086,12 @@ export default function InternshipPage({
 
   const handleApprove = useCallback(async () => {
     if (!currentDay) return;
-    await updateDay(currentDay, { ...currentDay, approved: true }, dayIndex);
+    await updateDay(currentDay, { ...currentDay, approved: 2 }, dayIndex);
+  }, [currentDay, updateDay, dayIndex]);
+
+  const handleUnapprove = useCallback(async () => {
+    if (!currentDay) return;
+    await updateDay(currentDay, { ...currentDay, approved: 3 }, dayIndex);
   }, [currentDay, updateDay, dayIndex]);
 
   const handlePostComment = useCallback(
@@ -2067,7 +2162,7 @@ export default function InternshipPage({
       const newDay = {
         dayNumber: String((days.length || 0) + 1),
         date: newDayDate,
-        approved: false,
+        approved: 1,
         shortReport: null,
         comments: [],
       };
@@ -2376,9 +2471,13 @@ export default function InternshipPage({
                     : "No day selected"}
                 </span>
                 <span
-                  className={`ip-status-pill ${currentDay?.approved ? "ip-status-pill--ok" : "ip-status-pill--warn"}`}
+                  className={`ip-status-pill ${currentDayApprovalCode === 2 ? "ip-status-pill--ok" : currentDayApprovalCode === 3 ? "ip-status-pill--warn" : "ip-status-pill--neutral"}`}
                 >
-                  {currentDay?.approved ? "Approved" : "Pending review"}
+                  {currentDayApprovalCode === 2
+                    ? "Approved"
+                    : currentDayApprovalCode === 3
+                      ? "Not approved"
+                      : "No decision"}
                 </span>
                 <span
                   className={`ip-status-pill ip-status-pill--internship-${normalizeInternshipStatus(baseInfoStatus).toLowerCase().replace(/\s+/g, "-")}`}
@@ -3358,14 +3457,24 @@ export default function InternshipPage({
           {(canApprove || canExport) && (
             <div className="ip-actions">
               {canApprove && (
-                <button
-                  type="button"
-                  className="ip-btn ip-btn--primary"
-                  disabled={!currentDay || submitting || currentDay?.approved}
-                  onClick={handleApprove}
-                >
-                  Approve report
-                </button>
+                <>
+                  <button
+                    type="button"
+                    className="ip-btn ip-btn--primary"
+                    disabled={!currentDay || submitting || currentDayApprovalCode === 2}
+                    onClick={handleApprove}
+                  >
+                    Approve report
+                  </button>
+                  <button
+                    type="button"
+                    className="ip-btn ip-btn--danger"
+                    disabled={!currentDay || submitting || currentDayApprovalCode !== 2}
+                    onClick={handleUnapprove}
+                  >
+                    Not approved
+                  </button>
+                </>
               )}
               {canExport && (
                 <button
@@ -3709,42 +3818,54 @@ export default function InternshipPage({
 
                 <div className="ip-carousel" ref={dayCarouselRef}>
                   <div className="ip-carousel-track">
-                    {days.map((day, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        ref={(el) => {
-                          dayItemRefs.current[idx] = el;
-                        }}
-                        className={`ip-carousel-item ${dayIndex === idx ? "ip-carousel-item--active" : ""}`}
-                        onClick={() => attemptDayChange(idx)}
-                      >
-                        <span className="ip-carousel-day-number">
-                          Day {day.dayNumber}
-                        </span>
-                        <span className="ip-carousel-day-date">
-                          {day.date || "No date"}
-                        </span>
-                        {day.approved && (
-                          <span className="ip-carousel-approved-badge">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="12"
-                              height="12"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="3"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg>
-                            Approved
+                    {days.map((day, idx) => {
+                      const dayStatus = getDayReportStatus(day);
+                      const dayStatusLabel = {
+                        empty: "Empty",
+                        submitted: "Sent",
+                        missed: "Missed",
+                        rejected: "Rejected",
+                        approved: "Approved",
+                      }[dayStatus];
+
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          ref={(el) => {
+                            dayItemRefs.current[idx] = el;
+                          }}
+                          className={`ip-carousel-item ip-carousel-item--${dayStatus} ${dayIndex === idx ? "ip-carousel-item--active" : ""}`}
+                          title={`Day ${day.dayNumber}: ${dayStatusLabel}`}
+                          onClick={() => attemptDayChange(idx)}
+                        >
+                          <span className="ip-carousel-day-number">
+                            Day {day.dayNumber}
                           </span>
-                        )}
-                      </button>
-                    ))}
+                          <span className="ip-carousel-day-date">
+                            {day.date || "No date"}
+                          </span>
+                          <span className={`ip-carousel-status-badge ip-carousel-status-badge--${dayStatus}`}>
+                            {dayStatus === "approved" && (
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="3"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                              </svg>
+                            )}
+                            {dayStatusLabel}
+                          </span>
+                        </button>
+                      );
+                      })}
 
                     {canWriteReport && (
                       <button
@@ -3814,9 +3935,9 @@ export default function InternshipPage({
                     </div>
                     <div className="ip-day-header-actions">
                       <span
-                        className={`ip-day-badge ${currentDay.approved ? "ip-day-badge--ok" : "ip-day-badge--pending"}`}
+                        className={`ip-day-badge ${currentDayApprovalCode === 2 ? "ip-day-badge--ok" : currentDayApprovalCode === 3 ? "ip-day-badge--danger" : "ip-day-badge--neutral"}`}
                       >
-                        {currentDay.approved ? (
+                        {currentDayApprovalCode === 2 ? (
                           <>
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
@@ -3829,6 +3950,25 @@ export default function InternshipPage({
                               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
                             </svg>
                             Approved
+                          </>
+                        ) : currentDayApprovalCode === 3 ? (
+                          <>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <circle cx="12" cy="12" r="10"></circle>
+                              <line x1="15" y1="9" x2="9" y2="15"></line>
+                              <line x1="9" y1="9" x2="15" y2="15"></line>
+                            </svg>
+                            Not approved
                           </>
                         ) : (
                           <>
@@ -3845,7 +3985,7 @@ export default function InternshipPage({
                               <line x1="12" y1="8" x2="12" y2="12" />
                               <line x1="12" y1="16" x2="12.01" y2="16" />
                             </svg>
-                            Pending
+                            No decision
                           </>
                         )}
                       </span>
@@ -4807,6 +4947,7 @@ const ipStyles = `
   }
   .ip-status-pill--ok { background: rgba(6,201,160,.10); color: #047857; border-color: rgba(6,201,160,.18); }
   .ip-status-pill--warn { background: rgba(245,166,35,.12); color: #b45309; border-color: rgba(245,166,35,.18); }
+  .ip-status-pill--neutral { background: rgba(255,255,255,.88); color: var(--t2, #5a6278); border-color: rgba(0,0,0,.10); }
   .ip-status-pill--internship-pending {
     background: rgba(245,166,35,.14);
     color: #9a4f00;
@@ -5632,6 +5773,17 @@ const ipStyles = `
     color: var(--t1, #0c0e18);
   }
   .ip-btn--secondary:hover:not(:disabled) { background: rgba(0,0,0,.04); }
+  .ip-btn--danger {
+    border: 1px solid rgba(239,68,68,.2);
+    background: linear-gradient(135deg, rgba(239,68,68,.14), rgba(255,255,255,.95));
+    color: #b91c1c;
+    box-shadow: 0 10px 24px rgba(239,68,68,.10);
+  }
+  .ip-btn--danger:hover:not(:disabled) {
+    background: linear-gradient(135deg, rgba(239,68,68,.18), rgba(255,255,255,.98));
+    box-shadow: 0 14px 28px rgba(239,68,68,.14);
+    transform: translateY(-1px);
+  }
   .ip-days { margin-bottom: clamp(16px,3vw,24px); }
   .ip-day-nav {
     display: flex;
@@ -5735,6 +5887,27 @@ const ipStyles = `
   }
   .ip-day-badge--pending svg {
     animation: pulse-info 2s ease-in-out infinite;
+  }
+  .ip-day-badge--neutral {
+    background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(246,248,252,.96));
+    color: var(--t2, #5a6278);
+    border: 1px solid rgba(0,0,0,.10);
+    box-shadow: inset 0 1px 2px rgba(255,255,255,.7), 0 2px 6px rgba(15,23,42,.06);
+  }
+  .ip-day-badge--neutral:hover {
+    background: linear-gradient(135deg, rgba(255,255,255,.99), rgba(246,248,252,.99));
+    transform: translateY(-1px);
+  }
+  .ip-day-badge--danger {
+    background: linear-gradient(135deg, rgba(239,68,68,.14), rgba(239,68,68,.06));
+    color: #b91c1c;
+    border: 1px solid rgba(239,68,68,.28);
+    box-shadow: inset 0 1px 2px rgba(239,68,68,.08), 0 2px 6px rgba(239,68,68,.10);
+  }
+  .ip-day-badge--danger:hover {
+    background: linear-gradient(135deg, rgba(239,68,68,.18), rgba(239,68,68,.08));
+    border-color: rgba(239,68,68,.38);
+    transform: translateY(-1px);
   }
   .ip-day-edit-btn {
     display: inline-flex;
@@ -6354,9 +6527,34 @@ const ipStyles = `
     position: relative;
     flex: 0 0 clamp(150px, 28vw, 220px);
   }
+  .ip-carousel-item--empty {
+    border-color: rgba(99,91,255,.1);
+    background: rgba(255,255,255,.7);
+    box-shadow: none;
+  }
+  .ip-carousel-item--submitted {
+    border-color: rgba(249, 115, 22, .36);
+    background: linear-gradient(135deg, rgba(249, 115, 22, .14), rgba(255, 255, 255, .96));
+    box-shadow: 0 10px 24px rgba(249, 115, 22, .14);
+  }
+  .ip-carousel-item--missed {
+    border-color: rgba(239, 68, 68, .42);
+    background: linear-gradient(135deg, rgba(239, 68, 68, .16), rgba(255, 255, 255, .96));
+    box-shadow: 0 10px 24px rgba(239, 68, 68, .16);
+  }
+  .ip-carousel-item--rejected {
+    border-color: rgba(239, 68, 68, .34);
+    background: linear-gradient(135deg, rgba(239, 68, 68, .14), rgba(255, 255, 255, .96));
+    box-shadow: 0 10px 24px rgba(239, 68, 68, .14);
+  }
+  .ip-carousel-item--approved {
+    border-color: rgba(34, 197, 94, .34);
+    background: linear-gradient(135deg, rgba(34, 197, 94, .14), rgba(255, 255, 255, .96));
+    box-shadow: 0 10px 24px rgba(34, 197, 94, .14);
+  }
   .ip-carousel-item:hover {
     border-color: rgba(99,91,255,.3);
-    background: rgba(255,255,255,.95);
+    background: rgba(255,255,255,.98);
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(99,91,255,.1);
   }
@@ -6364,6 +6562,21 @@ const ipStyles = `
     border-color: rgba(99,91,255,.5);
     background: linear-gradient(135deg, rgba(99,91,255,.12), rgba(6,201,160,.08));
     box-shadow: 0 8px 24px rgba(99,91,255,.15);
+  }
+  .ip-carousel-item--active.ip-carousel-item--empty {
+    box-shadow: 0 12px 28px rgba(245, 158, 11, .18);
+  }
+  .ip-carousel-item--active.ip-carousel-item--submitted {
+    box-shadow: 0 12px 28px rgba(249, 115, 22, .2);
+  }
+  .ip-carousel-item--active.ip-carousel-item--missed {
+    box-shadow: 0 12px 28px rgba(239, 68, 68, .2);
+  }
+  .ip-carousel-item--active.ip-carousel-item--rejected {
+    box-shadow: 0 12px 28px rgba(239, 68, 68, .2);
+  }
+  .ip-carousel-item--active.ip-carousel-item--approved {
+    box-shadow: 0 12px 28px rgba(34, 197, 94, .2);
   }
   .ip-carousel-day-number {
     font-size: 13px;
@@ -6374,29 +6587,65 @@ const ipStyles = `
     font-size: 11px;
     color: var(--t3, #9ba3bb);
   }
-  .ip-carousel-approved-badge {
+  .ip-carousel-status-badge {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 4px;
+    min-height: 22px;
     font-size: 10px;
     font-weight: 700;
-    background: linear-gradient(135deg, rgba(6,201,160,.15), rgba(6,201,160,.08));
-    color: #047857;
     padding: 4px 8px;
     border-radius: 6px;
-    border: 1px solid rgba(6,201,160,.25);
     margin-top: 4px;
     white-space: nowrap;
-    box-shadow: 0 2px 4px rgba(6,201,160,.08);
+    box-shadow: 0 2px 4px rgba(15,23,42,.08);
     transition: all .2s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
-  .ip-carousel-item:hover .ip-carousel-approved-badge {
+  .ip-carousel-status-badge--empty {
+    background: rgba(255,255,255,.9);
+    color: var(--t3, #9ba3bb);
+    border: 1px solid rgba(99,91,255,.12);
+  }
+  .ip-carousel-status-badge--submitted {
+    background: linear-gradient(135deg, rgba(249, 115, 22, .18), rgba(249, 115, 22, .08));
+    color: #c2410c;
+    border: 1px solid rgba(249, 115, 22, .24);
+  }
+  .ip-carousel-status-badge--missed {
+    background: linear-gradient(135deg, rgba(239, 68, 68, .18), rgba(239, 68, 68, .08));
+    color: #b91c1c;
+    border: 1px solid rgba(239, 68, 68, .24);
+  }
+  .ip-carousel-status-badge--rejected {
+    background: linear-gradient(135deg, rgba(239, 68, 68, .18), rgba(239, 68, 68, .08));
+    color: #b91c1c;
+    border: 1px solid rgba(239, 68, 68, .24);
+  }
+  .ip-carousel-status-badge--approved {
+    background: linear-gradient(135deg, rgba(6,201,160,.15), rgba(6,201,160,.08));
+    color: #047857;
+    border: 1px solid rgba(6,201,160,.25);
+    box-shadow: 0 2px 4px rgba(6,201,160,.08);
+  }
+  .ip-carousel-item:hover .ip-carousel-status-badge--empty {
+    box-shadow: 0 4px 8px rgba(245, 158, 11, .12);
+  }
+  .ip-carousel-item:hover .ip-carousel-status-badge--submitted {
+    box-shadow: 0 4px 8px rgba(249, 115, 22, .14);
+  }
+  .ip-carousel-item:hover .ip-carousel-status-badge--missed {
+    box-shadow: 0 4px 8px rgba(239, 68, 68, .14);
+  }
+  .ip-carousel-item:hover .ip-carousel-status-badge--rejected {
+    box-shadow: 0 4px 8px rgba(239, 68, 68, .14);
+  }
+  .ip-carousel-item:hover .ip-carousel-status-badge--approved {
     background: linear-gradient(135deg, rgba(6,201,160,.2), rgba(6,201,160,.12));
     border-color: rgba(6,201,160,.4);
     box-shadow: 0 4px 8px rgba(6,201,160,.12);
   }
-  .ip-carousel-item--active .ip-carousel-approved-badge {
+  .ip-carousel-item--active .ip-carousel-status-badge--approved {
     background: linear-gradient(135deg, rgba(6,201,160,.25), rgba(6,201,160,.15));
     border-color: rgba(6,201,160,.5);
     box-shadow: 0 4px 12px rgba(6,201,160,.15);

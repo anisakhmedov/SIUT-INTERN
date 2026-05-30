@@ -9,46 +9,38 @@ function buildUrl(path) {
   return `${BASE.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
 }
 
-export async function postEvaluation(payload) {
-  try {
-    const res = await fetch(buildUrl('/internship-evaluations'), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
+export async function postEvaluation(payload, endpoint = '/internship-evaluations') {
+  const res = await fetch(buildUrl(endpoint), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
 
-    if (!res.ok) {
-      const text = await res.text();
-      const ct = res.headers.get('content-type') || '';
-      if (ct.includes('application/json')) {
-        try {
-          const j = JSON.parse(text);
-          throw new Error(j.message || JSON.stringify(j));
-        } catch (e) {
-          throw new Error(text || `Request failed with status ${res.status}`);
-        }
-      }
-      throw new Error(text || `Request failed with status ${res.status}`);
-    }
-
+  if (!res.ok) {
+    const text = await res.text();
     const ct = res.headers.get('content-type') || '';
-    if (!ct.includes('application/json')) {
-      const text = await res.text();
-      throw new Error(`Expected JSON response but received: ${text.slice(0, 200)}`);
+    if (ct.includes('application/json')) {
+      try {
+        const j = JSON.parse(text);
+        throw new Error(j.message || JSON.stringify(j));
+      } catch {
+        throw new Error(text || `Request failed with status ${res.status}`);
+      }
     }
-
-    return await res.json();
-  } catch (err) {
-    throw err;
+    throw new Error(text || `Request failed with status ${res.status}`);
   }
+
+  const ct = res.headers.get('content-type') || '';
+  if (!ct.includes('application/json')) {
+    const text = await res.text();
+    throw new Error(`Expected JSON response but received: ${text.slice(0, 200)}`);
+  }
+
+  return await res.json();
 }
 
 export default { postEvaluation };
 
-export async function getEvaluations() {
-  try {
-    return await get('/internship-evaluations');
-  } catch (err) {
-    throw err;
-  }
+export async function getEvaluations(endpoint = '/internship-evaluations') {
+  return await get(endpoint);
 }

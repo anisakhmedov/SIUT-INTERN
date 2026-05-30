@@ -371,7 +371,7 @@ function CustomDateRangePicker({ startDate, endDate, onChange, daysCount }) {
       `}</style>
 
       <div className="cdrp-input-wrapper">
-        <Calendar className="cdrp-icon" size={16} />
+        <Calendar className="cdrp-icon" size={14} />
         <input
           ref={inputRef}
           type="text"
@@ -396,7 +396,7 @@ function CustomDateRangePicker({ startDate, endDate, onChange, daysCount }) {
               setIsOpen(false);
             }}
           >
-            <X size={16} />
+            <X size={14} />
           </button>
         )}
       </div>
@@ -405,13 +405,13 @@ function CustomDateRangePicker({ startDate, endDate, onChange, daysCount }) {
         <div ref={popupRef} className="cdrp-popup" data-position={popupPosition}>
           <div className="cdrp-header">
             <button type="button" className="cdrp-nav-btn" onClick={handlePrevMonth}>
-              <ChevronLeft size={16} />
+              <ChevronLeft size={14} />
             </button>
             <span className="cdrp-month-year">
               {currentMonth.toLocaleString('en-US', { month: 'long', year: 'numeric' })}
             </span>
             <button type="button" className="cdrp-nav-btn" onClick={handleNextMonth}>
-              <ChevronRight size={16} />
+              <ChevronRight size={14} />
             </button>
           </div>
 

@@ -1,9 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { GraduationCap } from 'lucide-react';
+import { ArrowRight, Building2, GraduationCap, Sparkles } from 'lucide-react';
 import { post, setAuthSession } from '../utils/apiClient';
 import { toast } from '../utils/toast';
 
-export default function LoginPage({ onLogin, onUserSet, sessionMessage = '', onOpenPublicEvaluation }) {
+export default function LoginPage({
+  onLogin,
+  onUserSet,
+  sessionMessage = '',
+  onOpenPublicEvaluation,
+  onOpenCompanyEvaluation,
+}) {
   const [f, setF] = useState({ login: '', password: '' });
   const [loading, setLoading] = useState(false);
 
@@ -12,6 +18,69 @@ export default function LoginPage({ onLogin, onUserSet, sessionMessage = '', onO
       toast.warning(sessionMessage);
     }
   }, [sessionMessage]);
+
+  const publicButtonBase = {
+    width: '100%',
+    minHeight: 66,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 14,
+    padding: '14px 16px',
+    borderRadius: 16,
+    cursor: 'pointer',
+    background:
+      'linear-gradient(135deg, rgba(255,255,255,.96), rgba(255,255,255,.84))',
+    color: '#0c0e18',
+    boxShadow: '0 12px 30px rgba(2,6,23,.12)',
+    transition: 'transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease',
+    textAlign: 'left',
+  };
+
+  const publicButtonLeft = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    minWidth: 0,
+  };
+
+  const publicButtonIcon = {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    boxShadow: 'inset 0 1px 0 rgba(255,255,255,.45)',
+  };
+
+  const publicButtonTitle = {
+    fontSize: 14,
+    fontWeight: 800,
+    lineHeight: 1.2,
+    letterSpacing: '-.2px',
+    color: '#0c0e18',
+  };
+
+  const publicButtonSubtitle = {
+    marginTop: 3,
+    fontSize: 12,
+    color: 'rgba(12,14,24,.62)',
+    lineHeight: 1.45,
+  };
+
+  const publicButtonArrow = {
+    width: 32,
+    height: 32,
+    borderRadius: 999,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    background: 'rgba(12,14,24,.05)',
+    color: 'rgba(12,14,24,.72)',
+  };
 
   const go = async () => {
     if (!f.login || !f.password) {
@@ -185,15 +254,70 @@ export default function LoginPage({ onLogin, onUserSet, sessionMessage = '', onO
           )}
           {loading ? 'Signing in…' : 'Sign In to Dashboard'}
         </button>
-        <div style={{ marginTop: 12, textAlign: 'center' }}>
+        <div style={{ marginTop: 16, display: 'grid', gap: 10 }}>
           <button
             className="lpublic"
             onClick={() => {
               if (onOpenPublicEvaluation) onOpenPublicEvaluation();
             }}
             type="button"
+            style={{
+              ...publicButtonBase,
+              background:
+                'linear-gradient(135deg, rgba(99,91,255,.18), rgba(255,255,255,.96))',
+              borderColor: 'rgba(99,91,255,.18)',
+            }}
           >
-            Open for students
+            <span style={publicButtonLeft}>
+              <span
+                style={{
+                  ...publicButtonIcon,
+                  background: 'linear-gradient(135deg, #635bff, #8a84ff)',
+                  color: '#fff',
+                }}
+              >
+                <GraduationCap size={18} />
+              </span>
+              <span style={{ display: 'grid', gap: 1 }}>
+                <span style={publicButtonTitle}>Open for students</span>
+                <span style={publicButtonSubtitle}>Student internship evaluation form</span>
+              </span>
+            </span>
+            <span style={publicButtonArrow}>
+              <ArrowRight size={16} />
+            </span>
+          </button>
+          <button
+            className="lpublic"
+            onClick={() => {
+              if (onOpenCompanyEvaluation) onOpenCompanyEvaluation();
+            }}
+            type="button"
+            style={{
+              ...publicButtonBase,
+              background:
+                'linear-gradient(135deg, rgba(6,201,160,.18), rgba(255,255,255,.96))',
+              borderColor: 'rgba(6,201,160,.18)',
+            }}
+          >
+            <span style={publicButtonLeft}>
+              <span
+                style={{
+                  ...publicButtonIcon,
+                  background: 'linear-gradient(135deg, #06c9a0, #48e1bc)',
+                  color: '#fff',
+                }}
+              >
+                <Building2 size={18} />
+              </span>
+              <span style={{ display: 'grid', gap: 1 }}>
+                <span style={publicButtonTitle}>Open company evaluation form</span>
+                <span style={publicButtonSubtitle}>Supervisor submission and review form</span>
+              </span>
+            </span>
+            <span style={publicButtonArrow}>
+              <ArrowRight size={16} />
+            </span>
           </button>
         </div>
       </div>

@@ -9,9 +9,9 @@ const styles = {
     padding: "12px clamp(16px, 3vw, 32px) 32px",
   },
   hero: {
-    marginBottom: 24,
-    padding: "24px 24px 22px",
-    borderRadius: 24,
+    marginBottom: 20,
+    padding: "28px 28px 24px",
+    borderRadius: 26,
     background:
       "linear-gradient(135deg, rgba(99,91,255,.10), rgba(6,201,160,.08))",
     border: "1px solid rgba(99,91,255,.14)",
@@ -46,13 +46,17 @@ const styles = {
   },
   form: {
     display: "grid",
-    gap: 22,
+    gap: 20,
   },
   card: {
-    padding: "20px 0 20px",
-    borderRadius: 22,
+    padding: 24,
+    borderRadius: 24,
     display: "grid",
-    gap: 22,
+    gap: 18,
+    background: "rgba(255,255,255,.88)",
+    border: "1px solid rgba(255,255,255,.92)",
+    boxShadow: "0 10px 24px rgba(12,14,24,.06)",
+    overflow: "visible",
   },
   successShell: {
     minHeight: "calc(100vh - 80px)",
@@ -69,7 +73,8 @@ const styles = {
       "linear-gradient(180deg, rgba(255,255,255,.98), rgba(247,249,255,.98))",
     border: "1px solid rgba(99,91,255,.14)",
     boxShadow: "0 24px 70px rgba(12,14,24,.12)",
-    position: "relative",
+    animation: "fadeUp .45s cubic-bezier(.22,1,.36,1) both",
+    transition: "transform .22s ease, box-shadow .22s ease",
     overflow: "hidden",
   },
   successGlow: {
@@ -87,32 +92,34 @@ const styles = {
     gap: 10,
     padding: "7px 14px",
     borderRadius: 999,
-    background: "rgba(34,197,94,.10)",
     border: "1px solid rgba(34,197,94,.18)",
     color: "#166534",
     fontSize: 12,
     fontWeight: 800,
     letterSpacing: ".08em",
     textTransform: "uppercase",
-    marginBottom: 18,
+    animation: "fadeUp .32s cubic-bezier(.22,1,.36,1) both",
+    transition: "transform .18s ease, box-shadow .18s ease",
   },
   successMark: {
     width: 64,
     height: 64,
     borderRadius: 20,
+    margin: "20px 0",
     display: "grid",
     placeItems: "center",
     background: "linear-gradient(135deg, #635bff, #06c9a0)",
     color: "#fff",
     fontSize: 30,
     boxShadow: "0 16px 32px rgba(99,91,255,.28)",
-    marginBottom: 18,
+    animation: "fadeUp .42s cubic-bezier(.22,1,.36,1) both",
   },
   successTitle: {
     margin: 0,
     fontSize: "clamp(30px, 5vw, 52px)",
     lineHeight: 1,
     color: "var(--t1)",
+    animation: "fadeUp .42s cubic-bezier(.22,1,.36,1) both",
   },
   successText: {
     margin: "14px 0 0",
@@ -123,9 +130,9 @@ const styles = {
   },
   successMeta: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
     gap: 12,
     marginTop: 28,
+    animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both",
   },
   successMetaItem: {
     padding: "14px 16px",
@@ -209,15 +216,20 @@ const styles = {
     transform: "translateY(1px)",
   },
   commentLabel: {
-    marginTop: -5,
-    marginBottom: -10,
+    marginTop: 4,
+    marginBottom: 2,
   },
   comment: {
     minHeight: 112,
     resize: "vertical",
   },
+  field: {
+    display: "grid",
+    // gap: 10,
+  },
   fieldLast: {
-    marginBottom: 0,
+    display: "grid",
+    // gap: 10,
   },
   ratingStack: {
     display: "grid",
@@ -309,14 +321,15 @@ const styles = {
     fontWeight: 900,
   },
   fieldHint: {
-    marginTop: 8,
+    // marginTop: 8,
     color: "var(--t2)",
     fontSize: 12,
     lineHeight: 1.45,
   },
   pickerField: {
     position: "relative",
-    // marginBottom: 14,
+    display: "grid",
+    gap: 6,
   },
   pickerButton: {
     width: "100%",
@@ -324,8 +337,8 @@ const styles = {
     alignItems: "center",
     justifyContent: "space-between",
     gap: 14,
-    padding: "11px 13px",
-    borderRadius: 14,
+    padding: "12px 14px",
+    borderRadius: 16,
     border: "1.5px solid rgba(0,0,0,.09)",
     background: "linear-gradient(180deg, #fff, rgba(248,250,252,.98))",
     boxShadow: "0 8px 18px rgba(12,14,24,.05)",
@@ -369,16 +382,21 @@ const styles = {
     flexShrink: 0,
   },
   pickerMenu: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    top: "calc(100% + 8px)",
-    zIndex: 20,
+    position: "static",
+    width: "100%",
+    marginTop: 4,
     borderRadius: 16,
-    overflow: "hidden",
+    maxHeight: 340,
+    overflowY: "auto",
     background: "rgba(255,255,255,.98)",
     border: "1px solid rgba(99,91,255,.16)",
     boxShadow: "0 24px 50px rgba(12,14,24,.18)",
+  },
+  pickerMenuCompact: {
+    marginTop: 4,
+    borderRadius: 14,
+    maxHeight: "min(52vh, 320px)",
+    boxShadow: "0 18px 34px rgba(12,14,24,.16)",
   },
   pickerOption: {
     width: "100%",
@@ -427,14 +445,16 @@ const styles = {
   },
   dateShell: {
     position: "relative",
+    display: "grid",
+    gap: 6,
   },
   dateTrigger: {
     width: "100%",
     display: "flex",
     alignItems: "center",
-    gap: 12,
-    padding: "11px 13px",
-    borderRadius: 14,
+    gap: 10,
+    padding: "8px 10px",
+    borderRadius: 12,
     border: "1.5px solid rgba(0,0,0,.09)",
     background: "linear-gradient(180deg, #fff, rgba(248,250,252,.98))",
     boxShadow: "0 8px 18px rgba(12,14,24,.05)",
@@ -443,15 +463,15 @@ const styles = {
     fontFamily: "Montserrat, sans-serif",
   },
   dateIcon: {
-    width: 30,
-    height: 30,
-    borderRadius: 10,
+    width: 22,
+    height: 22,
+    borderRadius: 8,
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
     background: "rgba(245,158,11,.12)",
     color: "#b45309",
-    fontSize: 16,
+    fontSize: 13,
     flexShrink: 0,
   },
   dateInput: {
@@ -461,27 +481,32 @@ const styles = {
     width: "100%",
     padding: 0,
     fontFamily: "Montserrat, sans-serif",
-    fontSize: 14,
+    fontSize: 13,
     color: "var(--t1)",
   },
   calendarPanel: {
-    position: "absolute",
-    bottom: "calc(100% + 8px)",
-    left: 0,
+    position: "static",
     zIndex: 25,
-    width: "min(100%, 360px)",
-    borderRadius: 18,
-    overflow: "hidden",
+    width: "100%",
+    marginTop: 4,
+    borderRadius: 14,
+    overflowY: "auto",
     background: "rgba(255,255,255,.98)",
     border: "1px solid rgba(99,91,255,.16)",
     boxShadow: "0 30px 70px rgba(12,14,24,.18)",
+  },
+  calendarPanelCompact: {
+    width: "100%",
+    marginTop: 4,
+    borderRadius: 12,
+    boxShadow: "0 12px 30px rgba(12,14,24,.14)",
   },
   calendarHeader: {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 12,
-    padding: "13px 13px 10px",
+    padding: "10px 10px 8px",
     borderBottom: "1px solid rgba(0,0,0,.06)",
     background:
       "linear-gradient(135deg, rgba(99,91,255,.08), rgba(6,201,160,.06))",
@@ -491,12 +516,12 @@ const styles = {
     gap: 4,
   },
   calendarMonthTitle: {
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: 800,
     color: "var(--t1)",
   },
   calendarMonthSub: {
-    fontSize: 12,
+    fontSize: 11,
     color: "var(--t2)",
   },
   calendarNav: {
@@ -504,9 +529,7 @@ const styles = {
     gap: 8,
   },
   calendarNavBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
+    borderRadius: 8,
     border: "1px solid rgba(0,0,0,.08)",
     background: "#fff",
     cursor: "pointer",
@@ -514,14 +537,14 @@ const styles = {
     color: "var(--t1)",
   },
   calendarGrid: {
-    padding: 12,
+    padding: 8,
     display: "grid",
     gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
-    gap: 6,
+    gap: 4,
   },
   calendarDow: {
     textAlign: "center",
-    fontSize: 10.5,
+    fontSize: 9,
     fontWeight: 800,
     letterSpacing: ".10em",
     textTransform: "uppercase",
@@ -530,7 +553,7 @@ const styles = {
   },
   calendarCell: {
     aspectRatio: "1 / 1",
-    borderRadius: 12,
+    borderRadius: 8,
     border: "1px solid rgba(0,0,0,.06)",
     background: "rgba(0,0,0,.02)",
     display: "flex",
@@ -556,13 +579,13 @@ const styles = {
   calendarFooter: {
     display: "flex",
     justifyContent: "space-between",
-    gap: 10,
-    padding: "0 12px 12px",
+    gap: 8,
+    padding: "0 8px 10px",
   },
   calendarAction: {
     flex: 1,
-    padding: "9px 10px",
-    borderRadius: 10,
+    padding: "7px 8px",
+    borderRadius: 8,
     border: "1px solid rgba(0,0,0,.08)",
     background: "#fff",
     cursor: "pointer",
@@ -638,7 +661,7 @@ function createInitialForm() {
       supervisorRecommendation: "",
       declarationAccepted: false,
       supervisorFullName: "",
-      date: "",
+      date: getTodayDateValue(),
     },
   };
 }
@@ -816,6 +839,7 @@ function FancySelect({
   errorKey,
 }) {
   const [open, setOpen] = useState(false);
+  const isCompact = useMediaQuery("(max-width: 640px)");
   const ref = useDismissableLayer(() => setOpen(false));
   const selectedOption =
     options.find((option) => option.value === value) || null;
@@ -844,7 +868,7 @@ function FancySelect({
       </button>
       {hint && <div style={styles.fieldHint}>{hint}</div>}
       {open && (
-        <div style={styles.pickerMenu}>
+        <div style={{ ...styles.pickerMenu, ...(isCompact ? styles.pickerMenuCompact : null) }}>
           {options.map((option, index) => {
             const active = option.value === value;
             return (
@@ -859,10 +883,12 @@ function FancySelect({
                   ...styles.pickerOption,
                   ...(active ? styles.pickerOptionActive : null),
                   borderTop: index === 0 ? "none" : "1px solid rgba(0,0,0,.05)",
+                  padding: isCompact ? "10px 12px" : "11px 13px",
+                  gap: isCompact ? 12 : 16,
                 }}
               >
                 <span style={styles.pickerOptionLeft}>
-                  <span style={styles.pickerOptionTitle}>{option.title}</span>
+                  <span style={{ ...styles.pickerOptionTitle, fontSize: isCompact ? 13 : 13.5 }}>{option.title}</span>
                   <span style={styles.pickerOptionDesc}>
                     {option.description}
                   </span>
@@ -894,6 +920,87 @@ function formatDateLabel(date) {
   }).format(date);
 }
 
+function getTodayDateValue() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function getRecordId(record) {
+  return record?._id || record?.id || record?.studentId || record?.facultyId || '';
+}
+
+function getStudentRecordId(student) {
+  return student?._id || student?.id || student?.studentId || '';
+}
+
+function getStudentFullName(student) {
+  return [student?.name, student?.surname, student?.lastname].filter(Boolean).join(' ').trim();
+}
+
+function getStudentDegreeLabel(student) {
+  return student?.degreeProgram || student?.nameFaculty || student?.faculty?.name || '';
+}
+
+function getStudentYearValue(student) {
+  return student?.year || student?.yearOfStudy || '';
+}
+
+function getInternshipTitle(internship) {
+  return internship?.name || internship?.title || internship?.company || 'Untitled internship';
+}
+
+function getInternshipCompany(internship) {
+  return internship?.company || internship?.companyName || internship?.organization || '';
+}
+
+function getInternshipDepartment(internship) {
+  return internship?.plan || internship?.department || internship?.title || '';
+}
+
+function getInternshipSupervisor(internship) {
+  return (
+    internship?.supervisorContact ||
+    internship?.tutorContact ||
+    internship?.supervisorName ||
+    internship?.tutorName ||
+    internship?.tutorID ||
+    internship?.supervisor ||
+    internship?.tutor ||
+    ''
+  );
+}
+
+function getInternshipStartDate(internship) {
+  return internship?.startDate || internship?.start || internship?.duration?.start || internship?.duration?.startDate || '';
+}
+
+function getInternshipEndDate(internship) {
+  return internship?.endDate || internship?.end || internship?.duration?.end || internship?.duration?.endDate || '';
+}
+
+function normalizeAvailableStudents(students, blockedIds = [], selectedInternship = null) {
+  const blockedSet = new Set((blockedIds || []).map((value) => String(value)));
+
+  const relatedIds = new Set(
+    (Array.isArray(selectedInternship?.students) ? selectedInternship.students : [])
+      .flatMap((item) => {
+        if (!item) return [];
+        if (typeof item === 'string') return [item];
+        return [item?._id || item?.id || item?.studentId || ''];
+      })
+      .filter(Boolean)
+      .map((value) => String(value)),
+  );
+
+  return (Array.isArray(students) ? students : [])
+    .filter((student) => {
+      const studentId = String(getStudentRecordId(student));
+      if (!studentId) return false;
+      if (blockedSet.has(studentId)) return false;
+      if (relatedIds.size > 0 && !relatedIds.has(studentId)) return false;
+      return true;
+    });
+}
+
 function createMonthGrid(currentMonth) {
   const start = new Date(
     currentMonth.getFullYear(),
@@ -913,6 +1020,7 @@ function createMonthGrid(currentMonth) {
 
 function FancyDateField({ label, value, onChange, hint, error, required, errorKey }) {
   const [open, setOpen] = useState(false);
+  const isCompact = useMediaQuery("(max-width: 640px)");
   const [viewMonth, setViewMonth] = useState(() => {
     const initial = value ? new Date(`${value}T00:00:00`) : new Date();
     return new Date(initial.getFullYear(), initial.getMonth(), 1);
@@ -986,7 +1094,7 @@ function FancyDateField({ label, value, onChange, hint, error, required, errorKe
       {hint && <div style={styles.fieldHint}>{hint}</div>}
       {error && <div style={styles.error}>{error}</div>}
       {open && (
-        <div style={styles.calendarPanel}>
+        <div style={{ ...styles.calendarPanel, ...(isCompact ? styles.calendarPanelCompact : null) }}>
           <div style={styles.calendarHeader}>
             <div style={styles.calendarMonth}>
               <span style={styles.calendarMonthTitle}>{monthTitle}</span>
@@ -997,7 +1105,7 @@ function FancyDateField({ label, value, onChange, hint, error, required, errorKe
             <div style={styles.calendarNav}>
               <button
                 type="button"
-                style={styles.calendarNavBtn}
+                style={{ ...styles.calendarNavBtn}}
                 onClick={() =>
                   setViewMonth(
                     (month) =>
@@ -1009,7 +1117,7 @@ function FancyDateField({ label, value, onChange, hint, error, required, errorKe
               </button>
               <button
                 type="button"
-                style={styles.calendarNavBtn}
+                style={{ ...styles.calendarNavBtn}}
                 onClick={() =>
                   setViewMonth(
                     (month) =>
@@ -1025,7 +1133,7 @@ function FancyDateField({ label, value, onChange, hint, error, required, errorKe
           <div style={styles.calendarGrid}>
             {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(
               (dayName) => (
-                <div key={dayName} style={styles.calendarDow}>
+                <div key={dayName} style={{ ...styles.calendarDow, fontSize: isCompact ? 8.5 : 9 }}>
                   {dayName}
                 </div>
               ),
@@ -1043,6 +1151,8 @@ function FancyDateField({ label, value, onChange, hint, error, required, errorKe
                   onClick={() => selectDay(day)}
                   style={{
                     ...styles.calendarCell,
+                    borderRadius: isCompact ? 10 : 12,
+                    fontSize: isCompact ? 12 : 14,
                     ...(isOtherMonth ? styles.calendarCellMuted : null),
                     ...(isSelected ? styles.calendarCellActive : null),
                     outline:
@@ -1253,6 +1363,14 @@ const ERROR_ANCHOR_ORDER = [
   "__group.communicationSkills",
   "__group.problemSolvingSkills",
   "__group.overallPerformance",
+  "openEndedQuestions.strengths",
+  "openEndedQuestions.areasOfImprovement",
+  "openEndedQuestions.projectTaskFeedback",
+  "openEndedQuestions.learningAndGrowth",
+  "openEndedQuestions.teamDynamics",
+  "openEndedQuestions.adaptability",
+  "openEndedQuestions.feedbackForStudent",
+  "openEndedQuestions.feedbackForUniversity",
   "finalRecommendation.finalRating",
   "finalRecommendation.supervisorRecommendation",
   "finalRecommendation.declarationAccepted",
@@ -1293,18 +1411,147 @@ function focusFirstError(errorMap) {
   }
 }
 
-export default function PublicEvaluationForm() {
+export default function PublicEvaluationForm({
+  badge = 'Student evaluation form',
+  title = 'Student Internship Evaluation',
+  successBadge = 'Success',
+  successTitle = 'Your evaluation was submitted.',
+  successText = 'Thank you. The student internship evaluation has been received and saved successfully.',
+  nextStepLabel = 'You may close this page',
+  submitLabel = 'Submit Evaluation',
+  apiPath = '/internship-evaluations',
+  internships = [],
+  students = [],
+  blockedStudentIds = [],
+  onSubmissionComplete,
+} = {}) {
   const [form, setForm] = useState(() => createInitialForm());
 
   const [errors, setErrors] = useState({});
   const [sending, setSending] = useState(false);
   const [success, setSuccess] = useState(null);
   const [serverError, setServerError] = useState(null);
+  const [selectedInternshipId, setSelectedInternshipId] = useState('');
+  const [selectedStudentId, setSelectedStudentId] = useState('');
+  const selectionSyncPauseRef = useRef(false);
+
+  const internshipOptions = useMemo(
+    () =>
+      (Array.isArray(internships) ? internships : []).map((internship) => {
+        const value = String(getRecordId(internship));
+        const title = getInternshipTitle(internship);
+        const company = getInternshipCompany(internship);
+        const start = getInternshipStartDate(internship);
+        const end = getInternshipEndDate(internship);
+        const dateLabel = [start, end].filter(Boolean).join(' → ');
+
+        return {
+          value,
+          title: company ? `${title} • ${company}` : title,
+          description: dateLabel || getInternshipDepartment(internship) || 'Internship record',
+        };
+      }),
+    [internships],
+  );
+
+  const selectedInternship = useMemo(
+    () =>
+      (Array.isArray(internships) ? internships : []).find(
+        (internship) => String(getRecordId(internship)) === String(selectedInternshipId),
+      ) || null,
+    [internships, selectedInternshipId],
+  );
+
+  const availableStudents = useMemo(
+    () => normalizeAvailableStudents(students, blockedStudentIds, selectedInternship),
+    [blockedStudentIds, selectedInternship, students],
+  );
+
+  const studentOptions = useMemo(
+    () =>
+      availableStudents.map((student) => {
+        const value = String(getStudentRecordId(student));
+        const fullName = getStudentFullName(student) || 'Unnamed student';
+        const degree = getStudentDegreeLabel(student);
+        const year = getStudentYearValue(student);
+
+        return {
+          value,
+          title: fullName,
+          description: [degree, year ? `Year ${year}` : '']
+            .filter(Boolean)
+            .join(' • '),
+        };
+      }),
+    [availableStudents],
+  );
+
+  const selectedStudent = useMemo(
+    () =>
+      availableStudents.find(
+        (student) => String(getStudentRecordId(student)) === String(selectedStudentId),
+      ) || null,
+    [availableStudents, selectedStudentId],
+  );
+
+  useEffect(() => {
+    if (selectedInternshipId && !selectedInternship) {
+      setSelectedInternshipId('');
+      return;
+    }
+
+    if (selectedStudentId && !selectedStudent) {
+      setSelectedStudentId('');
+    }
+  }, [selectedInternship, selectedInternshipId, selectedStudent, selectedStudentId]);
+
+  useEffect(() => {
+    if (selectionSyncPauseRef.current) return;
+
+    const nextStudentInfo = {
+      fullname: getStudentFullName(selectedStudent) || '',
+      studentID: getStudentRecordId(selectedStudent) || '',
+      degreeProgram: getStudentDegreeLabel(selectedStudent) || '',
+      yearOfStudy: getStudentYearValue(selectedStudent) || '',
+      internshipStartDate: getInternshipStartDate(selectedInternship) || '',
+      internshipEndDate: getInternshipEndDate(selectedInternship) || '',
+    };
+
+    const nextCompanyInfo = {
+      companyName: getInternshipCompany(selectedInternship) || '',
+      department: getInternshipDepartment(selectedInternship) || '',
+      supervisorContact: getInternshipSupervisor(selectedInternship) || '',
+    };
+
+    setForm((current) => {
+      const sameStudent = Object.entries(nextStudentInfo).every(
+        ([key, value]) => String(current.studentInformation?.[key] ?? '') === String(value ?? ''),
+      );
+      const sameCompany = Object.entries(nextCompanyInfo).every(
+        ([key, value]) => String(current.companyInformation?.[key] ?? '') === String(value ?? ''),
+      );
+
+      if (sameStudent && sameCompany) return current;
+
+      return {
+        ...current,
+        studentInformation: {
+          ...current.studentInformation,
+          ...nextStudentInfo,
+        },
+        companyInformation: {
+          ...current.companyInformation,
+          ...nextCompanyInfo,
+        },
+      };
+    });
+  }, [selectedInternship, selectedStudent]);
 
   const handleAutoFill = useCallback(() => {
     setSuccess(null);
     setServerError(null);
     setErrors({});
+    selectionSyncPauseRef.current = true;
     setForm({
       studentInformation: {
         fullname: "Amina Rahman",
@@ -1373,6 +1620,9 @@ export default function PublicEvaluationForm() {
         date: "2026-05-29",
       },
     });
+    window.setTimeout(() => {
+      selectionSyncPauseRef.current = false;
+    }, 0);
   }, []);
 
   const finalRatingOptions = useMemo(
@@ -1561,16 +1811,27 @@ export default function PublicEvaluationForm() {
     [errors],
   );
 
-  const [isPending, startTransition] = useTransition();
+  const [_isPending, startTransition] = useTransition();
 
   const setPath = useCallback((path, value, options = { lowPriority: true }) => {
     const parts = path.split(".");
+    const clearFieldError = () => {
+      setErrors((current) => {
+        if (!current[path]) return current;
+        const next = { ...current };
+        delete next[path];
+        return next;
+      });
+    };
+
     if (options.lowPriority) {
       startTransition(() => {
         setForm((current) => updateNestedValue(current, parts, value));
+        clearFieldError();
       });
     } else {
       setForm((current) => updateNestedValue(current, parts, value));
+      clearFieldError();
     }
   }, []);
 
@@ -1578,10 +1839,24 @@ export default function PublicEvaluationForm() {
     e.preventDefault();
     setServerError(null);
     try {
-      const parsed = InternshipEvaluationSchema.parse(form);
+      const parsed = InternshipEvaluationSchema.parse({
+        ...form,
+        finalRecommendation: {
+          ...form.finalRecommendation,
+          date: getTodayDateValue(),
+        },
+      });
       setErrors({});
       setSending(true);
-      await postEvaluation(parsed);
+      await postEvaluation(parsed, apiPath);
+      if (onSubmissionComplete) {
+        onSubmissionComplete({
+          internshipId: String(selectedInternshipId || ''),
+          studentId: String(getStudentRecordId(selectedStudent) || ''),
+          payload: parsed,
+        });
+      }
+      setSelectedStudentId('');
       setSuccess("Evaluation submitted successfully.");
     } catch (err) {
       if (err?.issues) {
@@ -1598,7 +1873,7 @@ export default function PublicEvaluationForm() {
     } finally {
       setSending(false);
     }
-  }, [form]);
+  }, [apiPath, onSubmissionComplete, selectedInternshipId, selectedStudent, form]);
 
   if (success) {
     return (
@@ -1607,11 +1882,11 @@ export default function PublicEvaluationForm() {
           <div style={styles.successShell}>
             <div style={styles.successCard}>
               <div style={styles.successGlow} />
-              <div style={styles.successBadge}>Success</div>
+              <div style={styles.successBadge}>{successBadge}</div>
               <div style={styles.successMark}>✓</div>
-              <h1 style={styles.successTitle}>Your evaluation was submitted.</h1>
+              <h1 style={styles.successTitle}>{successTitle}</h1>
               <p style={styles.successText}>
-                Thank you. The student internship evaluation has been received and saved successfully.
+                {successText}
               </p>
 
               <div style={styles.successMeta}>
@@ -1621,7 +1896,7 @@ export default function PublicEvaluationForm() {
                 </div>
                 <div style={styles.successMetaItem}>
                   <span style={styles.successMetaLabel}>Next step</span>
-                  <div style={styles.successMetaValue}>You may close this page</div>
+                  <div style={styles.successMetaValue}>{nextStepLabel}</div>
                 </div>
               </div>
             </div>
@@ -1635,11 +1910,57 @@ export default function PublicEvaluationForm() {
     <div className="pp">
       <div style={styles.page}>
         <div style={styles.hero}>
-          <div style={styles.badge}>Student evaluation form</div>
-          <h1 style={styles.title}>Student Internship Evaluation</h1>
+          <div style={styles.badge}>{badge}</div>
+          <h1 style={styles.title}>{title}</h1>
         </div>
 
         <form onSubmit={handleSubmit} style={styles.form}>
+          <section style={styles.card}>
+            <h3 style={styles.sectionTitle}>Choose Internship and Student</h3>
+            <div style={styles.grid2}>
+              <MemoFancySelect
+                label="Internship"
+                value={selectedInternshipId}
+                onChange={(nextValue) => {
+                  setSelectedInternshipId(nextValue);
+                  setSelectedStudentId('');
+                }}
+                options={internshipOptions}
+                placeholder={internshipOptions.length ? 'Select internship' : 'No internships available'}
+                hint="Choose the internship first so company data can be filled automatically."
+                error={null}
+              />
+
+              <MemoFancySelect
+                label="Student"
+                value={selectedStudentId}
+                onChange={(nextValue) => setSelectedStudentId(nextValue)}
+                options={studentOptions}
+                placeholder={selectedInternship ? 'Select student' : 'Select internship first'}
+                hint={selectedInternship ? 'Only students from this internship are shown.' : 'Pick an internship to load the student list.'}
+                error={null}
+              />
+            </div>
+            <div style={styles.fieldHint}>
+              {selectedInternship
+                ? `Selected internship: ${getInternshipTitle(selectedInternship)}`
+                : 'No internship selected yet.'}
+            </div>
+            {selectedStudent && (
+              <div style={{ ...styles.detailItem, marginTop: 12 }}>
+                <span style={styles.detailLabel}>Selected student</span>
+                <div style={styles.detailValue}>
+                  {getStudentFullName(selectedStudent) || 'Unnamed student'}
+                </div>
+              </div>
+            )}
+            {!studentOptions.length && selectedInternship && (
+              <div style={{ color: '#b45309', marginTop: 10, fontSize: 13, fontWeight: 600 }}>
+                No available students for this internship.
+              </div>
+            )}
+          </section>
+
           <section style={styles.card}>
             <h3 style={styles.sectionTitle}>Student Information</h3>
             <div style={styles.field} data-error-key="studentInformation.fullname">
@@ -1878,21 +2199,24 @@ export default function PublicEvaluationForm() {
             />
           </section>
 
-          <section style={styles.card}>
+          <section style={styles.card} className="requieres-attention">
             <h3 style={styles.sectionTitle}>Open-Ended Questions</h3>
             <p style={{ color: "var(--t2)" }}>
-              Optional but helpful for additional context.
+              All fields in this section are required.
             </p>
             <div style={styles.field}>
-              <label className="fl">Strengths</label>
+              <label className="fl">Strengths<span style={styles.requiredStar}>*</span></label>
               <MemoDebouncedTextarea
                 className="fi"
                 value={form.openEndedQuestions.strengths || ""}
                 onChange={(v) => setPath("openEndedQuestions.strengths", v, { lowPriority: true })}
               />
+              {errors["openEndedQuestions.strengths"] && (
+                <div style={{ color: "red" }}>{errors["openEndedQuestions.strengths"]}</div>
+              )}
             </div>
             <div style={styles.fieldLast}>
-              <label className="fl">Areas of improvement</label>
+              <label className="fl">Areas of improvement<span style={styles.requiredStar}>*</span></label>
               <MemoDebouncedTextarea
                 className="fi"
                 value={form.openEndedQuestions.areasOfImprovement || ""}
@@ -1900,9 +2224,12 @@ export default function PublicEvaluationForm() {
                   setPath("openEndedQuestions.areasOfImprovement", v, { lowPriority: true })
                 }
               />
+              {errors["openEndedQuestions.areasOfImprovement"] && (
+                <div style={{ color: "red" }}>{errors["openEndedQuestions.areasOfImprovement"]}</div>
+              )}
             </div>
             <div style={styles.field}>
-              <label className="fl">Project Task Feedback</label>
+              <label className="fl">Project Task Feedback<span style={styles.requiredStar}>*</span></label>
               <MemoDebouncedTextarea
                 className="fi"
                 value={form.openEndedQuestions.projectTaskFeedback || ""}
@@ -1910,9 +2237,12 @@ export default function PublicEvaluationForm() {
                   setPath("openEndedQuestions.projectTaskFeedback", v, { lowPriority: true })
                 }
               />
+              {errors["openEndedQuestions.projectTaskFeedback"] && (
+                <div style={{ color: "red" }}>{errors["openEndedQuestions.projectTaskFeedback"]}</div>
+              )}
             </div>
             <div style={styles.field}>
-              <label className="fl">Learning and Growth</label>
+              <label className="fl">Learning and Growth<span style={styles.requiredStar}>*</span></label>
               <MemoDebouncedTextarea
                 className="fi"
                 value={form.openEndedQuestions.learningAndGrowth || ""}
@@ -1920,25 +2250,34 @@ export default function PublicEvaluationForm() {
                   setPath("openEndedQuestions.learningAndGrowth", v, { lowPriority: true })
                 }
               />
+              {errors["openEndedQuestions.learningAndGrowth"] && (
+                <div style={{ color: "red" }}>{errors["openEndedQuestions.learningAndGrowth"]}</div>
+              )}
             </div>
             <div style={styles.field}>
-              <label className="fl">Team Dynamics</label>
+              <label className="fl">Team Dynamics<span style={styles.requiredStar}>*</span></label>
               <MemoDebouncedTextarea
                 className="fi"
                 value={form.openEndedQuestions.teamDynamics || ""}
                 onChange={(v) => setPath("openEndedQuestions.teamDynamics", v, { lowPriority: true })}
               />
+              {errors["openEndedQuestions.teamDynamics"] && (
+                <div style={{ color: "red" }}>{errors["openEndedQuestions.teamDynamics"]}</div>
+              )}
             </div>
             <div style={styles.field}>
-              <label className="fl">Adaptability</label>
+              <label className="fl">Adaptability<span style={styles.requiredStar}>*</span></label>
               <MemoDebouncedTextarea
                 className="fi"
                 value={form.openEndedQuestions.adaptability || ""}
                 onChange={(v) => setPath("openEndedQuestions.adaptability", v, { lowPriority: true })}
               />
+              {errors["openEndedQuestions.adaptability"] && (
+                <div style={{ color: "red" }}>{errors["openEndedQuestions.adaptability"]}</div>
+              )}
             </div>
             <div style={styles.field}>
-              <label className="fl">Feedback for Student</label>
+              <label className="fl">Feedback for Student<span style={styles.requiredStar}>*</span></label>
               <MemoDebouncedTextarea
                 className="fi"
                 value={form.openEndedQuestions.feedbackForStudent || ""}
@@ -1946,9 +2285,12 @@ export default function PublicEvaluationForm() {
                   setPath("openEndedQuestions.feedbackForStudent", v, { lowPriority: true })
                 }
               />
+              {errors["openEndedQuestions.feedbackForStudent"] && (
+                <div style={{ color: "red" }}>{errors["openEndedQuestions.feedbackForStudent"]}</div>
+              )}
             </div>
             <div style={styles.fieldLast}>
-              <label className="fl">Feedback for University</label>
+              <label className="fl">Feedback for University<span style={styles.requiredStar}>*</span></label>
               <MemoDebouncedTextarea
                 className="fi"
                 value={form.openEndedQuestions.feedbackForUniversity || ""}
@@ -1956,10 +2298,13 @@ export default function PublicEvaluationForm() {
                   setPath("openEndedQuestions.feedbackForUniversity", v, { lowPriority: true })
                 }
               />
+              {errors["openEndedQuestions.feedbackForUniversity"] && (
+                <div style={{ color: "red" }}>{errors["openEndedQuestions.feedbackForUniversity"]}</div>
+              )}
             </div>
           </section>
 
-          <section style={styles.card, { marginBottom: 0 }}>
+          <section style={{ ...styles.card, marginBottom: 0 }}>
             <h3 style={styles.sectionTitle}>Final Recommendation</h3>
             <MemoFancySelect
               label="Final Rating"
@@ -2033,17 +2378,44 @@ export default function PublicEvaluationForm() {
             </div>
 
             <div style={styles.fieldLast} data-error-key="finalRecommendation.date">
-              <FancyDateField
-                label="Date"
-                required
-                errorKey="finalRecommendation.date"
-                value={form.finalRecommendation.date}
-                onChange={(nextValue) =>
-                  setPath("finalRecommendation.date", nextValue)
-                }
-                hint="Use the date when the evaluation was completed."
-                error={errors["finalRecommendation.date"]}
-              />
+              <label className="fl">
+                Date
+              </label>
+              <div
+                style={{
+                  ...styles.dateTrigger,
+                  cursor: "default",
+                  pointerEvents: "none",
+                }}
+              >
+                <span style={styles.dateIcon}>📅</span>
+                <span style={{ display: "grid", gap: 4, minWidth: 0, flex: 1 }}>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 800,
+                      letterSpacing: ".12em",
+                      textTransform: "uppercase",
+                      color: "var(--t2)",
+                    }}
+                  >
+                    Date
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 15,
+                      fontWeight: 700,
+                      color: "var(--t1)",
+                    }}
+                  >
+                    {new Intl.DateTimeFormat("en-US", {
+                      month: "short",
+                      day: "2-digit",
+                      year: "numeric",
+                    }).format(new Date())}
+                  </span>
+                </span>
+              </div>
             </div>
           </section>
 
@@ -2055,7 +2427,7 @@ export default function PublicEvaluationForm() {
               Autofill
             </button>
             <button className="bp" type="submit" disabled={sending}>
-              {sending ? "Submitting…" : "Submit Evaluation"}
+              {sending ? "Submitting…" : submitLabel}
             </button>
           </div>
         </form>

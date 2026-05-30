@@ -5,11 +5,11 @@ const styles = {
   page: {
     maxWidth: 1320,
     margin: '0 auto',
-    padding: 'clamp(16px, 3vw, 32px)',
+    padding: 'clamp(16px, 2.5vw, 28px)',
   },
   hero: {
-    padding: '24px 24px 20px',
-    borderRadius: 24,
+    padding: '28px 28px 24px',
+    borderRadius: 26,
     background: 'linear-gradient(135deg, rgba(99,91,255,.10), rgba(6,201,160,.08))',
     border: '1px solid rgba(99,91,255,.14)',
     boxShadow: '0 14px 40px rgba(12,14,24,.06)',
@@ -45,8 +45,8 @@ const styles = {
     borderRadius: 22,
     overflow: 'hidden',
     border: '1px solid rgba(255,255,255,.86)',
-    background: 'rgba(255,255,255,.9)',
-    boxShadow: '0 10px 24px rgba(12,14,24,.06)',
+    background: 'rgba(255,255,255,.92)',
+    boxShadow: '0 14px 30px rgba(12,14,24,.06)',
   },
   tableWrap: {
     overflowX: 'auto',
@@ -109,8 +109,9 @@ const styles = {
     display: 'flex',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
     gap: 16,
-    padding: '22px 24px',
+    padding: '24px 24px 22px',
     borderRadius: 24,
     background: 'linear-gradient(135deg, rgba(255,255,255,.94), rgba(248,250,252,.98))',
     border: '1px solid rgba(255,255,255,.92)',
@@ -152,8 +153,8 @@ const styles = {
     gap: 12,
   },
   detailItem: {
-    padding: '12px 14px',
-    borderRadius: 14,
+    padding: '14px 15px',
+    borderRadius: 16,
     background: 'rgba(0,0,0,.03)',
   },
   detailLabel: {
@@ -189,6 +190,7 @@ const styles = {
     cursor: 'pointer',
     fontWeight: 700,
     boxShadow: '0 6px 16px rgba(12,14,24,.06)',
+    alignSelf: 'flex-start',
   },
 };
 
@@ -215,7 +217,12 @@ function SectionDetail({ title, children }) {
   );
 }
 
-export default function AllEvaluationsPage() {
+export default function AllEvaluationsPage({
+  badge = 'Admin / Developer review',
+  title = 'All Evaluations',
+  subtitle = 'Review submitted internship evaluations in a compact summary table, then open any row to see the full response details.',
+  endpoint = '/internship-evaluations',
+} = {}) {
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -225,7 +232,7 @@ export default function AllEvaluationsPage() {
     let mounted = true;
     (async () => {
       try {
-        const data = await getEvaluations();
+        const data = await getEvaluations(endpoint);
         if (!mounted) return;
         setList(Array.isArray(data) ? data : (data?.data || []));
       } catch (err) {
@@ -235,7 +242,7 @@ export default function AllEvaluationsPage() {
       }
     })();
     return () => { mounted = false; };
-  }, []);
+  }, [endpoint]);
 
   const stats = useMemo(() => ({
     total: list.length,
@@ -348,11 +355,9 @@ export default function AllEvaluationsPage() {
     <div className="pp">
       <div style={styles.page}>
         <div style={styles.hero}>
-          <div style={styles.badge}>Admin / Developer review</div>
-          <h1 style={styles.title}>All Evaluations</h1>
-          <p style={styles.subtitle}>
-            Review submitted internship evaluations in a compact summary table, then open any row to see the full response details.
-          </p>
+          <div style={styles.badge}>{badge}</div>
+          <h1 style={styles.title}>{title}</h1>
+          <p style={styles.subtitle}>{subtitle}</p>
           <div style={{ marginTop: 14, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
             <StatPill label="Total submissions" value={stats.total} bg="rgba(99,91,255,.10)" color="var(--a1)" />
           </div>

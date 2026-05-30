@@ -92,15 +92,15 @@ export const InternshipEvaluationSchema = z.object({
   }),
 
   openEndedQuestions: z.object({
-    strengths: z.string().optional(),
-    areasOfImprovement: z.string().optional(),
-    projectTaskFeedback: z.string().optional(),
-    learningAndGrowth: z.string().optional(),
-    teamDynamics: z.string().optional(),
-    adaptability: z.string().optional(),
-    feedbackForStudent: z.string().optional(),
-    feedbackForUniversity: z.string().optional(),
-  }).optional(),
+    strengths: requiredText('Please fill in the strengths field.'),
+    areasOfImprovement: requiredText('Please fill in the areas of improvement field.'),
+    projectTaskFeedback: requiredText('Please fill in the project task feedback field.'),
+    learningAndGrowth: requiredText('Please fill in the learning and growth field.'),
+    teamDynamics: requiredText('Please fill in the team dynamics field.'),
+    adaptability: requiredText('Please fill in the adaptability field.'),
+    feedbackForStudent: requiredText('Please fill in the feedback for student field.'),
+    feedbackForUniversity: requiredText('Please fill in the feedback for university field.'),
+  }),
 
   finalRecommendation: z.object({
     finalRating: requiredText('Please choose a final rating.').refine(

@@ -70,7 +70,9 @@ import ToastViewport from "./components/ToastViewport";
 import PageState from "./components/PageState";
 import ErrorPage from "./components/ErrorPage";
 import PublicEvaluationForm from "./components/PublicEvaluationForm";
+import CompanyEvaluationForm from "./components/CompanyEvaluationForm";
 import AllEvaluationsPage from "./components/AllEvaluationsPage";
+import CompanyEvaluationsPage from "./components/CompanyEvaluationsPage";
 import MaintenancePage from "./components/MaintenancePage";
 
 /* ═══════════════════════════════════════════════
@@ -134,7 +136,7 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);}
 .spf{margin:auto 12px 12px;padding:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.055);border-radius:12px;display:flex;align-items:center;gap:8px;cursor:pointer;transition:all .18s;position:relative;}
 .spf:hover{background:rgba(255,255,255,.07);}
 .av{width:35px;height:35px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;font-weight:700;font-size:12px;flex-shrink:0;}
-.sdd{position:absolute;bottom:50px;left:0;right:0;background:#171b2e;border:1px solid rgba(255,255,255,.085);border-radius:10px;overflow:hidden;animation:scaleIn .17s ease;z-index:100;}
+.sdd{position:absolute;bottom:67px;left:0;right:0;background:#171b2e;border:1px solid rgba(255,255,255,.085);border-radius:10px;overflow:hidden;animation:scaleIn .17s ease;z-index:100;}
 .sddi{display:flex;align-items:center;gap:9px;padding:10px 13px;color:rgba(255,255,255,.58);font-size:12.5px;cursor:pointer;transition:all .17s;}
 .sddi:hover{background:rgba(255,255,255,.06);color:#fff;}
 .sb-maintenance{margin:0 12px 12px;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.065);background:linear-gradient(135deg,rgba(99,91,255,.14),rgba(6,201,160,.08));display:flex;align-items:center;justify-content:space-between;gap:12px;color:#fff;cursor:pointer;transition:transform .18s ease,background .18s ease,border-color .18s ease;}
@@ -2763,6 +2765,15 @@ export default function App() {
   const [systemError, setSystemError] = useState(null);
   const [maintenanceMode, setMaintenanceMode] = useState(() => readMaintenanceMode());
   const [students, setStudents] = useState([]); // Add students state
+  const [blockedStudentIds, setBlockedStudentIds] = useState(() => {
+    try {
+      const raw = window.localStorage.getItem('siut_evaluation_blocked_student_ids');
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed.map((value) => String(value)) : [];
+    } catch {
+      return [];
+    }
+  });
   const [openCommentTarget, setOpenCommentTarget] = useState(null);
   const [sessionMessage, setSessionMessage] = useState("");
   const userInitials = useMemo(() => user?.initials || getUserInitials(user), [user]);
@@ -2771,6 +2782,17 @@ export default function App() {
     [user?.role],
   );
   const maintenanceLocked = maintenanceMode && !isPrivilegedUser;
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        'siut_evaluation_blocked_student_ids',
+        JSON.stringify(blockedStudentIds),
+      );
+    } catch {
+      // Ignore storage write failures.
+    }
+  }, [blockedStudentIds]);
 
   const openSystemError = useCallback((status, overrides = {}) => {
     setSystemError({
@@ -3005,6 +3027,8 @@ export default function App() {
     if (role === 'admin' || role === 'developer') {
       return [
         { I: Target, label: "Public Evaluation" },
+        { I: FileText, label: "Company Evaluation Form" },
+        { I: FileText, label: "Company Submissions" },
       ];
     }
     return [];
@@ -3016,6 +3040,8 @@ export default function App() {
     if (openIntern) return;
     const isAlwaysRoute = NAV_ALWAYS.some((item) => item.label === nav);
     if (nav === "Public Evaluation") return;
+    if (nav === "Company Evaluation Form") return;
+    if (nav === "Company Submissions") return;
     if (canAccessNav(user?.role, nav) || isAlwaysRoute) return;
     setNav(fallbackNav);
   }, [fallbackNav, nav, openIntern, user?.role, NAV_ALWAYS]);
@@ -3036,6 +3062,23 @@ export default function App() {
       return currentId === updatedId ? { ...student, ...updatedStudent } : student;
     }));
   }, []);
+
+  const handleEvaluationSubmitted = useCallback(({ studentId }) => {
+    const normalizedStudentId = String(studentId || '').trim();
+    if (!normalizedStudentId) return;
+
+    setBlockedStudentIds((current) => {
+      if (current.includes(normalizedStudentId)) return current;
+      return [...current, normalizedStudentId];
+    });
+  }, []);
+
+  const evaluationFormProps = useMemo(() => ({
+    internships: INTERNSHIPS,
+    students,
+    blockedStudentIds,
+    onSubmissionComplete: handleEvaluationSubmitted,
+  }), [INTERNSHIPS, blockedStudentIds, handleEvaluationSubmitted, students]);
 
   const currentUserRole = normalizeRole(user?.role);
 
@@ -3351,7 +3394,23 @@ export default function App() {
     }
 
     if (nav === "Public Evaluation") {
-      return <PublicEvaluationForm />;
+      return <PublicEvaluationForm {...evaluationFormProps} />;
+    }
+
+    if (nav === "Company Evaluation Form") {
+      return <CompanyEvaluationForm {...evaluationFormProps} />;
+    }
+
+    if (nav === "Company Submissions") {
+      if (!canAccessNav(user?.role, "All Evaluations")) {
+        return (
+          <div className="pp">
+            <PageState variant="forbidden" title="Access denied" message="Only administrators and developers can view company submissions." />
+          </div>
+        );
+      }
+
+      return <CompanyEvaluationsPage />;
     }
 
     if (nav === "All Evaluations") {
@@ -3407,6 +3466,7 @@ export default function App() {
     commentFeedbacks,
     handleOpenCommentFromFeedback,
     TUTORS,
+    evaluationFormProps,
     retryFromError,
     fallbackNav,
     
@@ -3445,6 +3505,9 @@ export default function App() {
           onOpenPublicEvaluation={() => {
             setPage('public-evaluation');
           }}
+          onOpenCompanyEvaluation={() => {
+            setPage('company-evaluation');
+          }}
         />
         <ToastViewport />
       </>
@@ -3470,7 +3533,33 @@ export default function App() {
       >
         <style>{CSS}</style>
         <div style={{ width: '100%', maxWidth: 1180, margin: '0 auto', padding: '32px 16px' }}>
-          <PublicEvaluationForm />
+          <PublicEvaluationForm {...evaluationFormProps} />
+        </div>
+        <ToastViewport />
+      </div>
+    );
+
+  if (page === "company-evaluation")
+    return (
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: '100%',
+          height: '100%',
+          display: 'block',
+          padding: 0,
+          overflowY: 'auto',
+          background: 'var(--bg)',
+          WebkitOverflowScrolling: 'touch',
+        }}
+      >
+        <style>{CSS}</style>
+        <div style={{ width: '100%', maxWidth: 1180, margin: '0 auto', padding: '32px 16px' }}>
+          <CompanyEvaluationForm {...evaluationFormProps} />
         </div>
         <ToastViewport />
       </div>

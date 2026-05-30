@@ -50,10 +50,12 @@ import {
 import { getUserFromStorage, clearUserFromStorage } from "./utils/storageUtils";
 import {
   get,
+  patch,
   getCurrentUser,
   handleStoredTokenExpiry,
   onAuthSessionExpired,
 } from "./utils/apiClient";
+import { toast } from "./utils/toast";
 
 
 
@@ -2764,6 +2766,7 @@ export default function App() {
   const [showCreatePage, setShowCreatePage] = useState(false);
   const [systemError, setSystemError] = useState(null);
   const [maintenanceMode, setMaintenanceMode] = useState(() => readMaintenanceMode());
+  const [maintenanceSaving, setMaintenanceSaving] = useState(false);
   const [students, setStudents] = useState([]); // Add students state
   const [blockedStudentIds, setBlockedStudentIds] = useState(() => {
     try {
@@ -2843,10 +2846,51 @@ export default function App() {
 
   const handleOpenSidebar = () => setSbOpen(true);
 
-  const handleToggleMaintenance = useCallback(() => {
+  const STATUS_ID = "6a1a906ace7c3808500ab41c";
+
+  const handleToggleMaintenance = useCallback(async () => {
     if (!isPrivilegedUser) return;
-    setMaintenanceMode((current) => !current);
-  }, [isPrivilegedUser]);
+    setMaintenanceSaving(true);
+    try {
+      const desired = !maintenanceMode; // maintenanceMode = true means site under maintenance
+      const payload = await patch(`/status/${STATUS_ID}`, { live: desired, message: '' });
+      const live = !!payload?.live;
+      // server.live === true => site is live => maintenanceMode should be false
+      setMaintenanceMode(!live);
+      writeMaintenanceMode(!live);
+      toast.success(!live ? 'Maintenance enabled (global).' : 'Maintenance disabled (global).');
+    } catch (err) {
+      toast.error(err?.message || 'Failed to update site status.');
+    } finally {
+      setMaintenanceSaving(false);
+    }
+  }, [isPrivilegedUser, maintenanceMode]);
+
+  useEffect(() => {
+    let mounted = true;
+    const STATUS_POLL_ID = "6a1a906ace7c3808500ab41c";
+    const fetchStatus = async () => {
+      try {
+        const payload = await get(`/status/${STATUS_POLL_ID}`);
+        if (!mounted) return;
+        if (payload && typeof payload.live === 'boolean') {
+          const live = !!payload.live;
+          setMaintenanceMode(!live);
+          writeMaintenanceMode(!live);
+        }
+      } catch (err) {
+        // ignore polling errors
+      }
+    };
+
+    // initial check
+    fetchStatus();
+    const iv = setInterval(fetchStatus, 30000);
+    return () => {
+      mounted = false;
+      clearInterval(iv);
+    };
+  }, []);
 
 
   // Fetch data from API on mount
@@ -3621,6 +3665,7 @@ export default function App() {
                 onClick={handleToggleMaintenance}
                 aria-pressed={maintenanceMode}
                 title={maintenanceMode ? "Disable site maintenance mode" : "Enable site maintenance mode"}
+                disabled={maintenanceSaving}
               >
                 <div className="sb-maintenance-copy">
                   <span className="sb-maintenance-label">Site under development</span>
@@ -3629,7 +3674,13 @@ export default function App() {
                   </span>
                 </div>
                 <div className="sb-maintenance-switch">
-                  {maintenanceMode ? <ToggleRight size={26} /> : <ToggleLeft size={26} />}
+                  {maintenanceSaving ? (
+                    <span style={{ display: 'inline-block', width: 26, textAlign: 'center' }}>…</span>
+                  ) : maintenanceMode ? (
+                    <ToggleRight size={26} />
+                  ) : (
+                    <ToggleLeft size={26} />
+                  )}
                 </div>
               </button>
             )}

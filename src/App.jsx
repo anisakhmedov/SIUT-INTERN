@@ -2852,8 +2852,8 @@ export default function App() {
     if (!isPrivilegedUser) return;
     setMaintenanceSaving(true);
     try {
-      const desired = !maintenanceMode; // maintenanceMode = true means site under maintenance
-      const payload = await patch(`/status/${STATUS_ID}`, { live: desired, message: '' });
+      // send current maintenanceMode as `live` to flip state on the server
+      const payload = await patch(`/status/${STATUS_ID}`, { live: maintenanceMode, message: '' });
       const live = !!payload?.live;
       // server.live === true => site is live => maintenanceMode should be false
       setMaintenanceMode(!live);

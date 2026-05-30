@@ -699,9 +699,10 @@ function arePropsEqualIgnoringKeys(prevProps, nextProps, ignoredKeys = []) {
   return true;
 }
 
-function DebouncedInput({ value, onChange, debounce = 250, ...props }) {
+function DebouncedInput({ value, onChange, debounce = 250, onTyping, ...props }) {
   const inputRef = useRef(null);
   const timeoutRef = useRef(null);
+  const composingRef = useRef(false);
 
   useEffect(() => {
     const nextValue = value ?? "";
@@ -714,8 +715,29 @@ function DebouncedInput({ value, onChange, debounce = 250, ...props }) {
 
   const handleInput = (event) => {
     const nextValue = event.target.value;
+    if (typeof onTyping === "function" && !composingRef.current) {
+      try {
+        onTyping(nextValue);
+      } catch (e) {
+        // swallow
+      }
+    }
     clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => onChange(nextValue), debounce);
+  };
+
+  const handleCompositionStart = () => {
+    composingRef.current = true;
+  };
+
+  const handleCompositionEnd = () => {
+    composingRef.current = false;
+    const nextValue = inputRef.current ? inputRef.current.value : "";
+    if (typeof onTyping === "function") {
+      try {
+        onTyping(nextValue);
+      } catch (e) {}
+    }
   };
 
   return (
@@ -724,12 +746,16 @@ function DebouncedInput({ value, onChange, debounce = 250, ...props }) {
       ref={inputRef}
       defaultValue={value ?? ""}
       onInput={handleInput}
+      onCompositionStart={handleCompositionStart}
+      onCompositionEnd={handleCompositionEnd}
     />
   );
 }
 
-const MemoDebouncedInput = React.memo(DebouncedInput, (prevProps, nextProps) =>
-  arePropsEqualIgnoringKeys(prevProps, nextProps, ["onChange"]),
+const MemoDebouncedInput = React.memo(
+  DebouncedInput,
+  (prevProps, nextProps) =>
+    arePropsEqualIgnoringKeys(prevProps, nextProps, ["onChange", "onTyping"]),
 );
 
 function DebouncedTextarea({ value, onChange, debounce = 300, ...props }) {
@@ -972,10 +998,8 @@ function getStudentDegreeLabel(student) {
 }
 
 function getStudentYearValue(student) {
-  // let studentYear = `20 ${student.nameFaculty.split("-")[2]}`
-  // console.log("studentYear", studentYear)
-  console.log(student)
-  return "";
+  let studentYear = Number(`20${student.nameFaculty.split("-")[2]}`);
+  return isNaN(studentYear) ? "" : studentYear;
 }
 
 function getInternshipTitle(internship) {
@@ -1041,7 +1065,6 @@ function normalizeAvailableStudents(internshipStudents, blockedIds = []) {
       if (typeof student === "string") {
         return { _id: student };
       }
-      console.log("student", student)
       return student || null;
 
     })
@@ -1608,8 +1631,7 @@ export default function PublicEvaluationForm({
         const value = String(getStudentRecordId(student));
         const fullName = getStudentFullName(student) || "Unnamed student";
         const degree = getStudentDegreeLabel(student);
-        const year = getStudentYearValue(student);
-        const yearLabel = year ? `Year ${year}` : "";
+        const yearLabel = getStudentYearValue(student);
         return {
           value,
           title: fullName,
@@ -1629,8 +1651,6 @@ export default function PublicEvaluationForm({
       ) || null,
     [availableStudents, selectedStudentId],
   );
-  console.log(availableStudents);
-  
 
   const lockedStudentInformation = useMemo(
     () => ({
@@ -1706,11 +1726,15 @@ export default function PublicEvaluationForm({
       ...sourceForm,
       studentInformation: {
         ...sourceForm.studentInformation,
-        ...lockedStudentInformation,
+        ...Object.fromEntries(
+          Object.entries(lockedStudentInformation).filter(([, v]) => v !== "" && v !== null && v !== undefined),
+        ),
       },
       companyInformation: {
         ...sourceForm.companyInformation,
-        ...lockedCompanyInformation,
+        ...Object.fromEntries(
+          Object.entries(lockedCompanyInformation).filter(([, v]) => v !== "" && v !== null && v !== undefined),
+        ),
       },
       finalRecommendation: {
         ...sourceForm.finalRecommendation,
@@ -2177,17 +2201,25 @@ export default function PublicEvaluationForm({
               <MemoDebouncedInput
                 className="fi"
                 value={form.studentInformation.fullname}
-                readOnly={!!form.studentInformation.fullname}
-                tabIndex={form.studentInformation.fullname ? -1 : 0}
+                readOnly={!!lockedStudentInformation.fullname}
+                tabIndex={lockedStudentInformation.fullname ? -1 : 0}
+                onTyping={(v) =>
+                  setErrors((current) => {
+                    if (!current["studentInformation.fullname"]) return current;
+                    const next = { ...current };
+                    delete next["studentInformation.fullname"];
+                    return next;
+                  })
+                }
                 onChange={
-                  form.studentInformation.fullname
+                  lockedStudentInformation.fullname
                     ? undefined
                     : (v) =>
                         setPath("studentInformation.fullname", v, {
                           lowPriority: true,
                         })
                 }
-                style={{ cursor: form.studentInformation.fullname ? "default" : "text" }}
+                style={{ cursor: lockedStudentInformation.fullname ? "default" : "text" }}
               />
               {errors["studentInformation.fullname"] && (
                 <div style={{ color: "red" }}>
@@ -2201,17 +2233,25 @@ export default function PublicEvaluationForm({
               <MemoDebouncedInput
                 className="fi"
                 value={form.studentInformation.studentID}
-                readOnly={!!form.studentInformation.studentID}
-                tabIndex={form.studentInformation.studentID ? -1 : 0}
+                readOnly={!!lockedStudentInformation.studentID}
+                tabIndex={lockedStudentInformation.studentID ? -1 : 0}
+                onTyping={(v) =>
+                  setErrors((current) => {
+                    if (!current["studentInformation.studentID"]) return current;
+                    const next = { ...current };
+                    delete next["studentInformation.studentID"];
+                    return next;
+                  })
+                }
                 onChange={
-                  form.studentInformation.studentID
+                  lockedStudentInformation.studentID
                     ? undefined
                     : (v) =>
                         setPath("studentInformation.studentID", v, {
                           lowPriority: true,
                         })
                 }
-                style={{ cursor: form.studentInformation.studentID ? "default" : "text" }}
+                style={{ cursor: lockedStudentInformation.studentID ? "default" : "text" }}
               />
               {errors["studentInformation.studentID"] && (
                 <div style={{ color: "red" }}>
@@ -2225,16 +2265,25 @@ export default function PublicEvaluationForm({
               <MemoDebouncedInput
                 className="fi"
                 value={form.studentInformation.degreeProgram}
-                tabIndex={form.studentInformation.degreeProgram ? -1 : 0}
+                readOnly={!!lockedStudentInformation.degreeProgram}
+                tabIndex={lockedStudentInformation.degreeProgram ? -1 : 0}
+                onTyping={(v) =>
+                  setErrors((current) => {
+                    if (!current["studentInformation.degreeProgram"]) return current;
+                    const next = { ...current };
+                    delete next["studentInformation.degreeProgram"];
+                    return next;
+                  })
+                }
                 onChange={
-                  form.studentInformation.degreeProgram
+                  lockedStudentInformation.degreeProgram
                     ? undefined
                     : (v) =>
                         setPath("studentInformation.degreeProgram", v, {
                           lowPriority: true,
                         })
                 }
-                style={{ cursor: form.studentInformation.degreeProgram ? "default" : "text" }}
+                style={{ cursor: lockedStudentInformation.degreeProgram ? "default" : "text" }}
               />
               {errors["studentInformation.degreeProgram"] && (
                 <div style={{ color: "red" }}>
@@ -2249,10 +2298,18 @@ export default function PublicEvaluationForm({
                 type="number"
                 className="fi"
                 value={form.studentInformation.yearOfStudy}
-                readOnly={!!form.studentInformation.yearOfStudy}
-                tabIndex={form.studentInformation.yearOfStudy ? -1 : 0}
+                readOnly={!!lockedStudentInformation.yearOfStudy}
+                tabIndex={lockedStudentInformation.yearOfStudy ? -1 : 0}
+                onTyping={(v) =>
+                  setErrors((current) => {
+                    if (!current["studentInformation.yearOfStudy"]) return current;
+                    const next = { ...current };
+                    delete next["studentInformation.yearOfStudy"];
+                    return next;
+                  })
+                }
                 onChange={
-                  form.studentInformation.yearOfStudy
+                  lockedStudentInformation.yearOfStudy
                     ? undefined
                     : (v) =>
                         setPath(
@@ -2261,7 +2318,7 @@ export default function PublicEvaluationForm({
                           { lowPriority: true },
                         )
                 }
-                style={{ cursor: form.studentInformation.yearOfStudy ? "default" : "text" }}
+                style={{ cursor: lockedStudentInformation.yearOfStudy ? "default" : "text" }}
               />
               {errors["studentInformation.yearOfStudy"] && (
                 <div style={{ color: "red" }}>
@@ -2382,17 +2439,25 @@ export default function PublicEvaluationForm({
               <MemoDebouncedInput
                 className="fi"
                 value={form.companyInformation.companyName}
-                readOnly={!!form.companyInformation.companyName}
-                tabIndex={form.companyInformation.companyName ? -1 : 0}
+                readOnly={!!lockedCompanyInformation.companyName}
+                tabIndex={lockedCompanyInformation.companyName ? -1 : 0}
+                onTyping={(v) =>
+                  setErrors((current) => {
+                    if (!current["companyInformation.companyName"]) return current;
+                    const next = { ...current };
+                    delete next["companyInformation.companyName"];
+                    return next;
+                  })
+                }
                 onChange={
-                  form.companyInformation.companyName
+                  lockedCompanyInformation.companyName
                     ? undefined
                     : (v) =>
                         setPath("companyInformation.companyName", v, {
                           lowPriority: true,
                         })
                 }
-                style={{ cursor: form.companyInformation.companyName ? "default" : "text" }}
+                style={{ cursor: lockedCompanyInformation.companyName ? "default" : "text" }}
               />
               {errors["companyInformation.companyName"] && (
                 <div style={{ color: "red" }}>
@@ -2406,17 +2471,25 @@ export default function PublicEvaluationForm({
               <MemoDebouncedInput
                 className="fi"
                 value={form.companyInformation.department}
-                readOnly={!!form.companyInformation.department}
-                tabIndex={form.companyInformation.department ? -1 : 0}
+                readOnly={!!lockedCompanyInformation.department}
+                tabIndex={lockedCompanyInformation.department ? -1 : 0}
+                onTyping={(v) =>
+                  setErrors((current) => {
+                    if (!current["companyInformation.department"]) return current;
+                    const next = { ...current };
+                    delete next["companyInformation.department"];
+                    return next;
+                  })
+                }
                 onChange={
-                  form.companyInformation.department
+                  lockedCompanyInformation.department
                     ? undefined
                     : (v) =>
                         setPath("companyInformation.department", v, {
                           lowPriority: true,
                         })
                 }
-                style={{ cursor: form.companyInformation.department ? "default" : "text" }}
+                style={{ cursor: lockedCompanyInformation.department ? "default" : "text" }}
               />
               {errors["companyInformation.department"] && (
                 <div style={{ color: "red" }}>
@@ -2430,17 +2503,25 @@ export default function PublicEvaluationForm({
               <MemoDebouncedInput
                 className="fi"
                 value={form.companyInformation.supervisorContact}
-                readOnly={!!form.companyInformation.supervisorContact}
-                tabIndex={form.companyInformation.supervisorContact ? -1 : 0}
+                readOnly={!!lockedCompanyInformation.supervisorContact}
+                tabIndex={lockedCompanyInformation.supervisorContact ? -1 : 0}
+                onTyping={(v) =>
+                  setErrors((current) => {
+                    if (!current["companyInformation.supervisorContact"]) return current;
+                    const next = { ...current };
+                    delete next["companyInformation.supervisorContact"];
+                    return next;
+                  })
+                }
                 onChange={
-                  form.companyInformation.supervisorContact
+                  lockedCompanyInformation.supervisorContact
                     ? undefined
                     : (v) =>
                         setPath("companyInformation.supervisorContact", v, {
                           lowPriority: true,
                         })
                 }
-                style={{ cursor: form.companyInformation.supervisorContact ? "default" : "text" }}
+                style={{ cursor: lockedCompanyInformation.supervisorContact ? "default" : "text" }}
               />
               {errors["companyInformation.supervisorContact"] && (
                 <div style={{ color: "red" }}>

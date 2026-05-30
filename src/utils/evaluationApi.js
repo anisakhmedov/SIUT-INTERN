@@ -44,3 +44,24 @@ export default { postEvaluation };
 export async function getEvaluations(endpoint = '/internship-evaluations') {
   return await get(endpoint);
 }
+
+export async function getPublicFormOptions() {
+  return await get('/public/form-options', {
+    auth: false,
+    handleUnauthorized: false,
+  });
+}
+
+export async function getPublicInternships() {
+  return await get('/public/internships', {
+    auth: false,
+    handleUnauthorized: false,
+  });
+}
+
+export async function getPublicStudents() {
+  return await get('/public/students', {
+    auth: false,
+    handleUnauthorized: false,
+  });
+}

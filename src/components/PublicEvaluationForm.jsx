@@ -1,6 +1,13 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import InternshipEvaluationSchema from "../utils/evaluationSchema";
-import { postEvaluation } from "../utils/evaluationApi";
+import { getPublicFormOptions, postEvaluation } from "../utils/evaluationApi";
 
 const styles = {
   page: {
@@ -721,10 +728,8 @@ function DebouncedInput({ value, onChange, debounce = 250, ...props }) {
   );
 }
 
-const MemoDebouncedInput = React.memo(
-  DebouncedInput,
-  (prevProps, nextProps) =>
-    arePropsEqualIgnoringKeys(prevProps, nextProps, ["onChange"]),
+const MemoDebouncedInput = React.memo(DebouncedInput, (prevProps, nextProps) =>
+  arePropsEqualIgnoringKeys(prevProps, nextProps, ["onChange"]),
 );
 
 function DebouncedTextarea({ value, onChange, debounce = 300, ...props }) {
@@ -837,6 +842,7 @@ function FancySelect({
   error,
   required,
   errorKey,
+  disabled = false,
 }) {
   const [open, setOpen] = useState(false);
   const isCompact = useMediaQuery("(max-width: 640px)");
@@ -849,11 +855,16 @@ function FancySelect({
       <button
         type="button"
         className="fi"
-        onClick={() => setOpen((state) => !state)}
+        onClick={() => {
+          if (disabled) return;
+          setOpen((state) => !state);
+        }}
         style={{
           ...styles.pickerButton,
           ...(open ? styles.pickerButtonOpen : null),
+          ...(disabled ? { opacity: 0.6, cursor: "not-allowed" } : null),
         }}
+        disabled={disabled}
       >
         <span style={styles.pickerTextWrap}>
           <span style={styles.pickerLabel}>
@@ -868,7 +879,12 @@ function FancySelect({
       </button>
       {hint && <div style={styles.fieldHint}>{hint}</div>}
       {open && (
-        <div style={{ ...styles.pickerMenu, ...(isCompact ? styles.pickerMenuCompact : null) }}>
+        <div
+          style={{
+            ...styles.pickerMenu,
+            ...(isCompact ? styles.pickerMenuCompact : null),
+          }}
+        >
           {options.map((option, index) => {
             const active = option.value === value;
             return (
@@ -888,7 +904,14 @@ function FancySelect({
                 }}
               >
                 <span style={styles.pickerOptionLeft}>
-                  <span style={{ ...styles.pickerOptionTitle, fontSize: isCompact ? 13 : 13.5 }}>{option.title}</span>
+                  <span
+                    style={{
+                      ...styles.pickerOptionTitle,
+                      fontSize: isCompact ? 13 : 13.5,
+                    }}
+                  >
+                    {option.title}
+                  </span>
                   <span style={styles.pickerOptionDesc}>
                     {option.description}
                   </span>
@@ -904,10 +927,8 @@ function FancySelect({
   );
 }
 
-const MemoFancySelect = React.memo(
-  FancySelect,
-  (prevProps, nextProps) =>
-    arePropsEqualIgnoringKeys(prevProps, nextProps, ["onChange"]),
+const MemoFancySelect = React.memo(FancySelect, (prevProps, nextProps) =>
+  arePropsEqualIgnoringKeys(prevProps, nextProps, ["onChange"]),
 );
 
 function formatDateLabel(date) {
@@ -925,35 +946,58 @@ function getTodayDateValue() {
 }
 
 function getRecordId(record) {
-  return record?._id || record?.id || record?.studentId || record?.facultyId || '';
+  return (
+    record?._id || record?.id || record?.studentId || record?.facultyId || ""
+  );
 }
 
 function getStudentRecordId(student) {
-  return student?._id || student?.id || student?.studentId || '';
+  return student?._id || student?.id || student?.studentId || "";
 }
 
 function getStudentFullName(student) {
-  return [student?.name, student?.surname, student?.lastname].filter(Boolean).join(' ').trim();
+  return [student?.name, student?.surname, student?.lastname]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
 }
 
 function getStudentDegreeLabel(student) {
-  return student?.degreeProgram || student?.nameFaculty || student?.faculty?.name || '';
+  return (
+    student?.degreeProgram ||
+    student?.nameFaculty ||
+    student?.faculty?.name ||
+    ""
+  );
 }
 
 function getStudentYearValue(student) {
-  return student?.year || student?.yearOfStudy || '';
+  // let studentYear = `20 ${student.nameFaculty.split("-")[2]}`
+  // console.log("studentYear", studentYear)
+  console.log(student)
+  return "";
 }
 
 function getInternshipTitle(internship) {
-  return internship?.name || internship?.title || internship?.company || 'Untitled internship';
+  return (
+    internship?.name ||
+    internship?.title ||
+    internship?.company ||
+    "Untitled internship"
+  );
 }
 
 function getInternshipCompany(internship) {
-  return internship?.company || internship?.companyName || internship?.organization || '';
+  return (
+    internship?.company ||
+    internship?.companyName ||
+    internship?.organization ||
+    ""
+  );
 }
 
 function getInternshipDepartment(internship) {
-  return internship?.plan || internship?.department || internship?.title || '';
+  return internship?.plan || internship?.department || internship?.title || "";
 }
 
 function getInternshipSupervisor(internship) {
@@ -965,40 +1009,55 @@ function getInternshipSupervisor(internship) {
     internship?.tutorID ||
     internship?.supervisor ||
     internship?.tutor ||
-    ''
+    ""
   );
 }
 
 function getInternshipStartDate(internship) {
-  return internship?.startDate || internship?.start || internship?.duration?.start || internship?.duration?.startDate || '';
+  return (
+    internship?.startDate ||
+    internship?.start ||
+    internship?.duration?.start ||
+    internship?.duration?.startDate ||
+    ""
+  );
 }
 
 function getInternshipEndDate(internship) {
-  return internship?.endDate || internship?.end || internship?.duration?.end || internship?.duration?.endDate || '';
+  return (
+    internship?.endDate ||
+    internship?.end ||
+    internship?.duration?.end ||
+    internship?.duration?.endDate ||
+    ""
+  );
 }
 
-function normalizeAvailableStudents(students, blockedIds = [], selectedInternship = null) {
+function normalizeAvailableStudents(internshipStudents, blockedIds = []) {
   const blockedSet = new Set((blockedIds || []).map((value) => String(value)));
 
-  const relatedIds = new Set(
-    (Array.isArray(selectedInternship?.students) ? selectedInternship.students : [])
-      .flatMap((item) => {
-        if (!item) return [];
-        if (typeof item === 'string') return [item];
-        return [item?._id || item?.id || item?.studentId || ''];
-      })
-      .filter(Boolean)
-      .map((value) => String(value)),
-  );
+  return (Array.isArray(internshipStudents) ? internshipStudents : [])
+    .map((student) => {
+      if (typeof student === "string") {
+        return { _id: student };
+      }
+      console.log("student", student)
+      return student || null;
 
-  return (Array.isArray(students) ? students : [])
+    })
     .filter((student) => {
       const studentId = String(getStudentRecordId(student));
-      if (!studentId) return false;
-      if (blockedSet.has(studentId)) return false;
-      if (relatedIds.size > 0 && !relatedIds.has(studentId)) return false;
-      return true;
+      return Boolean(studentId) && !blockedSet.has(studentId);
     });
+}
+
+function normalizePublicFormOptions(payload) {
+  const internships = Array.isArray(payload?.internships)
+    ? payload.internships
+    : [];
+  const students = Array.isArray(payload?.students) ? payload.students : [];
+
+  return { internships, students };
 }
 
 function createMonthGrid(currentMonth) {
@@ -1018,7 +1077,15 @@ function createMonthGrid(currentMonth) {
   });
 }
 
-function FancyDateField({ label, value, onChange, hint, error, required, errorKey }) {
+function FancyDateField({
+  label,
+  value,
+  onChange,
+  hint,
+  error,
+  required,
+  errorKey,
+}) {
   const [open, setOpen] = useState(false);
   const isCompact = useMediaQuery("(max-width: 640px)");
   const [viewMonth, setViewMonth] = useState(() => {
@@ -1094,7 +1161,12 @@ function FancyDateField({ label, value, onChange, hint, error, required, errorKe
       {hint && <div style={styles.fieldHint}>{hint}</div>}
       {error && <div style={styles.error}>{error}</div>}
       {open && (
-        <div style={{ ...styles.calendarPanel, ...(isCompact ? styles.calendarPanelCompact : null) }}>
+        <div
+          style={{
+            ...styles.calendarPanel,
+            ...(isCompact ? styles.calendarPanelCompact : null),
+          }}
+        >
           <div style={styles.calendarHeader}>
             <div style={styles.calendarMonth}>
               <span style={styles.calendarMonthTitle}>{monthTitle}</span>
@@ -1105,7 +1177,7 @@ function FancyDateField({ label, value, onChange, hint, error, required, errorKe
             <div style={styles.calendarNav}>
               <button
                 type="button"
-                style={{ ...styles.calendarNavBtn}}
+                style={{ ...styles.calendarNavBtn }}
                 onClick={() =>
                   setViewMonth(
                     (month) =>
@@ -1117,7 +1189,7 @@ function FancyDateField({ label, value, onChange, hint, error, required, errorKe
               </button>
               <button
                 type="button"
-                style={{ ...styles.calendarNavBtn}}
+                style={{ ...styles.calendarNavBtn }}
                 onClick={() =>
                   setViewMonth(
                     (month) =>
@@ -1133,7 +1205,13 @@ function FancyDateField({ label, value, onChange, hint, error, required, errorKe
           <div style={styles.calendarGrid}>
             {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(
               (dayName) => (
-                <div key={dayName} style={{ ...styles.calendarDow, fontSize: isCompact ? 8.5 : 9 }}>
+                <div
+                  key={dayName}
+                  style={{
+                    ...styles.calendarDow,
+                    fontSize: isCompact ? 8.5 : 9,
+                  }}
+                >
                   {dayName}
                 </div>
               ),
@@ -1195,10 +1273,8 @@ function FancyDateField({ label, value, onChange, hint, error, required, errorKe
   );
 }
 
-const MemoFancyDateField = React.memo(
-  FancyDateField,
-  (prevProps, nextProps) =>
-    arePropsEqualIgnoringKeys(prevProps, nextProps, ["onChange"]),
+const MemoFancyDateField = React.memo(FancyDateField, (prevProps, nextProps) =>
+  arePropsEqualIgnoringKeys(prevProps, nextProps, ["onChange"]),
 );
 
 function RatingTable({
@@ -1341,10 +1417,11 @@ function RatingTable({
   );
 }
 
-const MemoRatingTable = React.memo(
-  RatingTable,
-  (prevProps, nextProps) =>
-    arePropsEqualIgnoringKeys(prevProps, nextProps, ["onChange", "onCommentChange"]),
+const MemoRatingTable = React.memo(RatingTable, (prevProps, nextProps) =>
+  arePropsEqualIgnoringKeys(prevProps, nextProps, [
+    "onChange",
+    "onCommentChange",
+  ]),
 );
 
 const ERROR_ANCHOR_ORDER = [
@@ -1383,9 +1460,12 @@ function getErrorAnchorKey(errorKey) {
   if (errorKey.startsWith("professionalism.")) return "__group.professionalism";
   if (errorKey.startsWith("workEthic.")) return "__group.workEthic";
   if (errorKey.startsWith("technicalSkills.")) return "__group.technicalSkills";
-  if (errorKey.startsWith("communicationSkills.")) return "__group.communicationSkills";
-  if (errorKey.startsWith("problemSolvingSkills.")) return "__group.problemSolvingSkills";
-  if (errorKey.startsWith("overallPerformance.")) return "__group.overallPerformance";
+  if (errorKey.startsWith("communicationSkills."))
+    return "__group.communicationSkills";
+  if (errorKey.startsWith("problemSolvingSkills."))
+    return "__group.problemSolvingSkills";
+  if (errorKey.startsWith("overallPerformance."))
+    return "__group.overallPerformance";
   return errorKey;
 }
 
@@ -1402,24 +1482,25 @@ function focusFirstError(errorMap) {
   if (!target) return;
 
   target.scrollIntoView({ behavior: "smooth", block: "center" });
-  const focusable =
-    target.matches("input, textarea, select, button, [tabindex]")
-      ? target
-      : target.querySelector("input, textarea, select, button, [tabindex]");
+  const focusable = target.matches(
+    "input, textarea, select, button, [tabindex]",
+  )
+    ? target
+    : target.querySelector("input, textarea, select, button, [tabindex]");
   if (focusable && typeof focusable.focus === "function") {
     focusable.focus({ preventScroll: true });
   }
 }
 
 export default function PublicEvaluationForm({
-  badge = 'Student evaluation form',
-  title = 'Student Internship Evaluation',
-  successBadge = 'Success',
-  successTitle = 'Your evaluation was submitted.',
-  successText = 'Thank you. The student internship evaluation has been received and saved successfully.',
-  nextStepLabel = 'You may close this page',
-  submitLabel = 'Submit Evaluation',
-  apiPath = '/internship-evaluations',
+  badge = "Student evaluation form",
+  title = "Student Internship Evaluation",
+  successBadge = "Success",
+  successTitle = "Your evaluation was submitted.",
+  successText = "Thank you. The student internship evaluation has been received and saved successfully.",
+  nextStepLabel = "You may close this page",
+  submitLabel = "Submit Evaluation",
+  apiPath = "/internship-evaluations",
   internships = [],
   students = [],
   blockedStudentIds = [],
@@ -1431,56 +1512,110 @@ export default function PublicEvaluationForm({
   const [sending, setSending] = useState(false);
   const [success, setSuccess] = useState(null);
   const [serverError, setServerError] = useState(null);
-  const [selectedInternshipId, setSelectedInternshipId] = useState('');
-  const [selectedStudentId, setSelectedStudentId] = useState('');
+  const [selectedInternshipId, setSelectedInternshipId] = useState("");
+  const [selectedStudentId, setSelectedStudentId] = useState("");
   const selectionSyncPauseRef = useRef(false);
+  const [publicOptions, setPublicOptions] = useState({
+    internships: [],
+    students: [],
+  });
+  const [optionsLoading, setOptionsLoading] = useState(false);
+  const [optionsError, setOptionsError] = useState(null);
+
+  const hasInjectedOptions =
+    (Array.isArray(internships) && internships.length > 0) ||
+    (Array.isArray(students) && students.length > 0);
+
+  useEffect(() => {
+    if (hasInjectedOptions) {
+      setPublicOptions({ internships: [], students: [] });
+      setOptionsLoading(false);
+      setOptionsError(null);
+      return;
+    }
+
+    let mounted = true;
+    setOptionsLoading(true);
+    setOptionsError(null);
+
+    (async () => {
+      try {
+        const payload = await getPublicFormOptions();
+        if (!mounted) return;
+        setPublicOptions(normalizePublicFormOptions(payload));
+      } catch (err) {
+        if (!mounted) return;
+        setOptionsError(err?.message || String(err));
+      } finally {
+        if (mounted) setOptionsLoading(false);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [hasInjectedOptions, internships, students]);
+
+  const sourceInternships = hasInjectedOptions
+    ? internships
+    : publicOptions.internships;
 
   const internshipOptions = useMemo(
     () =>
-      (Array.isArray(internships) ? internships : []).map((internship) => {
-        const value = String(getRecordId(internship));
-        const title = getInternshipTitle(internship);
-        const company = getInternshipCompany(internship);
-        const start = getInternshipStartDate(internship);
-        const end = getInternshipEndDate(internship);
-        const dateLabel = [start, end].filter(Boolean).join(' → ');
+      (Array.isArray(sourceInternships) ? sourceInternships : []).map(
+        (internship) => {
+          const value = String(getRecordId(internship));
+          const title = getInternshipTitle(internship);
+          const company = getInternshipCompany(internship);
+          const start = getInternshipStartDate(internship);
+          const end = getInternshipEndDate(internship);
+          const dateLabel = [start, end].filter(Boolean).join(" → ");
 
-        return {
-          value,
-          title: company ? `${title} • ${company}` : title,
-          description: dateLabel || getInternshipDepartment(internship) || 'Internship record',
-        };
-      }),
-    [internships],
+          return {
+            value,
+            title: company ? `${title} • ${company}` : title,
+            description:
+              dateLabel ||
+              getInternshipDepartment(internship) ||
+              "Internship record",
+          };
+        },
+      ),
+    [sourceInternships],
   );
 
   const selectedInternship = useMemo(
     () =>
-      (Array.isArray(internships) ? internships : []).find(
-        (internship) => String(getRecordId(internship)) === String(selectedInternshipId),
+      (Array.isArray(sourceInternships) ? sourceInternships : []).find(
+        (internship) =>
+          String(getRecordId(internship)) === String(selectedInternshipId),
       ) || null,
-    [internships, selectedInternshipId],
+    [selectedInternshipId, sourceInternships],
   );
 
   const availableStudents = useMemo(
-    () => normalizeAvailableStudents(students, blockedStudentIds, selectedInternship),
-    [blockedStudentIds, selectedInternship, students],
+    () =>
+      normalizeAvailableStudents(
+        selectedInternship?.students,
+        blockedStudentIds,
+      ),
+    [blockedStudentIds, selectedInternship],
   );
 
   const studentOptions = useMemo(
     () =>
       availableStudents.map((student) => {
         const value = String(getStudentRecordId(student));
-        const fullName = getStudentFullName(student) || 'Unnamed student';
+        const fullName = getStudentFullName(student) || "Unnamed student";
         const degree = getStudentDegreeLabel(student);
         const year = getStudentYearValue(student);
-
+        const yearLabel = year ? `Year ${year}` : "";
         return {
           value,
           title: fullName,
-          description: [degree, year ? `Year ${year}` : '']
+          description: [degree, yearLabel]
             .filter(Boolean)
-            .join(' • '),
+            .join(" • "),
         };
       }),
     [availableStudents],
@@ -1489,46 +1624,65 @@ export default function PublicEvaluationForm({
   const selectedStudent = useMemo(
     () =>
       availableStudents.find(
-        (student) => String(getStudentRecordId(student)) === String(selectedStudentId),
+        (student) =>
+          String(getStudentRecordId(student)) === String(selectedStudentId),
       ) || null,
     [availableStudents, selectedStudentId],
+  );
+  console.log(availableStudents);
+  
+
+  const lockedStudentInformation = useMemo(
+    () => ({
+      fullname: selectedStudent ? getStudentFullName(selectedStudent) || "" : "",
+      studentID: selectedStudent ? getStudentRecordId(selectedStudent) || "" : "",
+      degreeProgram: selectedStudent ? getStudentDegreeLabel(selectedStudent) || "" : "",
+      yearOfStudy: selectedStudent ? getStudentYearValue(selectedStudent) || "" : "",
+      nameFaculty: selectedStudent ? getStudentDegreeLabel(selectedStudent) || "" : "",
+      internshipStartDate: selectedInternship ? getInternshipStartDate(selectedInternship) || "" : "",
+      internshipEndDate: selectedInternship ? getInternshipEndDate(selectedInternship) || "" : "",
+    }),
+    [selectedInternship, selectedStudent],
+  );
+
+  const lockedCompanyInformation = useMemo(
+    () => ({
+      companyName: selectedInternship ? getInternshipCompany(selectedInternship) || "" : "",
+      department: selectedInternship ? getInternshipDepartment(selectedInternship) || "" : "",
+      supervisorContact: selectedInternship ? getInternshipSupervisor(selectedInternship) || "" : "",
+    }),
+    [selectedInternship],
   );
 
   useEffect(() => {
     if (selectedInternshipId && !selectedInternship) {
-      setSelectedInternshipId('');
+      setSelectedInternshipId("");
       return;
     }
 
     if (selectedStudentId && !selectedStudent) {
-      setSelectedStudentId('');
+      setSelectedStudentId("");
     }
-  }, [selectedInternship, selectedInternshipId, selectedStudent, selectedStudentId]);
+  }, [
+    selectedInternship,
+    selectedInternshipId,
+    selectedStudent,
+    selectedStudentId,
+  ]);
 
   useEffect(() => {
     if (selectionSyncPauseRef.current) return;
 
-    const nextStudentInfo = {
-      fullname: getStudentFullName(selectedStudent) || '',
-      studentID: getStudentRecordId(selectedStudent) || '',
-      degreeProgram: getStudentDegreeLabel(selectedStudent) || '',
-      yearOfStudy: getStudentYearValue(selectedStudent) || '',
-      internshipStartDate: getInternshipStartDate(selectedInternship) || '',
-      internshipEndDate: getInternshipEndDate(selectedInternship) || '',
-    };
-
-    const nextCompanyInfo = {
-      companyName: getInternshipCompany(selectedInternship) || '',
-      department: getInternshipDepartment(selectedInternship) || '',
-      supervisorContact: getInternshipSupervisor(selectedInternship) || '',
-    };
-
     setForm((current) => {
-      const sameStudent = Object.entries(nextStudentInfo).every(
-        ([key, value]) => String(current.studentInformation?.[key] ?? '') === String(value ?? ''),
+      const sameStudent = Object.entries(lockedStudentInformation).every(
+        ([key, value]) =>
+          String(current.studentInformation?.[key] ?? "") ===
+          String(value ?? ""),
       );
-      const sameCompany = Object.entries(nextCompanyInfo).every(
-        ([key, value]) => String(current.companyInformation?.[key] ?? '') === String(value ?? ''),
+      const sameCompany = Object.entries(lockedCompanyInformation).every(
+        ([key, value]) =>
+          String(current.companyInformation?.[key] ?? "") ===
+          String(value ?? ""),
       );
 
       if (sameStudent && sameCompany) return current;
@@ -1537,15 +1691,34 @@ export default function PublicEvaluationForm({
         ...current,
         studentInformation: {
           ...current.studentInformation,
-          ...nextStudentInfo,
+          ...lockedStudentInformation,
         },
         companyInformation: {
           ...current.companyInformation,
-          ...nextCompanyInfo,
+          ...lockedCompanyInformation,
         },
       };
     });
-  }, [selectedInternship, selectedStudent]);
+  }, [lockedCompanyInformation, lockedStudentInformation]);
+
+  const buildSubmissionPayload = useCallback(
+    (sourceForm) => ({
+      ...sourceForm,
+      studentInformation: {
+        ...sourceForm.studentInformation,
+        ...lockedStudentInformation,
+      },
+      companyInformation: {
+        ...sourceForm.companyInformation,
+        ...lockedCompanyInformation,
+      },
+      finalRecommendation: {
+        ...sourceForm.finalRecommendation,
+        date: getTodayDateValue(),
+      },
+    }),
+    [lockedCompanyInformation, lockedStudentInformation],
+  );
 
   const handleAutoFill = useCallback(() => {
     setSuccess(null);
@@ -1605,12 +1778,16 @@ export default function PublicEvaluationForm({
       openEndedQuestions: {
         strengths: "Reliable, proactive, and eager to learn.",
         areasOfImprovement: "Can continue building deeper domain expertise.",
-        projectTaskFeedback: "Completed tasks thoughtfully and with good attention to detail.",
+        projectTaskFeedback:
+          "Completed tasks thoughtfully and with good attention to detail.",
         learningAndGrowth: "Made clear progress throughout the internship.",
-        teamDynamics: "Positive impact on team communication and collaboration.",
+        teamDynamics:
+          "Positive impact on team communication and collaboration.",
         adaptability: "Adjusted quickly to changing requirements and tools.",
-        feedbackForStudent: "Keep challenging yourself with larger technical tasks.",
-        feedbackForUniversity: "Great candidate with strong practical readiness.",
+        feedbackForStudent:
+          "Keep challenging yourself with larger technical tasks.",
+        feedbackForUniversity:
+          "Great candidate with strong practical readiness.",
       },
       finalRecommendation: {
         finalRating: "3-4",
@@ -1751,7 +1928,8 @@ export default function PublicEvaluationForm({
 
   const professionalismErrors = useMemo(
     () => ({
-      punctualityAndAttendance: errors["professionalism.punctualityAndAttendance"],
+      punctualityAndAttendance:
+        errors["professionalism.punctualityAndAttendance"],
       dressCodeAndAppearance: errors["professionalism.dressCodeAndAppearance"],
       adherenceToCompanyPolicies:
         errors["professionalism.adherenceToCompanyPolicies"],
@@ -1813,67 +1991,76 @@ export default function PublicEvaluationForm({
 
   const [_isPending, startTransition] = useTransition();
 
-  const setPath = useCallback((path, value, options = { lowPriority: true }) => {
-    const parts = path.split(".");
-    const clearFieldError = () => {
-      setErrors((current) => {
-        if (!current[path]) return current;
-        const next = { ...current };
-        delete next[path];
-        return next;
-      });
-    };
+  const setPath = useCallback(
+    (path, value, options = { lowPriority: true }) => {
+      const parts = path.split(".");
+      const clearFieldError = () => {
+        setErrors((current) => {
+          if (!current[path]) return current;
+          const next = { ...current };
+          delete next[path];
+          return next;
+        });
+      };
 
-    if (options.lowPriority) {
-      startTransition(() => {
+      if (options.lowPriority) {
+        startTransition(() => {
+          setForm((current) => updateNestedValue(current, parts, value));
+          clearFieldError();
+        });
+      } else {
         setForm((current) => updateNestedValue(current, parts, value));
         clearFieldError();
-      });
-    } else {
-      setForm((current) => updateNestedValue(current, parts, value));
-      clearFieldError();
-    }
-  }, []);
+      }
+    },
+    [],
+  );
 
-  const handleSubmit = useCallback(async (e) => {
-    e.preventDefault();
-    setServerError(null);
-    try {
-      const parsed = InternshipEvaluationSchema.parse({
-        ...form,
-        finalRecommendation: {
-          ...form.finalRecommendation,
-          date: getTodayDateValue(),
-        },
-      });
-      setErrors({});
-      setSending(true);
-      await postEvaluation(parsed, apiPath);
-      if (onSubmissionComplete) {
-        onSubmissionComplete({
-          internshipId: String(selectedInternshipId || ''),
-          studentId: String(getStudentRecordId(selectedStudent) || ''),
-          payload: parsed,
-        });
+  const handleSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
+      setServerError(null);
+      try {
+        const parsed = InternshipEvaluationSchema.parse(
+          buildSubmissionPayload(form),
+        );
+        setErrors({});
+        setSending(true);
+        await postEvaluation(parsed, apiPath);
+        if (onSubmissionComplete) {
+          onSubmissionComplete({
+            internshipId: String(selectedInternshipId || ""),
+            studentId: String(getStudentRecordId(selectedStudent) || ""),
+            payload: parsed,
+          });
+        }
+        setSelectedStudentId("");
+        setSuccess("Evaluation submitted successfully.");
+      } catch (err) {
+        if (err?.issues) {
+          const map = {};
+          err.issues.forEach((it) => {
+            const key = it.path.join(".") || "_form";
+            map[key] = it.message;
+          });
+          setErrors(map);
+          setTimeout(() => focusFirstError(map), 0);
+        } else {
+          setServerError(err.message || String(err));
+        }
+      } finally {
+        setSending(false);
       }
-      setSelectedStudentId('');
-      setSuccess("Evaluation submitted successfully.");
-    } catch (err) {
-      if (err?.issues) {
-        const map = {};
-        err.issues.forEach((it) => {
-          const key = it.path.join(".") || "_form";
-          map[key] = it.message;
-        });
-        setErrors(map);
-        setTimeout(() => focusFirstError(map), 0);
-      } else {
-        setServerError(err.message || String(err));
-      }
-    } finally {
-      setSending(false);
-    }
-  }, [apiPath, onSubmissionComplete, selectedInternshipId, selectedStudent, form]);
+    },
+    [
+      apiPath,
+      onSubmissionComplete,
+      selectedInternshipId,
+      selectedStudent,
+      form,
+      buildSubmissionPayload,
+    ],
+  );
 
   if (success) {
     return (
@@ -1885,9 +2072,7 @@ export default function PublicEvaluationForm({
               <div style={styles.successBadge}>{successBadge}</div>
               <div style={styles.successMark}>✓</div>
               <h1 style={styles.successTitle}>{successTitle}</h1>
-              <p style={styles.successText}>
-                {successText}
-              </p>
+              <p style={styles.successText}>{successText}</p>
 
               <div style={styles.successMeta}>
                 <div style={styles.successMetaItem}>
@@ -1917,18 +2102,39 @@ export default function PublicEvaluationForm({
         <form onSubmit={handleSubmit} style={styles.form}>
           <section style={styles.card}>
             <h3 style={styles.sectionTitle}>Choose Internship and Student</h3>
-            <div style={styles.grid2}>
+            {optionsLoading && (
+              <div style={styles.fieldHint}>
+                Loading public internships and students…
+              </div>
+            )}
+            {optionsError && (
+              <div
+                style={{
+                  color: "#b91c1c",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  marginBottom: 10,
+                }}
+              >
+                Unable to load public options: {optionsError}
+              </div>
+            )}
+            <div style={{ ...styles.grid2, display: "grid", gap: 10 }}>
               <MemoFancySelect
                 label="Internship"
                 value={selectedInternshipId}
                 onChange={(nextValue) => {
                   setSelectedInternshipId(nextValue);
-                  setSelectedStudentId('');
+                  setSelectedStudentId("");
                 }}
                 options={internshipOptions}
-                placeholder={internshipOptions.length ? 'Select internship' : 'No internships available'}
-                hint="Choose the internship first so company data can be filled automatically."
+                placeholder={
+                  internshipOptions.length
+                    ? "Select internship"
+                    : "No internships available"
+                }
                 error={null}
+                disabled={optionsLoading || !internshipOptions.length}
               />
 
               <MemoFancySelect
@@ -1936,26 +2142,29 @@ export default function PublicEvaluationForm({
                 value={selectedStudentId}
                 onChange={(nextValue) => setSelectedStudentId(nextValue)}
                 options={studentOptions}
-                placeholder={selectedInternship ? 'Select student' : 'Select internship first'}
-                hint={selectedInternship ? 'Only students from this internship are shown.' : 'Pick an internship to load the student list.'}
+                placeholder={
+                  selectedInternship
+                    ? "Select student"
+                    : "Select internship first"
+                }
                 error={null}
+                disabled={
+                  !selectedInternship ||
+                  optionsLoading ||
+                  !studentOptions.length
+                }
               />
             </div>
-            <div style={styles.fieldHint}>
-              {selectedInternship
-                ? `Selected internship: ${getInternshipTitle(selectedInternship)}`
-                : 'No internship selected yet.'}
-            </div>
-            {selectedStudent && (
-              <div style={{ ...styles.detailItem, marginTop: 12 }}>
-                <span style={styles.detailLabel}>Selected student</span>
-                <div style={styles.detailValue}>
-                  {getStudentFullName(selectedStudent) || 'Unnamed student'}
-                </div>
-              </div>
-            )}
+
             {!studentOptions.length && selectedInternship && (
-              <div style={{ color: '#b45309', marginTop: 10, fontSize: 13, fontWeight: 600 }}>
+              <div
+                style={{
+                  color: "#b45309",
+                  marginTop: 10,
+                  fontSize: 13,
+                  fontWeight: 600,
+                }}
+              >
                 No available students for this internship.
               </div>
             )}
@@ -1968,7 +2177,17 @@ export default function PublicEvaluationForm({
               <MemoDebouncedInput
                 className="fi"
                 value={form.studentInformation.fullname}
-                onChange={(v) => setPath("studentInformation.fullname", v, { lowPriority: true })}
+                readOnly={!!form.studentInformation.fullname}
+                tabIndex={form.studentInformation.fullname ? -1 : 0}
+                onChange={
+                  form.studentInformation.fullname
+                    ? undefined
+                    : (v) =>
+                        setPath("studentInformation.fullname", v, {
+                          lowPriority: true,
+                        })
+                }
+                style={{ cursor: form.studentInformation.fullname ? "default" : "text" }}
               />
               {errors["studentInformation.fullname"] && (
                 <div style={{ color: "red" }}>
@@ -1982,7 +2201,17 @@ export default function PublicEvaluationForm({
               <MemoDebouncedInput
                 className="fi"
                 value={form.studentInformation.studentID}
-                onChange={(v) => setPath("studentInformation.studentID", v, { lowPriority: true })}
+                readOnly={!!form.studentInformation.studentID}
+                tabIndex={form.studentInformation.studentID ? -1 : 0}
+                onChange={
+                  form.studentInformation.studentID
+                    ? undefined
+                    : (v) =>
+                        setPath("studentInformation.studentID", v, {
+                          lowPriority: true,
+                        })
+                }
+                style={{ cursor: form.studentInformation.studentID ? "default" : "text" }}
               />
               {errors["studentInformation.studentID"] && (
                 <div style={{ color: "red" }}>
@@ -1996,7 +2225,16 @@ export default function PublicEvaluationForm({
               <MemoDebouncedInput
                 className="fi"
                 value={form.studentInformation.degreeProgram}
-                onChange={(v) => setPath("studentInformation.degreeProgram", v, { lowPriority: true })}
+                tabIndex={form.studentInformation.degreeProgram ? -1 : 0}
+                onChange={
+                  form.studentInformation.degreeProgram
+                    ? undefined
+                    : (v) =>
+                        setPath("studentInformation.degreeProgram", v, {
+                          lowPriority: true,
+                        })
+                }
+                style={{ cursor: form.studentInformation.degreeProgram ? "default" : "text" }}
               />
               {errors["studentInformation.degreeProgram"] && (
                 <div style={{ color: "red" }}>
@@ -2011,9 +2249,19 @@ export default function PublicEvaluationForm({
                 type="number"
                 className="fi"
                 value={form.studentInformation.yearOfStudy}
-                onChange={(v) =>
-                  setPath("studentInformation.yearOfStudy", Number(v || 0), { lowPriority: true })
+                readOnly={!!form.studentInformation.yearOfStudy}
+                tabIndex={form.studentInformation.yearOfStudy ? -1 : 0}
+                onChange={
+                  form.studentInformation.yearOfStudy
+                    ? undefined
+                    : (v) =>
+                        setPath(
+                          "studentInformation.yearOfStudy",
+                          v === "" ? "" : Number(v),
+                          { lowPriority: true },
+                        )
                 }
+                style={{ cursor: form.studentInformation.yearOfStudy ? "default" : "text" }}
               />
               {errors["studentInformation.yearOfStudy"] && (
                 <div style={{ color: "red" }}>
@@ -2022,29 +2270,109 @@ export default function PublicEvaluationForm({
               )}
             </div>
 
-            <MemoFancyDateField
-              label="Internship Start Date"
-              required
-              errorKey="studentInformation.internshipStartDate"
-              value={form.studentInformation.internshipStartDate}
-              onChange={(nextValue) =>
-                setPath("studentInformation.internshipStartDate", nextValue, { lowPriority: true })
-              }
-              hint="Pick the first day of the internship period."
-              error={errors["studentInformation.internshipStartDate"]}
-            />
+            <div
+              style={styles.field}
+              data-error-key="studentInformation.internshipStartDate"
+            >
+              <RequiredLabel>Internship Start Date</RequiredLabel>
+              {form.studentInformation.internshipStartDate ? (
+                <div
+                  className="fi"
+                  style={{ ...styles.dateTrigger, cursor: "default" }}
+                >
+                  <span style={styles.dateIcon}>📅</span>
+                  <span style={{ display: "grid", gap: 4, minWidth: 0, flex: 1 }}>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 800,
+                        letterSpacing: ".12em",
+                        textTransform: "uppercase",
+                        color: "var(--t2)",
+                      }}
+                    >
+                      Internship Start Date
+                    </span>
+                    <span style={{ fontSize: 15, fontWeight: 700, color: "var(--t1)" }}>
+                      {formatDateLabel(
+                        new Date(`${form.studentInformation.internshipStartDate}T00:00:00`),
+                      )}
+                    </span>
+                  </span>
+                </div>
+              ) : (
+                <MemoFancyDateField
+                  label="Internship Start Date"
+                  required
+                  errorKey="studentInformation.internshipStartDate"
+                  value={form.studentInformation.internshipStartDate}
+                  onChange={(nextValue) =>
+                    setPath("studentInformation.internshipStartDate", nextValue, {
+                      lowPriority: true,
+                    })
+                  }
+                  hint="Pick the first day of the internship period."
+                  error={errors["studentInformation.internshipStartDate"]}
+                />
+              )}
+              {errors["studentInformation.internshipStartDate"] && (
+                <div style={{ color: "red" }}>
+                  {errors["studentInformation.internshipStartDate"]}
+                </div>
+              )}
+            </div>
 
-            <MemoFancyDateField
-              label="Internship End Date"
-              required
-              errorKey="studentInformation.internshipEndDate"
-              value={form.studentInformation.internshipEndDate}
-              onChange={(nextValue) =>
-                setPath("studentInformation.internshipEndDate", nextValue, { lowPriority: true })
-              }
-              hint="Pick the last day of the internship period."
-              error={errors["studentInformation.internshipEndDate"]}
-            />
+            <div
+              style={styles.field}
+              data-error-key="studentInformation.internshipEndDate"
+            >
+              <RequiredLabel>Internship End Date</RequiredLabel>
+              {form.studentInformation.internshipEndDate ? (
+                <div
+                  className="fi"
+                  style={{ ...styles.dateTrigger, cursor: "default" }}
+                >
+                  <span style={styles.dateIcon}>📅</span>
+                  <span style={{ display: "grid", gap: 4, minWidth: 0, flex: 1 }}>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 800,
+                        letterSpacing: ".12em",
+                        textTransform: "uppercase",
+                        color: "var(--t2)",
+                      }}
+                    >
+                      Internship End Date
+                    </span>
+                    <span style={{ fontSize: 15, fontWeight: 700, color: "var(--t1)" }}>
+                      {formatDateLabel(
+                        new Date(`${form.studentInformation.internshipEndDate}T00:00:00`),
+                      )}
+                    </span>
+                  </span>
+                </div>
+              ) : (
+                <MemoFancyDateField
+                  label="Internship End Date"
+                  required
+                  errorKey="studentInformation.internshipEndDate"
+                  value={form.studentInformation.internshipEndDate}
+                  onChange={(nextValue) =>
+                    setPath("studentInformation.internshipEndDate", nextValue, {
+                      lowPriority: true,
+                    })
+                  }
+                  hint="Pick the last day of the internship period."
+                  error={errors["studentInformation.internshipEndDate"]}
+                />
+              )}
+              {errors["studentInformation.internshipEndDate"] && (
+                <div style={{ color: "red" }}>
+                  {errors["studentInformation.internshipEndDate"]}
+                </div>
+              )}
+            </div>
           </section>
 
           <section style={styles.card}>
@@ -2054,7 +2382,17 @@ export default function PublicEvaluationForm({
               <MemoDebouncedInput
                 className="fi"
                 value={form.companyInformation.companyName}
-                onChange={(v) => setPath("companyInformation.companyName", v, { lowPriority: true })}
+                readOnly={!!form.companyInformation.companyName}
+                tabIndex={form.companyInformation.companyName ? -1 : 0}
+                onChange={
+                  form.companyInformation.companyName
+                    ? undefined
+                    : (v) =>
+                        setPath("companyInformation.companyName", v, {
+                          lowPriority: true,
+                        })
+                }
+                style={{ cursor: form.companyInformation.companyName ? "default" : "text" }}
               />
               {errors["companyInformation.companyName"] && (
                 <div style={{ color: "red" }}>
@@ -2068,7 +2406,17 @@ export default function PublicEvaluationForm({
               <MemoDebouncedInput
                 className="fi"
                 value={form.companyInformation.department}
-                onChange={(v) => setPath("companyInformation.department", v, { lowPriority: true })}
+                readOnly={!!form.companyInformation.department}
+                tabIndex={form.companyInformation.department ? -1 : 0}
+                onChange={
+                  form.companyInformation.department
+                    ? undefined
+                    : (v) =>
+                        setPath("companyInformation.department", v, {
+                          lowPriority: true,
+                        })
+                }
+                style={{ cursor: form.companyInformation.department ? "default" : "text" }}
               />
               {errors["companyInformation.department"] && (
                 <div style={{ color: "red" }}>
@@ -2082,9 +2430,17 @@ export default function PublicEvaluationForm({
               <MemoDebouncedInput
                 className="fi"
                 value={form.companyInformation.supervisorContact}
-                onChange={(v) =>
-                  setPath("companyInformation.supervisorContact", v, { lowPriority: true })
+                readOnly={!!form.companyInformation.supervisorContact}
+                tabIndex={form.companyInformation.supervisorContact ? -1 : 0}
+                onChange={
+                  form.companyInformation.supervisorContact
+                    ? undefined
+                    : (v) =>
+                        setPath("companyInformation.supervisorContact", v, {
+                          lowPriority: true,
+                        })
                 }
+                style={{ cursor: form.companyInformation.supervisorContact ? "default" : "text" }}
               />
               {errors["companyInformation.supervisorContact"] && (
                 <div style={{ color: "red" }}>
@@ -2112,7 +2468,9 @@ export default function PublicEvaluationForm({
               commentLabel="Comments on professionalism"
               commentValue={form.professionalism.comments}
               onCommentChange={(value) =>
-                setPath("professionalism.comments", value, { lowPriority: true })
+                setPath("professionalism.comments", value, {
+                  lowPriority: true,
+                })
               }
               errorPrefix={professionalismErrors}
             />
@@ -2126,7 +2484,9 @@ export default function PublicEvaluationForm({
               onChange={(key, value) => setPath(`workEthic.${key}`, value)}
               commentLabel="Comment on work ethic"
               commentValue={form.workEthic.comments}
-              onCommentChange={(value) => setPath("workEthic.comments", value, { lowPriority: true })}
+              onCommentChange={(value) =>
+                setPath("workEthic.comments", value, { lowPriority: true })
+              }
               errorPrefix={workEthicErrors}
             />
 
@@ -2142,7 +2502,9 @@ export default function PublicEvaluationForm({
               commentLabel="Comments on technical skills"
               commentValue={form.technicalSkills.comments}
               onCommentChange={(value) =>
-                setPath("technicalSkills.comments", value, { lowPriority: true })
+                setPath("technicalSkills.comments", value, {
+                  lowPriority: true,
+                })
               }
               errorPrefix={technicalSkillsErrors}
             />
@@ -2159,7 +2521,9 @@ export default function PublicEvaluationForm({
               commentLabel="Comments on communication skills"
               commentValue={form.communicationSkills.comments}
               onCommentChange={(value) =>
-                setPath("communicationSkills.comments", value, { lowPriority: true })
+                setPath("communicationSkills.comments", value, {
+                  lowPriority: true,
+                })
               }
               errorPrefix={communicationSkillsErrors}
             />
@@ -2176,7 +2540,9 @@ export default function PublicEvaluationForm({
               commentLabel="Comments on problem-solving skills"
               commentValue={form.problemSolvingSkills.comments}
               onCommentChange={(value) =>
-                setPath("problemSolvingSkills.comments", value, { lowPriority: true })
+                setPath("problemSolvingSkills.comments", value, {
+                  lowPriority: true,
+                })
               }
               errorPrefix={problemSolvingSkillsErrors}
             />
@@ -2193,7 +2559,9 @@ export default function PublicEvaluationForm({
               commentLabel="Comments on overall performance"
               commentValue={form.overallPerformance.comments}
               onCommentChange={(value) =>
-                setPath("overallPerformance.comments", value, { lowPriority: true })
+                setPath("overallPerformance.comments", value, {
+                  lowPriority: true,
+                })
               }
               errorPrefix={overallPerformanceErrors}
             />
@@ -2205,101 +2573,156 @@ export default function PublicEvaluationForm({
               All fields in this section are required.
             </p>
             <div style={styles.field}>
-              <label className="fl">Strengths<span style={styles.requiredStar}>*</span></label>
+              <label className="fl">
+                Strengths<span style={styles.requiredStar}>*</span>
+              </label>
               <MemoDebouncedTextarea
                 className="fi"
                 value={form.openEndedQuestions.strengths || ""}
-                onChange={(v) => setPath("openEndedQuestions.strengths", v, { lowPriority: true })}
+                onChange={(v) =>
+                  setPath("openEndedQuestions.strengths", v, {
+                    lowPriority: true,
+                  })
+                }
               />
               {errors["openEndedQuestions.strengths"] && (
-                <div style={{ color: "red" }}>{errors["openEndedQuestions.strengths"]}</div>
+                <div style={{ color: "red" }}>
+                  {errors["openEndedQuestions.strengths"]}
+                </div>
               )}
             </div>
             <div style={styles.fieldLast}>
-              <label className="fl">Areas of improvement<span style={styles.requiredStar}>*</span></label>
+              <label className="fl">
+                Areas of improvement<span style={styles.requiredStar}>*</span>
+              </label>
               <MemoDebouncedTextarea
                 className="fi"
                 value={form.openEndedQuestions.areasOfImprovement || ""}
                 onChange={(v) =>
-                  setPath("openEndedQuestions.areasOfImprovement", v, { lowPriority: true })
+                  setPath("openEndedQuestions.areasOfImprovement", v, {
+                    lowPriority: true,
+                  })
                 }
               />
               {errors["openEndedQuestions.areasOfImprovement"] && (
-                <div style={{ color: "red" }}>{errors["openEndedQuestions.areasOfImprovement"]}</div>
+                <div style={{ color: "red" }}>
+                  {errors["openEndedQuestions.areasOfImprovement"]}
+                </div>
               )}
             </div>
             <div style={styles.field}>
-              <label className="fl">Project Task Feedback<span style={styles.requiredStar}>*</span></label>
+              <label className="fl">
+                Project Task Feedback<span style={styles.requiredStar}>*</span>
+              </label>
               <MemoDebouncedTextarea
                 className="fi"
                 value={form.openEndedQuestions.projectTaskFeedback || ""}
                 onChange={(v) =>
-                  setPath("openEndedQuestions.projectTaskFeedback", v, { lowPriority: true })
+                  setPath("openEndedQuestions.projectTaskFeedback", v, {
+                    lowPriority: true,
+                  })
                 }
               />
               {errors["openEndedQuestions.projectTaskFeedback"] && (
-                <div style={{ color: "red" }}>{errors["openEndedQuestions.projectTaskFeedback"]}</div>
+                <div style={{ color: "red" }}>
+                  {errors["openEndedQuestions.projectTaskFeedback"]}
+                </div>
               )}
             </div>
             <div style={styles.field}>
-              <label className="fl">Learning and Growth<span style={styles.requiredStar}>*</span></label>
+              <label className="fl">
+                Learning and Growth<span style={styles.requiredStar}>*</span>
+              </label>
               <MemoDebouncedTextarea
                 className="fi"
                 value={form.openEndedQuestions.learningAndGrowth || ""}
                 onChange={(v) =>
-                  setPath("openEndedQuestions.learningAndGrowth", v, { lowPriority: true })
+                  setPath("openEndedQuestions.learningAndGrowth", v, {
+                    lowPriority: true,
+                  })
                 }
               />
               {errors["openEndedQuestions.learningAndGrowth"] && (
-                <div style={{ color: "red" }}>{errors["openEndedQuestions.learningAndGrowth"]}</div>
+                <div style={{ color: "red" }}>
+                  {errors["openEndedQuestions.learningAndGrowth"]}
+                </div>
               )}
             </div>
             <div style={styles.field}>
-              <label className="fl">Team Dynamics<span style={styles.requiredStar}>*</span></label>
+              <label className="fl">
+                Team Dynamics<span style={styles.requiredStar}>*</span>
+              </label>
               <MemoDebouncedTextarea
                 className="fi"
                 value={form.openEndedQuestions.teamDynamics || ""}
-                onChange={(v) => setPath("openEndedQuestions.teamDynamics", v, { lowPriority: true })}
+                onChange={(v) =>
+                  setPath("openEndedQuestions.teamDynamics", v, {
+                    lowPriority: true,
+                  })
+                }
               />
               {errors["openEndedQuestions.teamDynamics"] && (
-                <div style={{ color: "red" }}>{errors["openEndedQuestions.teamDynamics"]}</div>
+                <div style={{ color: "red" }}>
+                  {errors["openEndedQuestions.teamDynamics"]}
+                </div>
               )}
             </div>
             <div style={styles.field}>
-              <label className="fl">Adaptability<span style={styles.requiredStar}>*</span></label>
+              <label className="fl">
+                Adaptability<span style={styles.requiredStar}>*</span>
+              </label>
               <MemoDebouncedTextarea
                 className="fi"
                 value={form.openEndedQuestions.adaptability || ""}
-                onChange={(v) => setPath("openEndedQuestions.adaptability", v, { lowPriority: true })}
+                onChange={(v) =>
+                  setPath("openEndedQuestions.adaptability", v, {
+                    lowPriority: true,
+                  })
+                }
               />
               {errors["openEndedQuestions.adaptability"] && (
-                <div style={{ color: "red" }}>{errors["openEndedQuestions.adaptability"]}</div>
+                <div style={{ color: "red" }}>
+                  {errors["openEndedQuestions.adaptability"]}
+                </div>
               )}
             </div>
             <div style={styles.field}>
-              <label className="fl">Feedback for Student<span style={styles.requiredStar}>*</span></label>
+              <label className="fl">
+                Feedback for Student<span style={styles.requiredStar}>*</span>
+              </label>
               <MemoDebouncedTextarea
                 className="fi"
                 value={form.openEndedQuestions.feedbackForStudent || ""}
                 onChange={(v) =>
-                  setPath("openEndedQuestions.feedbackForStudent", v, { lowPriority: true })
+                  setPath("openEndedQuestions.feedbackForStudent", v, {
+                    lowPriority: true,
+                  })
                 }
               />
               {errors["openEndedQuestions.feedbackForStudent"] && (
-                <div style={{ color: "red" }}>{errors["openEndedQuestions.feedbackForStudent"]}</div>
+                <div style={{ color: "red" }}>
+                  {errors["openEndedQuestions.feedbackForStudent"]}
+                </div>
               )}
             </div>
             <div style={styles.fieldLast}>
-              <label className="fl">Feedback for University<span style={styles.requiredStar}>*</span></label>
+              <label className="fl">
+                Feedback for University
+                <span style={styles.requiredStar}>*</span>
+              </label>
               <MemoDebouncedTextarea
                 className="fi"
                 value={form.openEndedQuestions.feedbackForUniversity || ""}
                 onChange={(v) =>
-                  setPath("openEndedQuestions.feedbackForUniversity", v, { lowPriority: true })
+                  setPath("openEndedQuestions.feedbackForUniversity", v, {
+                    lowPriority: true,
+                  })
                 }
               />
               {errors["openEndedQuestions.feedbackForUniversity"] && (
-                <div style={{ color: "red" }}>{errors["openEndedQuestions.feedbackForUniversity"]}</div>
+                <div style={{ color: "red" }}>
+                  {errors["openEndedQuestions.feedbackForUniversity"]}
+                </div>
               )}
             </div>
           </section>
@@ -2337,7 +2760,10 @@ export default function PublicEvaluationForm({
               error={errors["finalRecommendation.supervisorRecommendation"]}
             />
 
-            <div style={styles.field} data-error-key="finalRecommendation.declarationAccepted">
+            <div
+              style={styles.field}
+              data-error-key="finalRecommendation.declarationAccepted"
+            >
               <RequiredLabel>
                 Declaration: By entering my name below and submitting this form,
                 I confirm that this evaluation is accurate and complete.
@@ -2366,7 +2792,10 @@ export default function PublicEvaluationForm({
               </label>
             </div>
 
-            <div style={styles.field} data-error-key="finalRecommendation.supervisorFullName">
+            <div
+              style={styles.field}
+              data-error-key="finalRecommendation.supervisorFullName"
+            >
               <RequiredLabel>Supervisor's Full Name</RequiredLabel>
               <MemoDebouncedInput
                 className="fi"
@@ -2377,10 +2806,11 @@ export default function PublicEvaluationForm({
               />
             </div>
 
-            <div style={styles.fieldLast} data-error-key="finalRecommendation.date">
-              <label className="fl">
-                Date
-              </label>
+            <div
+              style={styles.fieldLast}
+              data-error-key="finalRecommendation.date"
+            >
+              <label className="fl">Date</label>
               <div
                 style={{
                   ...styles.dateTrigger,

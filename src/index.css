@@ -11,10 +11,16 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
+  display: block;
+  place-items: normal;
+  width: 100%;
   min-width: 320px;
   min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+  width: 100%;
 }
 
 /* Ensure a light background by default to avoid unexpected dark UI */
@@ -63,7 +69,7 @@ button:focus-visible {
 /* Mobile adaptations for InternshipPage and attendance table */
 @media (max-width: 760px) {
   body {
-    place-items: start;
+    place-items: normal;
   }
 
   /* Make form wrappers full width and reduce padding */

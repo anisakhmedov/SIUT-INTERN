@@ -44,6 +44,8 @@ import {
   AtSign,
   Filter,
   UserCircle,
+  ToggleLeft,
+  ToggleRight,
 } from "lucide-react";
 import { getUserFromStorage, clearUserFromStorage } from "./utils/storageUtils";
 import {
@@ -69,6 +71,7 @@ import PageState from "./components/PageState";
 import ErrorPage from "./components/ErrorPage";
 import PublicEvaluationForm from "./components/PublicEvaluationForm";
 import AllEvaluationsPage from "./components/AllEvaluationsPage";
+import MaintenancePage from "./components/MaintenancePage";
 
 /* ═══════════════════════════════════════════════
    STYLES
@@ -134,6 +137,13 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);}
 .sdd{position:absolute;bottom:50px;left:0;right:0;background:#171b2e;border:1px solid rgba(255,255,255,.085);border-radius:10px;overflow:hidden;animation:scaleIn .17s ease;z-index:100;}
 .sddi{display:flex;align-items:center;gap:9px;padding:10px 13px;color:rgba(255,255,255,.58);font-size:12.5px;cursor:pointer;transition:all .17s;}
 .sddi:hover{background:rgba(255,255,255,.06);color:#fff;}
+.sb-maintenance{margin:0 12px 12px;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.065);background:linear-gradient(135deg,rgba(99,91,255,.14),rgba(6,201,160,.08));display:flex;align-items:center;justify-content:space-between;gap:12px;color:#fff;cursor:pointer;transition:transform .18s ease,background .18s ease,border-color .18s ease;}
+.sb-maintenance:hover{transform:translateY(-1px);border-color:rgba(255,255,255,.14);background:linear-gradient(135deg,rgba(99,91,255,.18),rgba(6,201,160,.12));}
+.sb-maintenance-copy{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.sb-maintenance-label{font-size:12px;font-weight:700;letter-spacing:.01em;}
+.sb-maintenance-hint{font-size:10.5px;color:rgba(255,255,255,.54);text-transform:uppercase;letter-spacing:.1em;}
+.sb-maintenance-switch{display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.86);flex-shrink:0;}
+.sb-maintenance.on{box-shadow:0 10px 28px rgba(99,91,255,.18);}
 
 /* MAIN */
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
@@ -338,6 +348,7 @@ const getUserInitials = (user) => {
 };
 
 const ALL_APP_ROLES = ["admin", "tutor", "professor", "rector", "student"];
+const MAINTENANCE_STORAGE_KEY = "siut_maintenance_mode";
 const NAV_PERMISSIONS = {
   Dashboard: ALL_APP_ROLES,
   Students: ["admin", "tutor", "professor", "rector"],
@@ -357,6 +368,22 @@ function normalizeRole(role) {
 function canAccessNav(role, label) {
   const allowedRoles = NAV_PERMISSIONS[label] || [];
   return allowedRoles.includes(normalizeRole(role));
+}
+
+function readMaintenanceMode() {
+  try {
+    return window.localStorage.getItem(MAINTENANCE_STORAGE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writeMaintenanceMode(enabled) {
+  try {
+    window.localStorage.setItem(MAINTENANCE_STORAGE_KEY, enabled ? "1" : "0");
+  } catch (error) {
+    console.error("Error saving maintenance mode:", error);
+  }
 }
 
 const DAY_TEXTS = [];
@@ -2734,10 +2761,16 @@ export default function App() {
   const [search] = useState("");
   const [showCreatePage, setShowCreatePage] = useState(false);
   const [systemError, setSystemError] = useState(null);
+  const [maintenanceMode, setMaintenanceMode] = useState(() => readMaintenanceMode());
   const [students, setStudents] = useState([]); // Add students state
   const [openCommentTarget, setOpenCommentTarget] = useState(null);
   const [sessionMessage, setSessionMessage] = useState("");
   const userInitials = useMemo(() => user?.initials || getUserInitials(user), [user]);
+  const isPrivilegedUser = useMemo(
+    () => ["admin", "developer"].includes(normalizeRole(user?.role)),
+    [user?.role],
+  );
+  const maintenanceLocked = maintenanceMode && !isPrivilegedUser;
 
   const openSystemError = useCallback((status, overrides = {}) => {
     setSystemError({
@@ -2788,7 +2821,11 @@ export default function App() {
 
   const handleOpenSidebar = () => setSbOpen(true);
 
-  const openFeedback = () => handleNavigate("Feedback");
+  const handleToggleMaintenance = useCallback(() => {
+    if (!isPrivilegedUser) return;
+    setMaintenanceMode((current) => !current);
+  }, [isPrivilegedUser]);
+
 
   // Fetch data from API on mount
   useEffect(() => {
@@ -2934,6 +2971,10 @@ export default function App() {
     setUser(null);
     setPage('login');
   }), []);
+
+  useEffect(() => {
+    writeMaintenanceMode(maintenanceMode);
+  }, [maintenanceMode]);
 
   // Fuzzy search algorithm for internships by name (marketplace style)
   useEffect(() => {
@@ -3371,6 +3412,16 @@ export default function App() {
     
   ]);
 
+  if (maintenanceLocked) {
+    return (
+      <>
+        <style>{CSS}</style>
+        <MaintenancePage />
+        <ToastViewport />
+      </>
+    );
+  }
+
   if (page === "error")
     return (
       <>
@@ -3473,6 +3524,26 @@ export default function App() {
                 <span style={{ color: nav === item.label ? "#fff" : "rgba(255,255,255,.4)" }}>{item.label}</span>
               </div>
             ))}
+
+            {isPrivilegedUser && (
+              <button
+                type="button"
+                className={`sb-maintenance ${maintenanceMode ? "on" : ""}`}
+                onClick={handleToggleMaintenance}
+                aria-pressed={maintenanceMode}
+                title={maintenanceMode ? "Disable site maintenance mode" : "Enable site maintenance mode"}
+              >
+                <div className="sb-maintenance-copy">
+                  <span className="sb-maintenance-label">Site under development</span>
+                  <span className="sb-maintenance-hint">
+                    {maintenanceMode ? "Access blocked for regular users" : "Portal is open"}
+                  </span>
+                </div>
+                <div className="sb-maintenance-switch">
+                  {maintenanceMode ? <ToggleRight size={26} /> : <ToggleLeft size={26} />}
+                </div>
+              </button>
+            )}
           </div>
           
           <div className="spf" onClick={handleToggleDd}>
@@ -3489,10 +3560,6 @@ export default function App() {
             </div>
             {dd && (
               <div className="sdd">
-                <div className="sddi" onClick={openFeedback}>
-                  <MessageSquare size={14} />
-                  <span>Feedback</span>
-                </div>
                 <div className="sddi" onClick={() => {
                   setPage("login");
                   setUser(null);

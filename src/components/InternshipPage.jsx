@@ -2034,8 +2034,8 @@ export default function InternshipPage({
       reportDayDate,
       reportImages,
       facultyId,
+      faculty,
       getDayId,
-      fetchFaculty,
       extractImageUrls,
       resetDayForm,
       syncFacultyProgress,
@@ -2103,6 +2103,11 @@ export default function InternshipPage({
   const handlePostComment = useCallback(
     async (e) => {
       e.preventDefault();
+      if (!canWriteComments) {
+        toast.error("You are not allowed to post comments.");
+        return;
+      }
+
       const text = newComment.trim();
       if (!text || !currentDay) return;
 
@@ -2146,6 +2151,7 @@ export default function InternshipPage({
       }
     },
     [
+      canWriteComments,
       currentDay,
       newComment,
       updateDay,

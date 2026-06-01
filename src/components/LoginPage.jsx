@@ -254,7 +254,7 @@ export default function LoginPage({
           )}
           {loading ? 'Signing in…' : 'Sign In to Dashboard'}
         </button>
-        <div style={{ marginTop: 16, display: 'grid', gap: 10 }}>
+        {/* <div style={{ marginTop: 16, display: 'grid', gap: 10 }}>
           <button
             className="lpublic"
             onClick={() => {
@@ -319,7 +319,7 @@ export default function LoginPage({
               <ArrowRight size={16} />
             </span>
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );

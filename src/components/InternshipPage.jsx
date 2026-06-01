@@ -1392,7 +1392,13 @@ export default function InternshipPage({
   }, [user, faculty, getOwnershipTokensLocal]);
 
   const canWriteReport = user?.role === "Admin" || isAssignedTutor; // Only Admin or assigned Tutor can write reports
-  const canWriteComments = canViewComments; // Allow writing only when comments are viewable (assigned staff or allowed roles)
+  const canWriteComments = useMemo(() => {
+    const role = normalizeRoleLocal(user?.role);
+    if (!canViewComments) return false;
+    // Explicitly disallow tutors from writing comments
+    if (role === "tutor") return false;
+    return true;
+  }, [canViewComments, user]);
   const canEditInternship = user?.role === "Admin" || isAssignedTutor;
   const canApprove = user?.role === "Admin";
   const canExport = user?.role === "Admin";

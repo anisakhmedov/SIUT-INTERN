@@ -7,8 +7,8 @@ export default function LoginPage({
   onLogin,
   onUserSet,
   sessionMessage = '',
-  onOpenPublicEvaluation,
-  onOpenCompanyEvaluation,
+  // onOpenPublicEvaluation,
+  // onOpenCompanyEvaluation,
 }) {
   const [f, setF] = useState({ login: '', password: '' });
   const [loading, setLoading] = useState(false);
@@ -19,68 +19,68 @@ export default function LoginPage({
     }
   }, [sessionMessage]);
 
-  const publicButtonBase = {
-    width: '100%',
-    minHeight: 66,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 14,
-    padding: '14px 16px',
-    borderRadius: 16,
-    cursor: 'pointer',
-    background:
-      'linear-gradient(135deg, rgba(255,255,255,.96), rgba(255,255,255,.84))',
-    color: '#0c0e18',
-    boxShadow: '0 12px 30px rgba(2,6,23,.12)',
-    transition: 'transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease',
-    textAlign: 'left',
-  };
+  // const publicButtonBase = {
+  //   width: '100%',
+  //   minHeight: 66,
+  //   display: 'flex',
+  //   alignItems: 'center',
+  //   justifyContent: 'space-between',
+  //   gap: 14,
+  //   padding: '14px 16px',
+  //   borderRadius: 16,
+  //   cursor: 'pointer',
+  //   background:
+  //     'linear-gradient(135deg, rgba(255,255,255,.96), rgba(255,255,255,.84))',
+  //   color: '#0c0e18',
+  //   boxShadow: '0 12px 30px rgba(2,6,23,.12)',
+  //   transition: 'transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease',
+  //   textAlign: 'left',
+  // };
 
-  const publicButtonLeft = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 12,
-    minWidth: 0,
-  };
+  // const publicButtonLeft = {
+  //   display: 'flex',
+  //   alignItems: 'center',
+  //   gap: 12,
+  //   minWidth: 0,
+  // };
 
-  const publicButtonIcon = {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-    boxShadow: 'inset 0 1px 0 rgba(255,255,255,.45)',
-  };
+  // const publicButtonIcon = {
+  //   width: 40,
+  //   height: 40,
+  //   borderRadius: 14,
+  //   display: 'flex',
+  //   alignItems: 'center',
+  //   justifyContent: 'center',
+  //   flexShrink: 0,
+  //   boxShadow: 'inset 0 1px 0 rgba(255,255,255,.45)',
+  // };
 
-  const publicButtonTitle = {
-    fontSize: 14,
-    fontWeight: 800,
-    lineHeight: 1.2,
-    letterSpacing: '-.2px',
-    color: '#0c0e18',
-  };
+  // const publicButtonTitle = {
+  //   fontSize: 14,
+  //   fontWeight: 800,
+  //   lineHeight: 1.2,
+  //   letterSpacing: '-.2px',
+  //   color: '#0c0e18',
+  // };
 
-  const publicButtonSubtitle = {
-    marginTop: 3,
-    fontSize: 12,
-    color: 'rgba(12,14,24,.62)',
-    lineHeight: 1.45,
-  };
+  // const publicButtonSubtitle = {
+  //   marginTop: 3,
+  //   fontSize: 12,
+  //   color: 'rgba(12,14,24,.62)',
+  //   lineHeight: 1.45,
+  // };
 
-  const publicButtonArrow = {
-    width: 32,
-    height: 32,
-    borderRadius: 999,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-    background: 'rgba(12,14,24,.05)',
-    color: 'rgba(12,14,24,.72)',
-  };
+  // const publicButtonArrow = {
+  //   width: 32,
+  //   height: 32,
+  //   borderRadius: 999,
+  //   display: 'flex',
+  //   alignItems: 'center',
+  //   justifyContent: 'center',
+  //   flexShrink: 0,
+  //   background: 'rgba(12,14,24,.05)',
+  //   color: 'rgba(12,14,24,.72)',
+  // };
 
   const go = async () => {
     if (!f.login || !f.password) {

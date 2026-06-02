@@ -354,7 +354,7 @@ export default function InternshipPage({
   focusCommentKey,
   students = [],
 }) {
-  const REPORT_DESCRIPTION_MIN_WORDS = 150;
+  const REPORT_DESCRIPTION_MIN_WORDS = 100;
 
   const [faculty, setFaculty] = useState(null);
   const [dayIndex, setDayIndex] = useState(0);

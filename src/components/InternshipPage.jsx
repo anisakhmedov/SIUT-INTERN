@@ -389,7 +389,6 @@ export default function InternshipPage({
   const [attendanceDraft, setAttendanceDraft] = useState(null);
   const [attendanceSaving, setAttendanceSaving] = useState(false);
   const [showAttendanceEditor, setShowAttendanceEditor] = useState(false);
-  const [editorDay, _setEditorDay] = useState(null); // null -> create
   const [highlightedCommentKey, setHighlightedCommentKey] = useState("");
   const [showStudents, setShowStudents] = useState(false);
   const [showStudentManager, setShowStudentManager] = useState(false);
@@ -471,32 +470,6 @@ export default function InternshipPage({
     if (!faculty) return;
     fetchAttendance();
   }, [faculty, fetchAttendance]);
-
-  const handleSaveAttendanceDay = useCallback(
-    async (payload) => {
-      if (!facultyId) return;
-      setAttendanceLoading(true);
-      try {
-        if (payload.id) {
-          await attendanceApi.updateAttendanceDay(
-            facultyId,
-            payload.id,
-            payload,
-          );
-        } else {
-          await attendanceApi.createAttendanceDay(facultyId, payload);
-        }
-        await fetchAttendance();
-        setShowAttendanceEditor(false);
-        toast.success("Attendance saved.");
-      } catch (err) {
-        toast.error(err?.message || "Failed to save attendance day.");
-      } finally {
-        setAttendanceLoading(false);
-      }
-    },
-    [facultyId, fetchAttendance],
-  );
 
   const attendanceHasChanges = useMemo(() => {
     const original = JSON.stringify(attendance?.attendance || []);
@@ -595,22 +568,6 @@ export default function InternshipPage({
       setAttendanceSaving(false);
     }
   }, [attendanceDraft, facultyId, fetchAttendance]);
-
-  useEffect(() => {
-    const container = attendanceScrollRef.current;
-    if (!container) return undefined;
-
-    const handleWheel = (event) => {
-      if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
-      container.scrollLeft += event.deltaY;
-      event.preventDefault();
-    };
-
-    container.addEventListener("wheel", handleWheel, { passive: false });
-    return () => {
-      container.removeEventListener("wheel", handleWheel);
-    };
-  }, [attendance?.attendance?.length]);
 
   useEffect(() => {
     fetchFaculty();
@@ -980,11 +937,11 @@ export default function InternshipPage({
   );
 
   const days = useMemo(() => faculty?.days || [], [faculty]);
-  const attendanceDays = Array.isArray(attendanceDraft?.attendance)
-    ? attendanceDraft.attendance
-    : Array.isArray(attendance?.attendance)
-      ? attendance.attendance
-      : [];
+  const attendanceDays = useMemo(() => {
+    if (Array.isArray(attendanceDraft?.attendance)) return attendanceDraft.attendance;
+    if (Array.isArray(attendance?.attendance)) return attendance.attendance;
+    return [];
+  }, [attendanceDraft?.attendance, attendance?.attendance]);
   const attendanceTableWidth = 700;
   const attendanceNameColumnWidth = 260;
   const attendanceDayColumnWidth = 132;
@@ -994,6 +951,28 @@ export default function InternshipPage({
     if (Array.isArray(faculty?.students)) return faculty.students;
     return [];
   }, [faculty]);
+  const attendanceSummary = useMemo(() => {
+    const daysCount = attendanceDays.length;
+    const studentsCount = attachedStudents.length;
+    const cellsCount = daysCount * studentsCount;
+    const presentCount = attendanceDays.reduce((total, day) => {
+      const marks = Array.isArray(day?.students) ? day.students : [];
+      return (
+        total +
+        marks.reduce((dayTotal, student) => {
+          return dayTotal + (student?.present ? 1 : 0);
+        }, 0)
+      );
+    }, 0);
+
+    return {
+      daysCount,
+      studentsCount,
+      cellsCount,
+      presentCount,
+      fillRate: cellsCount > 0 ? Math.round((presentCount / cellsCount) * 100) : 0,
+    };
+  }, [attendanceDays, attachedStudents]);
   const attachedStudentIds = useMemo(() => {
     return new Set(
       attachedStudents.map((student) => getStudentId(student)).filter(Boolean),
@@ -2205,38 +2184,6 @@ export default function InternshipPage({
     syncFacultyProgress,
   ]);
 
-  const handleAttendanceEditorSave = useCallback(
-    async (event) => {
-      event.preventDefault();
-      const dateEl = document.getElementById("attendance-editor-date");
-      const dateVal = dateEl ? dateEl.value : null;
-      const studentCheckboxes = Array.from(
-        document.querySelectorAll("[data-student-key]"),
-      );
-      const studentsPayload = studentCheckboxes.map((el) => ({
-        studentKey: el.getAttribute("data-student-key"),
-        present: Boolean(el.checked),
-      }));
-      const payload = {
-        id: editorDay?.id,
-        date: dateVal,
-        dayNumber:
-          editorDay?.dayNumber || (attendance?.attendance?.length || 0) + 1,
-        students: studentsPayload,
-      };
-      await handleSaveAttendanceDay(payload);
-      await attendanceApi.syncAttendance(facultyId);
-      await fetchAttendance();
-    },
-    [
-      attendance?.attendance?.length,
-      editorDay,
-      facultyId,
-      fetchAttendance,
-      handleSaveAttendanceDay,
-    ],
-  );
-
   const allComments = useMemo(() => {
     if (!faculty || !faculty.days) return [];
     if (!canViewComments) return [];
@@ -3268,184 +3215,29 @@ export default function InternshipPage({
               <div className="ip-attendance-head">
                 <div>
                   <span className="ip-summary-label">Attendance</span>
-                  <strong className="ip-summary-value">
-                    {attendance?.attendance?.length || 0} days
-                  </strong>
                 </div>
-              </div>
-
-              <div className="ip-attendance-body">
-                {attendanceLoading ? (
-                  <div className="ip-empty-state">Loading attendance…</div>
-                ) : attendanceError ? (
-                  <div className="ip-empty-state">Error: {attendanceError}</div>
-                ) : !attendance ||
-                  !Array.isArray(attendance.attendance) ||
-                  attendance.attendance.length === 0 ? (
-                  <div className="ip-empty-state">
-                    No attendance recorded yet.
-                  </div>
-                ) : isMobile ? (
-                  <AttendanceMobile
-                    students={mobileStudents}
-                    days={attendanceDays}
-                    onTogglePresent={handleTogglePresent}
-                    onSave={handleSaveAttendanceChanges}
-                    saving={attendanceSaving}
-                    hasChanges={attendanceHasChanges}
-                  />
-                ) : (
-                  <div className="ip-attendance-table-wrap">
-                    <div className="ip-attendance-day">
-                      <div
-                        ref={attendanceScrollRef}
-                        className="ip-attendance-scroll"
-                        style={{
-                          maxHeight: "min(70vh, 720px)",
-                          overflowX: "auto",
-                          overflowY: "auto",
-                          userSelect: "none",
-                          scrollbarGutter: "stable both-edges",
-                          touchAction: "auto",
-                          WebkitOverflowScrolling: "touch",
-                          cursor: "grab",
-                        }}
-                      >
-                        <div
-                          className="ip-attendance-table-frame"
-                          style={{
-                            width: `${attendanceTableWidth}px`,
-                            minWidth: `${attendanceTableWidth}px`,
-                          }}
-                        >
-                          <table className="ip-attendance-table">
-                            <thead>
-                              <tr>
-                                <th
-                                  style={{
-                                    minWidth: `${attendanceNameColumnWidth}px`,
-                                    width: `${attendanceNameColumnWidth}px`,
-                                  }}
-                                ></th>
-                                {attendanceDays.map((day) => (
-                                  <th
-                                    key={day.id || day.date}
-                                    style={{
-                                      whiteSpace: "nowrap",
-                                      minWidth: `${attendanceDayColumnWidth}px`,
-                                      width: `${attendanceDayColumnWidth}px`,
-                                      textAlign: "center",
-                                    }}
-                                  >
-                                    <div
-                                      style={{
-                                        textAlign: "center",
-                                      }}
-                                    >
-                                      <div>
-                                        <div style={{ fontWeight: 700 }}>
-                                          {day.date
-                                            ? new Date(
-                                                day.date,
-                                              ).toLocaleDateString()
-                                            : `Day ${day.dayNumber}`}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </th>
-                                ))}
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {(Array.isArray(attachedStudents)
-                                ? attachedStudents
-                                : []
-                              ).map((stu, sidx) => {
-                                const sk = getStudentId(stu) || `key-${sidx}`;
-                                const studentName = getStudentName(stu);
-                                return (
-                                  <tr key={sk}>
-                                    <td
-                                      style={{
-                                        minWidth: `${attendanceNameColumnWidth}px`,
-                                        width: `${attendanceNameColumnWidth}px`,
-                                      }}
-                                    >
-                                      {studentName}
-                                    </td>
-                                    {attendanceDays.map((day) => {
-                                      const studentRecord = (
-                                        Array.isArray(day.students)
-                                          ? day.students
-                                          : []
-                                      ).find(
-                                        (s) =>
-                                          String(
-                                            s.studentKey ||
-                                              s.studentId ||
-                                              `${s.name}-${s.surname}`,
-                                          ).trim() === String(sk).trim(),
-                                      );
-                                      const present = Boolean(
-                                        studentRecord
-                                          ? studentRecord.present
-                                          : false,
-                                      );
-                                      return (
-                                        <td
-                                          key={`${day.id || day.date}-${sk}`}
-                                          style={{
-                                            textAlign: "center",
-                                            minWidth: `${attendanceDayColumnWidth}px`,
-                                            width: `${attendanceDayColumnWidth}px`,
-                                          }}
-                                        >
-                                          <input
-                                            type="checkbox"
-                                            className="ip-attendance-radio"
-                                            checked={present}
-                                            onChange={(e) =>
-                                              handleTogglePresent(
-                                                day.id,
-                                                sk,
-                                                e.target.checked,
-                                              )
-                                            }
-                                            title="Toggle presence"
-                                          />
-                                        </td>
-                                      );
-                                    })}
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "flex-end",
-                          marginTop: 12,
-                        }}
-                      >
-                        <button
-                          type="button"
-                          className="ip-btn ip-btn--primary"
-                          onClick={handleSaveAttendanceChanges}
-                          disabled={
-                            !attendanceHasChanges ||
-                            attendanceSaving ||
-                            attendanceLoading
-                          }
-                        >
-                          {attendanceSaving ? "Saving…" : "Save attendance"}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                <button
+                  type="button"
+                  className="ip-eye-btn"
+                  onClick={() => setShowAttendanceEditor(true)}
+                  aria-label="Open attendance manager"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
               </div>
             </div>
           </header>
@@ -4334,17 +4126,20 @@ export default function InternshipPage({
               <div
                 className="ip-modal-overlay"
                 onClick={() => setShowAttendanceEditor(false)}
+                style={{ alignItems: "stretch", justifyContent: "stretch" }}
               >
                 <div
-                  className="ip-modal-content"
+                  className="ip-modal-content ip-modal-content--wide ip-attendance-modal"
                   onClick={(e) => e.stopPropagation()}
+                  style={{ width: "100vw", height: "100vh", maxWidth: "none", maxHeight: "none", borderRadius: 0 }}
                 >
                   <div className="ip-modal-header">
-                    <h3 className="ip-modal-title">
-                      {editorDay
-                        ? `Edit Day ${editorDay.dayNumber}`
-                        : "New Attendance Day"}
-                    </h3>
+                    <div style={{ display: "grid", gap: 4 }}>
+                      <h3 className="ip-modal-title">Attendance</h3>
+                      <div style={{ fontSize: 12, color: "var(--t2, #5a6278)" }}>
+                        Manage daily presence across all students and days.
+                      </div>
+                    </div>
                     <button
                       type="button"
                       className="ip-close-btn"
@@ -4353,90 +4148,189 @@ export default function InternshipPage({
                       ×
                     </button>
                   </div>
-                  <form onSubmit={handleAttendanceEditorSave}>
-                    <div className="ip-modal-body">
-                      <label className="form-label">Date</label>
-                      <input
-                        type="date"
-                        className="ip-input"
-                        defaultValue={
-                          editorDay?.date ||
-                          new Date().toISOString().slice(0, 10)
-                        }
-                        id="attendance-editor-date"
-                      />
-
-                      <div style={{ marginTop: 12 }}>
-                        <label className="form-label">Students</label>
-                        <div
-                          style={{
-                            maxHeight: 280,
-                            overflow: "auto",
-                            border: "1px solid rgba(0,0,0,.06)",
-                            borderRadius: 8,
-                            padding: 8,
-                          }}
-                        >
-                          {(attachedStudents || []).map((stu, idx) => {
-                            const sk = getStudentId(stu) || `key-${idx}`;
-                            const present = editorDay
-                              ? Boolean(
-                                  (editorDay.students || []).find(
-                                    (s) => (s.studentKey || s.studentId) == sk,
-                                  )?.present,
-                                )
-                              : false;
-                            return (
-                              <div
-                                key={sk}
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "space-between",
-                                  gap: 12,
-                                  padding: "6px 8px",
-                                }}
-                              >
-                                <div>{getStudentName(stu)}</div>
-                                <div>
-                                  <label
-                                    style={{
-                                      display: "inline-flex",
-                                      alignItems: "center",
-                                      gap: 8,
-                                    }}
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      defaultChecked={present}
-                                      data-student-key={sk}
-                                    />{" "}
-                                    Present
-                                  </label>
-                                </div>
-                              </div>
-                            );
-                          })}
+                  <div
+                    className="ip-modal-body"
+                    style={{ display: "grid", gap: 14, overflow: "hidden", padding: 20 }}
+                  >
+                    {attendanceLoading ? (
+                      <div className="ip-empty-state">Loading attendance…</div>
+                    ) : attendanceError ? (
+                      <div className="ip-empty-state">Error: {attendanceError}</div>
+                    ) : !attendance ||
+                      !Array.isArray(attendance.attendance) ||
+                      attendance.attendance.length === 0 ? (
+                      <div className="ip-empty-state">
+                        No attendance recorded yet.
+                      </div>
+                    ) : isMobile ? (
+                      <div style={{ maxHeight: "calc(100vh - 240px)", overflow: "auto" }}>
+                        <AttendanceMobile
+                          students={mobileStudents}
+                          days={attendanceDays}
+                          onTogglePresent={handleTogglePresent}
+                          onSave={handleSaveAttendanceChanges}
+                          saving={attendanceSaving}
+                          hasChanges={attendanceHasChanges}
+                        />
+                      </div>
+                    ) : (
+                      <div
+                        className="ip-attendance-table-wrap"
+                        style={{
+                          maxHeight: "calc(100vh)",
+                          overflowX: "scroll",
+                          overflowY: "scroll",
+                          scrollbarGutter: "stable both-edges",
+                          borderRadius: 16,
+                          border: "1px solid rgba(0,0,0,.08)",
+                          background: "rgba(255,255,255,.92)",
+                        }}
+                      >
+                        <div className="ip-attendance-day">
+                          <div
+                            ref={attendanceScrollRef}
+                            className="ip-attendance-scroll"
+                            style={{
+                              minHeight: "420px",
+                              userSelect: "none",
+                              touchAction: "auto",
+                              WebkitOverflowScrolling: "touch",
+                            }}
+                          >
+                            <div
+                              className="ip-attendance-table-frame"
+                              style={{
+                                width: `${attendanceTableWidth}px`,
+                                minWidth: `${attendanceTableWidth}px`,
+                              }}
+                            >
+                              <table className="ip-attendance-table">
+                                <thead>
+                                  <tr>
+                                    <th
+                                      style={{
+                                        minWidth: `${attendanceNameColumnWidth}px`,
+                                        width: `${attendanceNameColumnWidth}px`,
+                                      }}
+                                    ></th>
+                                    {attendanceDays.map((day) => (
+                                      <th
+                                        key={day.id || day.date}
+                                        style={{
+                                          whiteSpace: "nowrap",
+                                          minWidth: `${attendanceDayColumnWidth}px`,
+                                          width: `${attendanceDayColumnWidth}px`,
+                                          textAlign: "center",
+                                        }}
+                                      >
+                                        <div style={{ textAlign: "center" }}>
+                                          <div>
+                                            <div style={{ fontWeight: 700 }}>
+                                              {day.date
+                                                ? new Date(day.date).toLocaleDateString()
+                                                : `Day ${day.dayNumber}`}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </th>
+                                    ))}
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {(Array.isArray(attachedStudents)
+                                    ? attachedStudents
+                                    : []
+                                  ).map((stu, sidx) => {
+                                    const sk = getStudentId(stu) || `key-${sidx}`;
+                                    const studentName = getStudentName(stu);
+                                    return (
+                                      <tr key={sk}>
+                                        <td
+                                          style={{
+                                            minWidth: `${attendanceNameColumnWidth}px`,
+                                            width: `${attendanceNameColumnWidth}px`,
+                                          }}
+                                        >
+                                          {studentName}
+                                        </td>
+                                        {attendanceDays.map((day) => {
+                                          const studentRecord = (
+                                            Array.isArray(day.students)
+                                              ? day.students
+                                              : []
+                                          ).find(
+                                            (s) =>
+                                              String(
+                                                s.studentKey ||
+                                                  s.studentId ||
+                                                  `${s.name}-${s.surname}`,
+                                              ).trim() === String(sk).trim(),
+                                          );
+                                          const present = Boolean(
+                                            studentRecord
+                                              ? studentRecord.present
+                                              : false,
+                                          );
+                                          return (
+                                            <td
+                                              key={`${day.id || day.date}-${sk}`}
+                                              style={{
+                                                textAlign: "center",
+                                                minWidth: `${attendanceDayColumnWidth}px`,
+                                                width: `${attendanceDayColumnWidth}px`,
+                                              }}
+                                            >
+                                              <input
+                                                type="checkbox"
+                                                className="ip-attendance-radio"
+                                                checked={present}
+                                                onChange={(e) =>
+                                                  handleTogglePresent(
+                                                    day.id,
+                                                    sk,
+                                                    e.target.checked,
+                                                  )
+                                                }
+                                                title="Toggle presence"
+                                              />
+                                            </td>
+                                          );
+                                        })}
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="ip-modal-footer">
+                    )}
+                  </div>
+
+                  <div className="ip-modal-footer">
+                    <button
+                      type="button"
+                      className="ip-btn ip-btn--secondary"
+                      onClick={() => setShowAttendanceEditor(false)}
+                    >
+                      Close
+                    </button>
+                    {!isMobile && attendance && Array.isArray(attendance.attendance) && attendance.attendance.length > 0 && (
                       <button
                         type="button"
-                        className="ip-btn ip-btn--ghost"
-                        onClick={() => setShowAttendanceEditor(false)}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
                         className="ip-btn ip-btn--primary"
-                        disabled={attendanceLoading}
+                        onClick={handleSaveAttendanceChanges}
+                        disabled={
+                          !attendanceHasChanges ||
+                          attendanceSaving ||
+                          attendanceLoading
+                        }
                       >
-                        Save
+                        {attendanceSaving ? "Saving…" : "Save attendance"}
                       </button>
-                    </div>
-                  </form>
+                    )}
+                  </div>
                 </div>
               </div>,
               document.body,

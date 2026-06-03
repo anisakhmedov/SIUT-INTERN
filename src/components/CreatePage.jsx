@@ -45,9 +45,22 @@ function formatCoordsLocation(coords) {
   };
 }
 
+function formatLocalDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function parseLocalDate(dateString) {
+  if (!dateString) return new Date();
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
 function CustomDateRangePicker({ startDate, endDate, onChange, daysCount }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [currentMonth, setCurrentMonth] = useState(new Date(startDate || new Date()));
+  const [currentMonth, setCurrentMonth] = useState(startDate ? parseLocalDate(startDate) : new Date());
   const [popupPosition, setPopupPosition] = useState('bottom');
   const pickerRef = useRef(null);
   const inputRef = useRef(null);
@@ -62,15 +75,13 @@ function CustomDateRangePicker({ startDate, endDate, onChange, daysCount }) {
   };
 
   const dateToString = (date) => {
-    return date.toISOString().split('T')[0];
+    return formatLocalDate(date);
   };
 
   const isDateInRange = (date) => {
     if (!startDate || !endDate) return false;
-    const d = new Date(dateToString(date));
-    const s = new Date(startDate + 'T00:00:00');
-    const e = new Date(endDate + 'T00:00:00');
-    return d >= s && d <= e;
+    const d = dateToString(date);
+    return d >= startDate && d <= endDate;
   };
 
   const isDateSelected = (date) => {
@@ -968,12 +979,12 @@ export default function CreatePage({ onSubmit, onCancel, students = [], tutors: 
     
     const numDays = getDateRangeDays();
     const days = [];
-    const startDate = new Date(formData.duration.start);
+    const startDate = parseLocalDate(formData.duration.start);
     
     for (let i = 0; i < numDays; i++) {
       const currentDate = new Date(startDate);
       currentDate.setDate(currentDate.getDate() + i);
-      const dateString = currentDate.toISOString().split('T')[0];
+      const dateString = formatLocalDate(currentDate);
       
       days.push({
         dayNumber: String(i + 1),
@@ -1641,7 +1652,7 @@ export default function CreatePage({ onSubmit, onCancel, students = [], tutors: 
                       for (let i = 0; i < daysCount; i++) {
                         const currentDate = new Date(start);
                         currentDate.setDate(currentDate.getDate() + i);
-                        const dateString = currentDate.toISOString().split('T')[0];
+                        const dateString = formatLocalDate(currentDate);
 
                         days.push({
                           dayNumber: String(i + 1),

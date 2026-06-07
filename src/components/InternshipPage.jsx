@@ -6,7 +6,7 @@ import React, {
   useMemo,
 } from "react";
 import { createPortal } from "react-dom";
-import { get, patch, post } from "../utils/apiClient";
+import { del, get, patch, post } from "../utils/apiClient";
 import * as attendanceApi from "../utils/attendanceApi";
 import { toast } from "../utils/toast";
 import { generateFinalReport } from "../utils/finalReportApi";
@@ -42,11 +42,14 @@ function hasReportContent(day) {
 }
 
 function normalizeApprovalCode(value) {
+  if (value === true) return 2;
+  if (value === false) return 3;
+
   const numericValue = Number(value);
-  if (numericValue === 2 || value === true) return 2;
+  if (numericValue === 2) return 2;
   if (numericValue === 3) return 3;
 
-  const rawValue = String(value || "").trim().toLowerCase();
+  const rawValue = String(value ?? "").trim().toLowerCase();
   if (rawValue === "approved") return 2;
   if (rawValue === "rejected" || rawValue === "declined" || rawValue === "not approved") {
     return 3;
@@ -92,6 +95,7 @@ function isMissedDay(day) {
 }
 
 function getDayReportStatus(day) {
+  console.log("[status debug] full day =", JSON.stringify(day, null, 2));
   if (isApprovedDay(day)) return "approved";
   if (isRejectedDay(day)) return "rejected";
 
@@ -375,6 +379,8 @@ export default function InternshipPage({
   const [baseInfoStatus, setBaseInfoStatus] = useState("");
   const [baseInfoProgressAll, setBaseInfoProgressAll] = useState("");
   const [baseInfoPlan, setBaseInfoPlan] = useState("");
+  const [baseInfoStartDate, setBaseInfoStartDate] = useState("");
+  const [baseInfoEndDate, setBaseInfoEndDate] = useState("");
   const [activeImageSrc, setActiveImageSrc] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showFeedbackView, setShowFeedbackView] = useState(false);
@@ -383,6 +389,8 @@ export default function InternshipPage({
   const [newDayDate, setNewDayDate] = useState(
     new Date().toISOString().slice(0, 10),
   );
+  const [showEditDayDateModal, setShowEditDayDateModal] = useState(false);
+  const [editDayDate, setEditDayDate] = useState("");
   const [attendance, setAttendance] = useState(null);
   const [attendanceLoading, setAttendanceLoading] = useState(false);
   const [attendanceError, setAttendanceError] = useState("");
@@ -390,6 +398,8 @@ export default function InternshipPage({
   const [attendanceSaving, setAttendanceSaving] = useState(false);
   const [showAttendanceEditor, setShowAttendanceEditor] = useState(false);
   const [highlightedCommentKey, setHighlightedCommentKey] = useState("");
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editingCommentText, setEditingCommentText] = useState("");
   const [showStudents, setShowStudents] = useState(false);
   const [showStudentManager, setShowStudentManager] = useState(false);
   const [studentSearchTerm, setStudentSearchTerm] = useState("");
@@ -904,6 +914,9 @@ export default function InternshipPage({
         : "",
     );
     setBaseInfoPlan(facultySnapshot.plan || "");
+    const daysList = Array.isArray(facultySnapshot?.days) ? facultySnapshot.days : [];
+    setBaseInfoStartDate(daysList[0]?.date ? String(daysList[0].date).slice(0, 10) : "");
+    setBaseInfoEndDate(daysList.length > 0 && daysList[daysList.length - 1]?.date ? String(daysList[daysList.length - 1].date).slice(0, 10) : "");
   }, []);
 
   const applyFormatting = useCallback(
@@ -951,28 +964,6 @@ export default function InternshipPage({
     if (Array.isArray(faculty?.students)) return faculty.students;
     return [];
   }, [faculty]);
-  const attendanceSummary = useMemo(() => {
-    const daysCount = attendanceDays.length;
-    const studentsCount = attachedStudents.length;
-    const cellsCount = daysCount * studentsCount;
-    const presentCount = attendanceDays.reduce((total, day) => {
-      const marks = Array.isArray(day?.students) ? day.students : [];
-      return (
-        total +
-        marks.reduce((dayTotal, student) => {
-          return dayTotal + (student?.present ? 1 : 0);
-        }, 0)
-      );
-    }, 0);
-
-    return {
-      daysCount,
-      studentsCount,
-      cellsCount,
-      presentCount,
-      fillRate: cellsCount > 0 ? Math.round((presentCount / cellsCount) * 100) : 0,
-    };
-  }, [attendanceDays, attachedStudents]);
   const attachedStudentIds = useMemo(() => {
     return new Set(
       attachedStudents.map((student) => getStudentId(student)).filter(Boolean),
@@ -1756,6 +1747,45 @@ export default function InternshipPage({
         if (!nextCompany) throw new Error("Company is required.");
         if (!nextLocation) throw new Error("Location is required.");
 
+        // Synchronize individual day dates with the new start/end date range
+        const daysList = Array.isArray(faculty.days) ? faculty.days : [];
+        if (daysList.length > 0) {
+          const originalStartDate = String(daysList[0]?.date || "").slice(0, 10);
+
+          const startDeltaMs =
+            baseInfoStartDate && originalStartDate
+              ? new Date(baseInfoStartDate).getTime() - new Date(originalStartDate).getTime()
+              : 0;
+
+          // Compute new date for every day (shifted by start delta)
+          const newDayDates = daysList.map((day) => {
+            if (!day.date) return null;
+            return new Date(
+              new Date(String(day.date).slice(0, 10)).getTime() + startDeltaMs
+            ).toISOString().slice(0, 10);
+          });
+
+          // Override last day's date if end date was explicitly changed
+          if (baseInfoEndDate && newDayDates.length > 0) {
+            const expectedEnd = newDayDates[newDayDates.length - 1];
+            if (expectedEnd !== baseInfoEndDate) {
+              newDayDates[newDayDates.length - 1] = baseInfoEndDate;
+            }
+          }
+
+          // Patch only days whose dates actually changed
+          for (let i = 0; i < daysList.length; i++) {
+            const day = daysList[i];
+            const newDate = newDayDates[i];
+            if (!newDate) continue;
+            const currentDate = String(day.date || "").slice(0, 10);
+            if (newDate === currentDate) continue;
+            const dayId = getDayId(day);
+            if (!dayId) continue;
+            await patch(`/faculty/${facultyId}/days/${dayId}`, { ...day, date: newDate });
+          }
+        }
+
         const payload = {
           ...normalizeFacultyDays(faculty),
           name: nextName,
@@ -1775,6 +1805,8 @@ export default function InternshipPage({
         const refreshedFaculty = await fetchFaculty();
         await syncFacultyProgress(refreshedFaculty);
         await syncFacultyDuration(refreshedFaculty);
+        await attendanceApi.syncAttendance(facultyId);
+        await fetchAttendance();
         toast.success("Internship information saved.");
         setIsInternshipEditMode(false);
       } catch (err) {
@@ -1790,10 +1822,14 @@ export default function InternshipPage({
       baseInfoCompany,
       baseInfoLocation,
       baseInfoDuration,
+      baseInfoStartDate,
+      baseInfoEndDate,
       baseInfoStatus,
       baseInfoProgressAll,
       baseInfoPlan,
       fetchFaculty,
+      fetchAttendance,
+      getDayId,
       syncFacultyProgress,
       syncFacultyDuration,
     ],
@@ -2071,12 +2107,12 @@ export default function InternshipPage({
 
   const handleApprove = useCallback(async () => {
     if (!currentDay) return;
-    await updateDay(currentDay, { ...currentDay, approved: 2 }, dayIndex);
+    await updateDay(currentDay, { ...currentDay, approved: true }, dayIndex);
   }, [currentDay, updateDay, dayIndex]);
 
   const handleUnapprove = useCallback(async () => {
     if (!currentDay) return;
-    await updateDay(currentDay, { ...currentDay, approved: 3 }, dayIndex);
+    await updateDay(currentDay, { ...currentDay, approved: false }, dayIndex);
   }, [currentDay, updateDay, dayIndex]);
 
   const handlePostComment = useCallback(
@@ -2142,6 +2178,65 @@ export default function InternshipPage({
     ],
   );
 
+  const handleUpdateComment = useCallback(
+    async (commentId, newText) => {
+      const trimmed = newText.trim();
+      if (!trimmed || !currentDay) return;
+
+      const dayId =
+        getDayId(currentDay) ?? (dayIndex != null ? String(dayIndex) : null);
+      if (!dayId) {
+        toast.error("Day could not be identified.");
+        return;
+      }
+
+      setSubmitting(true);
+      try {
+        await patch(
+          `/faculty/${facultyId}/days/${dayId}/comments/${commentId}`,
+          { text: trimmed },
+        );
+        setEditingCommentId(null);
+        setEditingCommentText("");
+        await fetchFaculty();
+        toast.success("Comment updated.");
+      } catch (err) {
+        toast.error(err.message || "Failed to update comment.");
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [currentDay, dayIndex, facultyId, fetchFaculty, getDayId],
+  );
+
+  const handleDeleteComment = useCallback(
+    async (commentId) => {
+      if (!currentDay) return;
+      if (!window.confirm("Delete this comment?")) return;
+
+      const dayId =
+        getDayId(currentDay) ?? (dayIndex != null ? String(dayIndex) : null);
+      if (!dayId) {
+        toast.error("Day could not be identified.");
+        return;
+      }
+
+      setSubmitting(true);
+      try {
+        await del(
+          `/faculty/${facultyId}/days/${dayId}/comments/${commentId}`,
+        );
+        await fetchFaculty();
+        toast.success("Comment deleted.");
+      } catch (err) {
+        toast.error(err.message || "Failed to delete comment.");
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [currentDay, dayIndex, facultyId, fetchFaculty, getDayId],
+  );
+
   const handleAddDayClick = useCallback(() => {
     setNewDayDate(new Date().toISOString().slice(0, 10));
     setShowAddDayModal(true);
@@ -2182,6 +2277,46 @@ export default function InternshipPage({
     fetchFaculty,
     syncFacultyDuration,
     syncFacultyProgress,
+  ]);
+
+  const handleEditDayDateClick = useCallback(() => {
+    if (!currentDay) return;
+    setEditDayDate(String(currentDay.date || "").slice(0, 10));
+    setShowEditDayDateModal(true);
+  }, [currentDay]);
+
+  const handleEditDayDateConfirm = useCallback(async () => {
+    if (!currentDay || !editDayDate) return;
+    const dayId = getDayId(currentDay);
+    if (!dayId) {
+      toast.error("Day could not be identified.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await patch(`/faculty/${facultyId}/days/${dayId}`, {
+        ...currentDay,
+        date: editDayDate,
+      });
+      const refreshedFaculty = await fetchFaculty();
+      await syncFacultyDuration(refreshedFaculty);
+      await attendanceApi.syncAttendance(facultyId);
+      await fetchAttendance();
+      toast.success("Date updated.");
+      setShowEditDayDateModal(false);
+    } catch (err) {
+      toast.error(err.message || "Failed to update date.");
+    } finally {
+      setSubmitting(false);
+    }
+  }, [
+    currentDay,
+    editDayDate,
+    facultyId,
+    fetchAttendance,
+    fetchFaculty,
+    getDayId,
+    syncFacultyDuration,
   ]);
 
   const allComments = useMemo(() => {
@@ -2504,13 +2639,29 @@ export default function InternshipPage({
               </div>
               <div className="ip-hero-item">
                 <span className="ip-hero-label">Duration</span>
-                <input
-                  className="ip-input ip-inline-field"
-                  value={baseInfoDuration}
-                  onChange={(e) => setBaseInfoDuration(e.target.value)}
-                  disabled={!isInternshipEditMode}
-                  aria-label="Duration"
-                />
+                {isInternshipEditMode ? (
+                  <div className="ip-duration-pickers">
+                    <input
+                      type="date"
+                      className="ip-input ip-date-input ip-duration-date"
+                      value={baseInfoStartDate}
+                      onChange={(e) => setBaseInfoStartDate(e.target.value)}
+                      aria-label="Start date"
+                    />
+                    <span className="ip-duration-sep">—</span>
+                    <input
+                      type="date"
+                      className="ip-input ip-date-input ip-duration-date"
+                      value={baseInfoEndDate}
+                      onChange={(e) => setBaseInfoEndDate(e.target.value)}
+                      aria-label="End date"
+                    />
+                  </div>
+                ) : (
+                  <span className="ip-inline-field ip-inline-field--display">
+                    {baseInfoDuration || "—"}
+                  </span>
+                )}
               </div>
               <div className="ip-hero-item">
                 <span className="ip-hero-label">Status</span>
@@ -3084,39 +3235,144 @@ export default function InternshipPage({
               )}
             </div>
 
-            <div className="ip-students-card" aria-label="Attached students">
-              <div className="ip-students-head">
-                <div>
-                  <span className="ip-summary-label">Students</span>
-                  <strong className="ip-summary-value">
-                    {attachedStudents.length} attached
-                  </strong>
-                </div>
-                <div className="ip-students-head-actions">
-                  {canManageStudents && (
+            <div className="ip-hero-duo">
+              <div className="ip-students-card" aria-label="Attached students">
+                <div className="ip-students-head">
+                  <div>
+                    <span className="ip-summary-label">Students</span>
+                    <strong className="ip-summary-value">
+                      {attachedStudents.length} attached
+                    </strong>
+                  </div>
+                  <div className="ip-students-head-actions">
+                    {canManageStudents && (
+                      <button
+                        type="button"
+                        className="ip-student-action-btn"
+                        onClick={openStudentManager}
+                        disabled={
+                          submitting ||
+                          !Array.isArray(students) ||
+                          students.length === 0
+                        }
+                      >
+                        Manage students
+                      </button>
+                    )}
                     <button
                       type="button"
-                      className="ip-student-action-btn"
-                      onClick={openStudentManager}
-                      disabled={
-                        submitting ||
-                        !Array.isArray(students) ||
-                        students.length === 0
+                      className="ip-eye-btn"
+                      onClick={() => setShowStudents((prev) => !prev)}
+                      aria-label={
+                        showStudents
+                          ? "Hide attached students"
+                          : "Show attached students"
                       }
+                      aria-expanded={showStudents}
                     >
-                      Manage students
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                        className={`ip-eye-chevron ${showStudents ? "ip-eye-chevron--open" : ""}`}
+                      >
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
                     </button>
-                  )}
+                  </div>
+                </div>
+
+                {showStudents && (
+                  <div className="ip-students-list-wrap">
+                    {attachedStudents.length === 0 ? (
+                      <div className="ip-students-empty-state">
+                        <p className="ip-students-empty">
+                          No students attached to this internship.
+                        </p>
+                        {canManageStudents && (
+                          <button
+                            type="button"
+                            className="ip-student-action-btn"
+                            onClick={openStudentManager}
+                            disabled={
+                              submitting ||
+                              !Array.isArray(students) ||
+                              students.length === 0
+                            }
+                          >
+                            Attach students
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <ul className="ip-students-list">
+                        {attachedStudents.map((student, index) => {
+                          const studentId =
+                            getStudentId(student) || `student-${index}`;
+                          const studentName = getStudentName(student);
+                          return (
+                            <li key={studentId} className="ip-student-item">
+                              <div className="ip-student-copy">
+                                <span className="ip-student-name">
+                                  {studentName}
+                                </span>
+                                {getStudentFacultyName(student) && (
+                                  <span className="ip-student-faculty">
+                                    {getStudentFacultyName(student)}
+                                  </span>
+                                )}
+                              </div>
+                              {canManageStudents && (
+                                <button
+                                  type="button"
+                                  className="ip-student-action-btn ip-student-action-btn--ghost"
+                                  onClick={() => handleDetachStudent(student)}
+                                  disabled={submitting}
+                                >
+                                  Detach
+                                </button>
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="ip-attendance-card" aria-label="Attendance">
+                <div className="ip-attendance-head">
+                  <div>
+                    <strong className="ip-summary-value">Attendance</strong>
+                  </div>
                   <button
                     type="button"
                     className="ip-eye-btn"
-                    onClick={() => setShowStudents((prev) => !prev)}
-                    aria-label={
-                      showStudents
-                        ? "Hide attached students"
-                        : "Show attached students"
-                    }
-                    aria-expanded={showStudents}
+                    onClick={() => setShowAttendanceEditor(true)}
+                    aria-label="Open attendance manager"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -3133,111 +3389,8 @@ export default function InternshipPage({
                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                       <circle cx="12" cy="12" r="3"></circle>
                     </svg>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                      className={`ip-eye-chevron ${showStudents ? "ip-eye-chevron--open" : ""}`}
-                    >
-                      <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
                   </button>
                 </div>
-              </div>
-
-              {showStudents && (
-                <div className="ip-students-list-wrap">
-                  {attachedStudents.length === 0 ? (
-                    <div className="ip-students-empty-state">
-                      <p className="ip-students-empty">
-                        No students attached to this internship.
-                      </p>
-                      {canManageStudents && (
-                        <button
-                          type="button"
-                          className="ip-student-action-btn"
-                          onClick={openStudentManager}
-                          disabled={
-                            submitting ||
-                            !Array.isArray(students) ||
-                            students.length === 0
-                          }
-                        >
-                          Attach students
-                        </button>
-                      )}
-                    </div>
-                  ) : (
-                    <ul className="ip-students-list">
-                      {attachedStudents.map((student, index) => {
-                        const studentId =
-                          getStudentId(student) || `student-${index}`;
-                        const studentName = getStudentName(student);
-                        return (
-                          <li key={studentId} className="ip-student-item">
-                            <div className="ip-student-copy">
-                              <span className="ip-student-name">
-                                {studentName}
-                              </span>
-                              {getStudentFacultyName(student) && (
-                                <span className="ip-student-faculty">
-                                  {getStudentFacultyName(student)}
-                                </span>
-                              )}
-                            </div>
-                            {canManageStudents && (
-                              <button
-                                type="button"
-                                className="ip-student-action-btn ip-student-action-btn--ghost"
-                                onClick={() => handleDetachStudent(student)}
-                                disabled={submitting}
-                              >
-                                Detach
-                              </button>
-                            )}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <div className="ip-attendance-card" aria-label="Attendance">
-              <div className="ip-attendance-head">
-                <div>
-                  <span className="ip-summary-label">Attendance</span>
-                </div>
-                <button
-                  type="button"
-                  className="ip-eye-btn"
-                  onClick={() => setShowAttendanceEditor(true)}
-                  aria-label="Open attendance manager"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
-                  </svg>
-                </button>
               </div>
             </div>
           </header>
@@ -3719,6 +3872,20 @@ export default function InternshipPage({
                       </span>
                       <div className="ip-day-subtitle">
                         {currentDay.date || "No date"}
+                        {canWriteReport && (
+                          <button
+                            type="button"
+                            className="ip-day-date-edit-btn"
+                            onClick={handleEditDayDateClick}
+                            disabled={submitting}
+                            title="Change date"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
+                          </button>
+                        )}
                       </div>
                     </div>
                     <div className="ip-day-header-actions">
@@ -3848,15 +4015,32 @@ export default function InternshipPage({
                         visibleCurrentDayComments.length > 0 && (
                           <ul className="ip-comments-list">
                             {visibleCurrentDayComments.map((comment, idx) => {
-                              const user =
+                              const canEditThisComment =
+                                Boolean(comment._id) &&
+                                (normalizeRoleLocal(user?.role) === "admin" ||
+                                  normalizeRoleLocal(user?.role) ===
+                                    "developer" ||
+                                  String(user?.id || user?._id || "") ===
+                                    String(
+                                      typeof comment.userID === "object"
+                                        ? comment.userID?._id ||
+                                          comment.userID?.id ||
+                                          ""
+                                        : comment.userID || "",
+                                    ));
+                              const commentUser =
                                 typeof comment.userID === "object"
                                   ? comment.userID
                                   : null;
-                              const userName = user
-                                ? `${user.name} ${user.surname}`
+                              const userName = commentUser
+                                ? `${commentUser.name} ${commentUser.surname}`
                                 : "Unknown User";
-                              const userRole = user ? user.role : "";
+                              const userRole = commentUser
+                                ? commentUser.role
+                                : "";
                               const commentKey = getCommentKey(comment, idx);
+                              const isEditingThis =
+                                editingCommentId === comment._id;
                               return (
                                 <li
                                   key={comment._id || idx}
@@ -3903,8 +4087,105 @@ export default function InternshipPage({
                                         ).toLocaleTimeString()}
                                       </div>
                                     </div>
+                                    {canEditThisComment && !isEditingThis && (
+                                      <div style={{ display: "flex", gap: "4px" }}>
+                                        <button
+                                          type="button"
+                                          style={{
+                                            background: "none",
+                                            border: "none",
+                                            cursor: "pointer",
+                                            fontSize: "12px",
+                                            color: "var(--a1, #635bff)",
+                                            padding: "2px 6px",
+                                          }}
+                                          onClick={() => {
+                                            setEditingCommentId(comment._id);
+                                            setEditingCommentText(comment.text);
+                                          }}
+                                        >
+                                          Edit
+                                        </button>
+                                        <button
+                                          type="button"
+                                          style={{
+                                            background: "none",
+                                            border: "none",
+                                            cursor: "pointer",
+                                            fontSize: "12px",
+                                            color: "var(--error, #e53e3e)",
+                                            padding: "2px 6px",
+                                          }}
+                                          disabled={submitting}
+                                          onClick={() =>
+                                            handleDeleteComment(comment._id)
+                                          }
+                                        >
+                                          Delete
+                                        </button>
+                                      </div>
+                                    )}
                                   </div>
-                                  <p style={{ margin: 0 }}>{comment.text}</p>
+                                  {isEditingThis ? (
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        gap: "8px",
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      <input
+                                        type="text"
+                                        value={editingCommentText}
+                                        onChange={(e) =>
+                                          setEditingCommentText(e.target.value)
+                                        }
+                                        className="ip-input"
+                                        style={{ flex: 1 }}
+                                        autoFocus
+                                        onKeyDown={(e) => {
+                                          if (e.key === "Enter")
+                                            handleUpdateComment(
+                                              comment._id,
+                                              editingCommentText,
+                                            );
+                                          if (e.key === "Escape") {
+                                            setEditingCommentId(null);
+                                            setEditingCommentText("");
+                                          }
+                                        }}
+                                      />
+                                      <button
+                                        type="button"
+                                        className="ip-btn ip-btn--primary"
+                                        disabled={
+                                          submitting ||
+                                          !editingCommentText.trim()
+                                        }
+                                        onClick={() =>
+                                          handleUpdateComment(
+                                            comment._id,
+                                            editingCommentText,
+                                          )
+                                        }
+                                      >
+                                        Save
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="ip-btn ip-btn--secondary"
+                                        disabled={submitting}
+                                        onClick={() => {
+                                          setEditingCommentId(null);
+                                          setEditingCommentText("");
+                                        }}
+                                      >
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <p style={{ margin: 0 }}>{comment.text}</p>
+                                  )}
                                 </li>
                               );
                             })}
@@ -4113,6 +4394,74 @@ export default function InternshipPage({
                       disabled={submitting}
                     >
                       {submitting ? "Adding…" : "Add Day"}
+                    </button>
+                  </div>
+                </div>
+              </div>,
+              document.body,
+            )}
+
+          {showEditDayDateModal &&
+            typeof document !== "undefined" &&
+            createPortal(
+              <div
+                className="ip-modal-overlay"
+                onClick={() => setShowEditDayDateModal(false)}
+              >
+                <div
+                  className="ip-modal"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="ip-modal-header">
+                    <h3 className="ip-modal-title">Change Day Date</h3>
+                    <button
+                      type="button"
+                      className="ip-close-btn"
+                      onClick={() => setShowEditDayDateModal(false)}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="ip-modal-body">
+                    <label className="ip-label" htmlFor="edit-day-date">
+                      Select new date for Day {currentDay?.dayNumber}
+                    </label>
+                    <input
+                      id="edit-day-date"
+                      type="date"
+                      value={editDayDate}
+                      onChange={(e) => setEditDayDate(e.target.value)}
+                      className="ip-input ip-date-input"
+                    />
+                  </div>
+                  <div className="ip-modal-footer">
+                    <button
+                      type="button"
+                      className="ip-btn ip-btn--secondary"
+                      onClick={() => setShowEditDayDateModal(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="ip-btn ip-btn--primary"
+                      onClick={handleEditDayDateConfirm}
+                      disabled={submitting || !editDayDate}
+                    >
+                      {submitting ? "Saving…" : "Save Date"}
                     </button>
                   </div>
                 </div>
@@ -4916,6 +5265,29 @@ const ipStyles = `
     padding: 8px 10px;
     font-size: 14px;
   }
+  .ip-inline-field--display {
+    display: block;
+    padding: 8px 10px;
+    font-size: 14px;
+    color: var(--t1, #0c0e18);
+  }
+  .ip-duration-pickers {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .ip-duration-date {
+    flex: 1 1 130px;
+    min-width: 130px;
+    padding: 8px 10px;
+    font-size: 14px;
+  }
+  .ip-duration-sep {
+    font-size: 14px;
+    color: var(--t3, #9ba3bb);
+    flex-shrink: 0;
+  }
   .ip-hero-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(clamp(120px,35vw,1fr), 1fr));
@@ -5136,6 +5508,16 @@ const ipStyles = `
     border-radius: 16px;
     background: rgba(248,250,255,.95);
     border: 1px solid rgba(99,91,255,.08);
+  }
+  .ip-hero-duo {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    align-items: start;
+  }
+  .ip-hero-duo > * {
+    min-width: 0;
   }
   .ip-tutor-card {
     margin-top: 14px;
@@ -5817,6 +6199,32 @@ const ipStyles = `
     margin-top: clamp(2px,1vw,4px);
     font-size: clamp(11px,1.8vw,12px);
     color: var(--t3, #9ba3bb);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .ip-day-date-edit-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--t3, #9ba3bb);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: color .15s, background .15s;
+    flex-shrink: 0;
+  }
+  .ip-day-date-edit-btn:hover:not(:disabled) {
+    color: var(--a1, #635bff);
+    background: rgba(99,91,255,.1);
+  }
+  .ip-day-date-edit-btn:disabled {
+    opacity: .4;
+    cursor: not-allowed;
   }
   .ip-day-header-actions {
     display: inline-flex;
@@ -5990,7 +6398,6 @@ const ipStyles = `
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    margin-bottom: 12px;
   }
   .ip-attendance-actions { display:flex; gap:8px; align-items:center; }
   .ip-attendance-body { }
@@ -6781,6 +7188,7 @@ const ipStyles = `
     .ip-hero-statuslist { justify-content: flex-start; }
     .ip-hero-summary { grid-template-columns: 1fr 1fr; }
     .ip-summary-card--wide { grid-column: 1 / -1; }
+    .ip-hero-duo { grid-template-columns: 1fr; gap: 16px; }
     .ip-actions { position: static; }
     .ip-comment-form { flex-direction: column; }
     .ip-plan-card { padding: 16px; }

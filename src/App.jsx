@@ -24,7 +24,6 @@ import {
   Eye,
   ChevronRight,
   Zap,
-  Target,
   Shield,
   Activity,
   UserCheck,
@@ -71,11 +70,11 @@ import UserEducationPage from "./components/UserEducationPage";
 import ToastViewport from "./components/ToastViewport";
 import PageState from "./components/PageState";
 import ErrorPage from "./components/ErrorPage";
-import PublicEvaluationForm from "./components/PublicEvaluationForm";
-import CompanyEvaluationForm from "./components/CompanyEvaluationForm";
-import AllEvaluationsPage from "./components/AllEvaluationsPage";
-import CompanyEvaluationsPage from "./components/CompanyEvaluationsPage";
 import MaintenancePage from "./components/MaintenancePage";
+import SupervisorEvaluationFormPage from "./components/SupervisorEvaluationFormPage";
+import StudentEvaluationFormPage from "./components/StudentEvaluationFormPage";
+import AdminSupervisorReportsPage from "./components/AdminSupervisorReportsPage";
+import AdminStudentEvaluationsPage from "./components/AdminStudentEvaluationsPage";
 
 /* ═══════════════════════════════════════════════
    STYLES
@@ -131,6 +130,18 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);}
 .nv:hover{background:rgba(255,255,255,.054);color:rgba(255,255,255,.78);}
 .nv.on{background:linear-gradient(135deg,rgba(99,91,255,.27),rgba(6,201,160,.13));color:#fff;border:1px solid rgba(99,91,255,.27);}
 .nv.on svg{color:var(--a1);}
+.sb-group{margin:6px 0 2px;}
+.sb-group-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 9px;border:1px solid transparent;border-radius:10px;background:transparent;color:rgba(255,255,255,.48);cursor:pointer;transition:all .2s;font-family:'Montserrat',sans-serif;text-align:left;}
+.sb-group-btn:hover{background:rgba(255,255,255,.045);color:rgba(255,255,255,.82);}
+.sb-group-btn.open{background:rgba(255,255,255,.045);color:#fff;border-color:rgba(255,255,255,.06);}
+.sb-group-head{display:flex;align-items:center;gap:10px;min-width:0;}
+.sb-group-copy{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0;}
+.sb-group-title{font-size:13px;font-weight:600;line-height:1.15;}
+.sb-group-meta{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.24);}
+.sb-group-toggle{flex-shrink:0;transition:transform .2s ease;color:rgba(255,255,255,.38);}
+.sb-group-btn.open .sb-group-toggle{transform:rotate(180deg);color:#fff;}
+.sb-group-body{margin:4px 0 0 11px;padding-left:10px;border-left:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;gap:2px;}
+.nv.sub{padding:8px 9px 8px 10px;font-size:12.5px;opacity:.95;}
 .sb-stat{margin:0 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.055);border-radius:12px;padding:12px;}
 .ii{padding:8px 9px;border-radius:8px;transition:all .18s;cursor:pointer;margin-bottom:2px;}
 .ii:hover{background:rgba(255,255,255,.054);}
@@ -174,11 +185,6 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);}
 .bg:hover{background:rgba(0,0,0,.05);color:var(--t1);}
 .bi{background:#fff;border:1px solid rgba(0,0,0,.09);border-radius:9px;padding:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s;color:var(--t2);}
 .bi:hover{background:rgba(0,0,0,.04);color:var(--t1);}
-
-/* Public evaluation button on login: white, elevated, subtle hover */
-.lpublic{background:#ffffff;color:#0c0e18;border:none;border-radius:11px;padding:10px 16px;font-family:'Montserrat',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 6px 20px rgba(2,6,23,.08);transition:transform .18s ease,box-shadow .18s ease,opacity .12s ease;}
-.lpublic:hover{transform:translateY(-3px);box-shadow:0 18px 46px rgba(2,6,23,.14);opacity:0.98}
-.lpublic:active{transform:translateY(-1px);box-shadow:0 10px 26px rgba(2,6,23,.10)}
 
 /* MISC */
 .badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:10.5px;font-weight:600;}
@@ -362,7 +368,10 @@ const NAV_PERMISSIONS = {
   "Create Tutors": ["admin"],
   "Create Internship": ["admin"],
   Settings: ["admin"],
-  "All Evaluations": ["admin", "developer"],
+  "Supervisor Report": ALL_APP_ROLES,
+  "Student Self-Evaluation": ["admin", "tutor"],
+  "Supervisor Reports (Admin)": ["admin"],
+  "Student Evaluations (Admin)": ["admin"],
 };
 
 function normalizeRole(role) {
@@ -2762,21 +2771,15 @@ export default function App() {
   const [routeModalOpen, setRouteModalOpen] = useState(false);
   const [dd, setDd] = useState(false);
   const [sbOpen, setSbOpen] = useState(false);
+  const [sidebarGroupsOpen, setSidebarGroupsOpen] = useState({
+    administration: false,
+  });
   const [search] = useState("");
   const [showCreatePage, setShowCreatePage] = useState(false);
   const [systemError, setSystemError] = useState(null);
   const [maintenanceMode, setMaintenanceMode] = useState(() => readMaintenanceMode());
   const [maintenanceSaving, setMaintenanceSaving] = useState(false);
-  const [students, setStudents] = useState([]); // Add students state
-  const [blockedStudentIds, setBlockedStudentIds] = useState(() => {
-    try {
-      const raw = window.localStorage.getItem('siut_evaluation_blocked_student_ids');
-      const parsed = raw ? JSON.parse(raw) : [];
-      return Array.isArray(parsed) ? parsed.map((value) => String(value)) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [students, setStudents] = useState([]);
   const [openCommentTarget, setOpenCommentTarget] = useState(null);
   const [sessionMessage, setSessionMessage] = useState("");
   const userInitials = useMemo(() => user?.initials || getUserInitials(user), [user]);
@@ -2785,17 +2788,6 @@ export default function App() {
     [user?.role],
   );
   const maintenanceLocked = maintenanceMode && !isPrivilegedUser;
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(
-        'siut_evaluation_blocked_student_ids',
-        JSON.stringify(blockedStudentIds),
-      );
-    } catch {
-      // Ignore storage write failures.
-    }
-  }, [blockedStudentIds]);
 
   const openSystemError = useCallback((status, overrides = {}) => {
     setSystemError({
@@ -2845,6 +2837,13 @@ export default function App() {
   const handleToggleDd = () => setDd((p) => !p);
 
   const handleOpenSidebar = () => setSbOpen(true);
+
+  const handleToggleSidebarGroup = useCallback((groupKey) => {
+    setSidebarGroupsOpen((current) => ({
+      ...current,
+      [groupKey]: !current[groupKey],
+    }));
+  }, []);
 
   const STATUS_ID = "6a1a906ace7c3808500ab41c";
 
@@ -3060,32 +3059,43 @@ export default function App() {
     { I: Users, label: "Students" },
     { I: MessageSquare, label: "Feedback" },
     { I: BookOpen, label: "User Education" },
-    { I: Briefcase, label: "All Internships" },
-    { I: FileText, label: "All Evaluations" },
-    { I: UserCheck, label: "Create Tutors" },
-    { I: Plus, label: "Create Internship" },
+    { I: FileText, label: "Supervisor Report" },
+    { I: Award, label: "Student Self-Evaluation" },
   ].filter((item) => canAccessNav(user?.role, item.label));
 
-  const NAV_ALWAYS = useMemo(() => {
-    const role = (user?.role || '').toLowerCase();
-    if (role === 'admin' || role === 'developer') {
-      return [
-        { I: Target, label: "Public Evaluation" },
-        { I: FileText, label: "Company Evaluation Form" },
-        { I: FileText, label: "Company Submissions" },
-      ];
-    }
-    return [];
-  }, [user?.role]);
+  const NAV_ALWAYS = useMemo(() => [], []);
+
+  const sidebarGroups = useMemo(() => {
+    const groups = [
+      {
+        key: "administration",
+        label: "Administration",
+        icon: Shield,
+        items: [
+          { I: Briefcase, label: "All Internships" },
+          { I: UserCheck, label: "Create Tutors" },
+          { I: Plus, label: "Create Internship" },
+          { I: FileText, label: "Supervisor Reports (Admin)" },
+          { I: Award, label: "Student Evaluations (Admin)" },
+        ],
+      },
+    ];
+
+    return groups
+      .map((group) => ({
+        ...group,
+        items: group.items.filter(
+          (item) => canAccessNav(user?.role, item.label) || NAV_ALWAYS.some((navItem) => navItem.label === item.label),
+        ),
+      }))
+      .filter((group) => group.items.length > 0);
+  }, [NAV_ALWAYS, user?.role]);
 
   const fallbackNav = navItems[0]?.label || "Dashboard";
 
   useEffect(() => {
     if (openIntern) return;
     const isAlwaysRoute = NAV_ALWAYS.some((item) => item.label === nav);
-    if (nav === "Public Evaluation") return;
-    if (nav === "Company Evaluation Form") return;
-    if (nav === "Company Submissions") return;
     if (canAccessNav(user?.role, nav) || isAlwaysRoute) return;
     setNav(fallbackNav);
   }, [fallbackNav, nav, openIntern, user?.role, NAV_ALWAYS]);
@@ -3106,23 +3116,6 @@ export default function App() {
       return currentId === updatedId ? { ...student, ...updatedStudent } : student;
     }));
   }, []);
-
-  const handleEvaluationSubmitted = useCallback(({ studentId }) => {
-    const normalizedStudentId = String(studentId || '').trim();
-    if (!normalizedStudentId) return;
-
-    setBlockedStudentIds((current) => {
-      if (current.includes(normalizedStudentId)) return current;
-      return [...current, normalizedStudentId];
-    });
-  }, []);
-
-  const evaluationFormProps = useMemo(() => ({
-    internships: INTERNSHIPS,
-    students,
-    blockedStudentIds,
-    onSubmissionComplete: handleEvaluationSubmitted,
-  }), [INTERNSHIPS, blockedStudentIds, handleEvaluationSubmitted, students]);
 
   const currentUserRole = normalizeRole(user?.role);
 
@@ -3437,40 +3430,38 @@ export default function App() {
       return <FeedView feedbacks={commentFeedbacks} onOpenFeedback={handleOpenCommentFromFeedback} />;
     }
 
-    if (nav === "Public Evaluation") {
-      return <PublicEvaluationForm {...evaluationFormProps} />;
-    }
-
-    if (nav === "Company Evaluation Form") {
-      return <CompanyEvaluationForm {...evaluationFormProps} />;
-    }
-
-    if (nav === "Company Submissions") {
-      if (!canAccessNav(user?.role, "All Evaluations")) {
-        return (
-          <div className="pp">
-            <PageState variant="forbidden" title="Access denied" message="Only administrators and developers can view company submissions." />
-          </div>
-        );
-      }
-
-      return <CompanyEvaluationsPage />;
-    }
-
-    if (nav === "All Evaluations") {
-      if (!canAccessNav(user?.role, "All Evaluations")) {
-        return (
-          <div className="pp">
-            <PageState variant="forbidden" title="Access denied" message="Only administrators and developers can view all evaluations." />
-          </div>
-        );
-      }
-
-      return <AllEvaluationsPage />;
-    }
-
     if (nav === "User Education") {
       return <UserEducationPage user={user} />;
+    }
+
+    if (nav === "Supervisor Report") {
+      return <SupervisorEvaluationFormPage />;
+    }
+
+    if (nav === "Student Self-Evaluation") {
+      return <StudentEvaluationFormPage />;
+    }
+
+    if (nav === "Supervisor Reports (Admin)") {
+      if (!canAccessNav(user?.role, "Supervisor Reports (Admin)")) {
+        return (
+          <div className="pp">
+            <PageState variant="forbidden" title="Admin access required" message="Only administrators can view all supervisor reports." />
+          </div>
+        );
+      }
+      return <AdminSupervisorReportsPage />;
+    }
+
+    if (nav === "Student Evaluations (Admin)") {
+      if (!canAccessNav(user?.role, "Student Evaluations (Admin)")) {
+        return (
+          <div className="pp">
+            <PageState variant="forbidden" title="Admin access required" message="Only administrators can view all student evaluations." />
+          </div>
+        );
+      }
+      return <AdminStudentEvaluationsPage />;
     }
 
     if (nav === "Settings") {
@@ -3510,7 +3501,6 @@ export default function App() {
     commentFeedbacks,
     handleOpenCommentFromFeedback,
     TUTORS,
-    evaluationFormProps,
     retryFromError,
     fallbackNav,
     
@@ -3535,6 +3525,44 @@ export default function App() {
       </>
     );
 
+  if (page === "public-form")
+    return (
+      <>
+        <style>{CSS}</style>
+        <div style={{ minHeight: '100vh', background: 'var(--bg)', fontFamily: "'Montserrat',sans-serif" }}>
+          <div style={{
+            background: '#0c0e18', padding: '13px 24px',
+            display: 'flex', alignItems: 'center', gap: 14,
+            borderBottom: '1px solid rgba(255,255,255,.07)',
+          }}>
+            <button
+              type="button"
+              onClick={() => setPage('login')}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.12)',
+                borderRadius: 9, padding: '7px 13px',
+                color: 'rgba(255,255,255,.7)', fontFamily: 'Montserrat', fontSize: 12, fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              ← Back to Login
+            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 9, background: 'linear-gradient(135deg,#635bff,#06c9a0)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <GraduationCap size={16} color="#fff" />
+              </div>
+              <span style={{ color: '#fff', fontFamily: 'Montserrat', fontSize: 14, fontWeight: 700, letterSpacing: '-.2px' }}>
+                SIUT · Student Internship Report Form
+              </span>
+            </div>
+          </div>
+          <SupervisorEvaluationFormPage publicMode />
+        </div>
+        <ToastViewport />
+      </>
+    );
+
   if (page === "login")
     return (
       <>
@@ -3545,68 +3573,11 @@ export default function App() {
             setPage("dashboard");
           }}
           onUserSet={setUser}
+          onPublicForm={() => setPage('public-form')}
           sessionMessage={sessionMessage}
-          onOpenPublicEvaluation={() => {
-            setPage('public-evaluation');
-          }}
-          onOpenCompanyEvaluation={() => {
-            setPage('company-evaluation');
-          }}
         />
         <ToastViewport />
       </>
-    );
-
-  if (page === "public-evaluation")
-    return (
-      <div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          width: '100%',
-          height: '100%',
-          display: 'block',
-          padding: 0,
-          overflowY: 'auto',
-          background: 'var(--bg)',
-          WebkitOverflowScrolling: 'touch',
-        }}
-      >
-        <style>{CSS}</style>
-        <div style={{ width: '100%', maxWidth: 1180, margin: '0 auto', padding: '32px 16px' }}>
-          <PublicEvaluationForm {...evaluationFormProps} />
-        </div>
-        <ToastViewport />
-      </div>
-    );
-
-  if (page === "company-evaluation")
-    return (
-      <div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          width: '100%',
-          height: '100%',
-          display: 'block',
-          padding: 0,
-          overflowY: 'auto',
-          background: 'var(--bg)',
-          WebkitOverflowScrolling: 'touch',
-        }}
-      >
-        <style>{CSS}</style>
-        <div style={{ width: '100%', maxWidth: 1180, margin: '0 auto', padding: '32px 16px' }}>
-          <CompanyEvaluationForm {...evaluationFormProps} />
-        </div>
-        <ToastViewport />
-      </div>
     );
 
   return (
@@ -3647,16 +3618,43 @@ export default function App() {
                 <span style={{ color: nav === item.label ? "#fff" : "rgba(255,255,255,.4)" }}>{item.label}</span>
               </div>
             ))}
-            {NAV_ALWAYS.map((item) => (
-              <div
-                key={item.label}
-                className={`nv ${nav === item.label ? "on" : ""}`}
-                onClick={() => handleNavigate(item.label)}
-              >
-                <item.I size={16} color={nav === item.label ? "var(--a1)" : "rgba(255,255,255,.4)"} />
-                <span style={{ color: nav === item.label ? "#fff" : "rgba(255,255,255,.4)" }}>{item.label}</span>
-              </div>
-            ))}
+
+            {sidebarGroups.map((group) => {
+              const isOpen = sidebarGroupsOpen[group.key] || group.items.some((item) => nav === item.label);
+
+              return (
+                <div className="sb-group" key={group.key}>
+                  <button
+                    type="button"
+                    className={`sb-group-btn ${isOpen ? "open" : ""}`}
+                    onClick={() => handleToggleSidebarGroup(group.key)}
+                  >
+                    <div className="sb-group-head">
+                      <group.icon size={15} color={isOpen ? "#fff" : "rgba(255,255,255,.42)"} />
+                      <div className="sb-group-copy">
+                        <span className="sb-group-title">{group.label}</span>
+                        <span className="sb-group-meta">{group.items.length} pages</span>
+                      </div>
+                    </div>
+                    <ChevronDown size={13} className="sb-group-toggle" />
+                  </button>
+                  {isOpen && (
+                    <div className="sb-group-body">
+                      {group.items.map((item) => (
+                        <div
+                          key={item.label}
+                          className={`nv sub ${nav === item.label ? "on" : ""}`}
+                          onClick={() => handleNavigate(item.label)}
+                        >
+                          <item.I size={15} color={nav === item.label ? "var(--a1)" : "rgba(255,255,255,.42)"} />
+                          <span style={{ color: nav === item.label ? "#fff" : "rgba(255,255,255,.44)" }}>{item.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
 
             {isPrivilegedUser && (
               <button

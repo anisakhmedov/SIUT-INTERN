@@ -121,6 +121,65 @@ export function CustomSelect({ value, onChange, options, placeholder, hasError, 
   );
 }
 
+/* ── RatingField ── */
+const RATING_LABELS = { 1: 'Poor', 2: 'Below avg', 3: 'Satisfactory', 4: 'Good', 5: 'Excellent' };
+const RATING_LABELS_SHORT = { 1: 'Poor', 2: 'Fair', 3: 'Okay', 4: 'Good', 5: 'Great' };
+const RATING_COLORS = {
+  1: { idle: '#fef2f2', border: '#fecaca', active: '#ef4444', shadow: 'rgba(239,68,68,.3)' },
+  2: { idle: '#fff7ed', border: '#fed7aa', active: '#f97316', shadow: 'rgba(249,115,22,.3)' },
+  3: { idle: '#fffbeb', border: '#fde68a', active: '#d97706', shadow: 'rgba(217,119,6,.3)' },
+  4: { idle: '#f0fdf4', border: '#bbf7d0', active: '#16a34a', shadow: 'rgba(22,163,74,.3)' },
+  5: { idle: '#ecfdf5', border: '#a7f3d0', active: '#06c9a0', shadow: 'rgba(6,201,160,.3)' },
+};
+
+export function RatingField({ value, onChange, hasError, name, compact }) {
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: compact ? 4 : 6, width: '100%' }}>
+        {[1, 2, 3, 4, 5].map((n) => {
+          const isSelected = value === n;
+          const c = RATING_COLORS[n];
+          const label = compact ? RATING_LABELS_SHORT[n] : RATING_LABELS[n];
+          return (
+            <label key={n} style={{ flex: 1, cursor: 'pointer', userSelect: 'none', minWidth: 0 }}>
+              <input
+                type="radio" name={name} value={n} checked={isSelected} onChange={() => onChange(n)}
+                style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
+              />
+              <div style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                height: compact ? 52 : 62, borderRadius: 10,
+                border: `2px solid ${isSelected ? c.active : hasError && !value ? '#ef4444' : c.border}`,
+                background: isSelected ? c.active : c.idle,
+                transition: 'all .15s',
+                boxShadow: isSelected ? `0 4px 14px ${c.shadow}` : 'none',
+                padding: '5px 2px',
+                minWidth: 0,
+              }}>
+                <span style={{
+                  fontFamily: 'Montserrat', fontWeight: 800,
+                  fontSize: compact ? 15 : 18, lineHeight: 1,
+                  color: isSelected ? '#fff' : c.active,
+                }}>{n}</span>
+                <span style={{
+                  fontSize: compact ? 8 : 9, fontWeight: 600, marginTop: 3,
+                  letterSpacing: 0.1, whiteSpace: 'nowrap',
+                  overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '90%',
+                  color: isSelected ? 'rgba(255,255,255,.88)' : c.active,
+                  opacity: isSelected ? 1 : 0.7,
+                }}>{label}</span>
+              </div>
+            </label>
+          );
+        })}
+      </div>
+      {hasError && !value && (
+        <span style={{ fontSize: 11, color: '#ef4444', marginTop: 5, display: 'block' }}>Required</span>
+      )}
+    </div>
+  );
+}
+
 /* ── CustomDatePicker ── */
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DOW_LABELS = ['Mo','Tu','We','Th','Fr','Sa','Su'];

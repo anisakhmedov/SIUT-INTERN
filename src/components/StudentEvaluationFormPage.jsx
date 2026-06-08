@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { get, post } from '../utils/apiClient';
 import { toast } from '../utils/toast';
 import { AlertCircle, CheckCircle2, Briefcase } from 'lucide-react';
-import { CustomSelect, CustomDatePicker } from './ui';
+import { CustomSelect, CustomDatePicker, RatingField } from './ui';
 
 /* ── helpers ── */
 const getStudentId = (s) => String(s?._id || s?.id || s?.studentId || '').trim();
@@ -51,8 +51,6 @@ const defaultForm = () => ({
   },
 });
 
-const RATING_LABELS = { 1: 'Poor', 2: 'Below avg', 3: 'Satisfactory', 4: 'Good', 5: 'Excellent' };
-
 function useIsMobile() {
   const [mob, setMob] = useState(() => window.innerWidth < 680);
   useEffect(() => {
@@ -61,44 +59,6 @@ function useIsMobile() {
     return () => window.removeEventListener('resize', h);
   }, []);
   return mob;
-}
-
-/* ── RatingField (custom radio) ── */
-function RatingField({ value, onChange, hasError, name, compact }) {
-  const w = compact ? 56 : 72;
-  const h = compact ? 48 : 56;
-  return (
-    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-      {[1, 2, 3, 4, 5].map((n) => {
-        const isSelected = value === n;
-        return (
-          <label key={n} style={{ cursor: 'pointer', userSelect: 'none' }}>
-            <input
-              type="radio" name={name} value={n} checked={isSelected} onChange={() => onChange(n)}
-              style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
-            />
-            <div style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              width: w, height: h, borderRadius: 11,
-              border: `2px solid ${isSelected ? 'transparent' : hasError && !value ? '#ef4444' : 'rgba(0,0,0,.1)'}`,
-              background: isSelected ? 'linear-gradient(135deg,var(--a1),var(--a2))' : 'rgba(0,0,0,.02)',
-              color: isSelected ? '#fff' : 'var(--t2)',
-              transition: 'all .18s',
-              boxShadow: isSelected ? '0 4px 14px rgba(99,91,255,.35)' : 'none',
-            }}>
-              <span style={{ fontFamily: 'Montserrat', fontWeight: 800, fontSize: compact ? 15 : 17, lineHeight: 1 }}>{n}</span>
-              <span style={{ fontSize: 9, fontWeight: 600, marginTop: 3, opacity: isSelected ? 0.85 : 0.55, letterSpacing: 0.2 }}>
-                {RATING_LABELS[n]}
-              </span>
-            </div>
-          </label>
-        );
-      })}
-      {hasError && !value && (
-        <span style={{ fontSize: 11, color: '#ef4444', marginLeft: 4 }}>Required</span>
-      )}
-    </div>
-  );
 }
 
 function SectionHeader({ number, title, subtitle }) {

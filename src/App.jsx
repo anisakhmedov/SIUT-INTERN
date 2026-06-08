@@ -3553,11 +3553,11 @@ export default function App() {
                 <GraduationCap size={16} color="#fff" />
               </div>
               <span style={{ color: '#fff', fontFamily: 'Montserrat', fontSize: 14, fontWeight: 700, letterSpacing: '-.2px' }}>
-                SIUT · Student Internship Report Form
+                SIUT · Individual Student Internship Evaluation Form
               </span>
             </div>
           </div>
-          <SupervisorEvaluationFormPage publicMode />
+          <StudentEvaluationFormPage publicMode />
         </div>
         <ToastViewport />
       </>

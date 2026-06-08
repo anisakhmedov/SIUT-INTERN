@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { get } from "../utils/apiClient";
 import { toast } from "../utils/toast";
 import PageState from "./PageState";
@@ -77,14 +78,27 @@ function getDayStatus(day) {
 }
 
 /* ─────────────────────────────────────────────
+   RESPONSIVE HOOK
+───────────────────────────────────────────── */
+function useIsMobile(bp = 640) {
+  const [mob, setMob] = useState(() => typeof window !== "undefined" && window.innerWidth < bp);
+  useEffect(() => {
+    const fn = () => setMob(window.innerWidth < bp);
+    window.addEventListener("resize", fn);
+    return () => window.removeEventListener("resize", fn);
+  }, [bp]);
+  return mob;
+}
+
+/* ─────────────────────────────────────────────
    CONFIG
 ───────────────────────────────────────────── */
 const STATUS_META = {
-  approved:  { label: "Одобрено",    color: "#22c55e", bg: "rgba(34,197,94,.12)",   Icon: CheckCircle2 },
-  submitted: { label: "На проверке", color: "#3b82f6", bg: "rgba(59,130,246,.12)",  Icon: Clock },
-  rejected:  { label: "Отклонено",   color: "#ef4444", bg: "rgba(239,68,68,.11)",   Icon: XCircle },
-  missed:    { label: "Пропущено",   color: "#f59e0b", bg: "rgba(245,158,11,.12)",  Icon: AlertTriangle },
-  empty:     { label: "Пустые",      color: "#9ca3af", bg: "rgba(156,163,175,.11)", Icon: Circle },
+  approved:  { label: "Approved",    color: "#22c55e", bg: "rgba(34,197,94,.12)",   Icon: CheckCircle2 },
+  submitted: { label: "Under Review", color: "#3b82f6", bg: "rgba(59,130,246,.12)",  Icon: Clock },
+  rejected:  { label: "Rejected",    color: "#ef4444", bg: "rgba(239,68,68,.11)",   Icon: XCircle },
+  missed:    { label: "Missed",      color: "#f59e0b", bg: "rgba(245,158,11,.12)",  Icon: AlertTriangle },
+  empty:     { label: "Empty",       color: "#9ca3af", bg: "rgba(156,163,175,.11)", Icon: Circle },
 };
 
 /* ─────────────────────────────────────────────
@@ -129,7 +143,7 @@ function KpiCard({ status, value, total, onClick, isActive }) {
       </div>
       <div>
         <div style={{ fontFamily: "Montserrat", fontSize: 24, fontWeight: 800, color: "var(--t1)", lineHeight: 1 }}>{value}</div>
-        <div style={{ fontSize: 11, color: "var(--t2)", fontWeight: 500, marginTop: 3 }}>{m.label} дней</div>
+        <div style={{ fontSize: 11, color: "var(--t2)", fontWeight: 500, marginTop: 3 }}>{m.label} days</div>
       </div>
       <div style={{ height: 3, background: "rgba(0,0,0,.06)", borderRadius: 999, overflow: "hidden" }}>
         <div style={{ width: `${pct}%`, height: "100%", background: m.color, borderRadius: 999, transition: "width .5s" }} />
@@ -167,7 +181,7 @@ function MiniStatusBar({ stats }) {
 ───────────────────────────────────────────── */
 function DonutChart({ data }) {
   const total = data.reduce((s, d) => s + d.value, 0);
-  if (total === 0) return <div style={{ textAlign: "center", color: "var(--t3)", fontSize: 12, padding: "20px 0" }}>Нет данных</div>;
+  if (total === 0) return <div style={{ textAlign: "center", color: "var(--t3)", fontSize: 12, padding: "20px 0" }}>No data</div>;
 
   const r = 52, cx = 64, cy = 64, sw = 20, circ = 2 * Math.PI * r;
 
@@ -192,7 +206,7 @@ function DonutChart({ data }) {
         </svg>
         <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
           <span style={{ fontFamily: "Montserrat", fontSize: 20, fontWeight: 800, color: "var(--t1)", lineHeight: 1 }}>{total}</span>
-          <span style={{ fontSize: 9, color: "var(--t3)", fontWeight: 600 }}>дней</span>
+          <span style={{ fontSize: 9, color: "var(--t3)", fontWeight: 600 }}>days</span>
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 9, flex: 1 }}>
@@ -281,9 +295,16 @@ function SpotlightCard({ title, IconComp, iconColor, iconBg, items, emptyText })
 /* ─────────────────────────────────────────────
    STATUS PANEL (slide-in drawer)
 ───────────────────────────────────────────── */
-function StatusPanel({ status, allDays, onClose, onOpenDay }) {
+function StatusPanel({ status, allDays, onClose, onOpenDay, panelTitle }) {
   const m = STATUS_META[status];
+  const isMobile = useIsMobile();
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    const sa = document.querySelector(".sa");
+    if (sa) sa.style.overflow = "hidden";
+    return () => { if (sa) sa.style.overflow = ""; };
+  }, []);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -301,10 +322,17 @@ function StatusPanel({ status, allDays, onClose, onOpenDay }) {
     return [...map.entries()].map(([id, g]) => ({ id, ...g }));
   }, [filtered]);
 
-  return (
+  return createPortal(
     <>
-      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.38)", backdropFilter: "blur(6px)", zIndex: 200, animation: "fadeIn .18s ease" }} />
-      <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "clamp(320px,36vw,460px)", background: "#fff", boxShadow: "-8px 0 48px rgba(0,0,0,.16)", zIndex: 201, display: "flex", flexDirection: "column", animation: "panelIn .3s cubic-bezier(.22,1,.36,1)" }}>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.45)", backdropFilter: "blur(6px)", zIndex: 1000, animation: "fadeIn .18s ease" }} />
+      <div style={{
+        position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
+        width: isMobile ? "calc(100vw - 24px)" : "clamp(380px, 50vw, 620px)",
+        maxHeight: "80vh",
+        background: "#fff", borderRadius: 20, boxShadow: "0 24px 80px rgba(0,0,0,.22)",
+        zIndex: 1001, display: "flex", flexDirection: "column", overflow: "hidden",
+        animation: "modalIn .25s cubic-bezier(.22,1,.36,1)",
+      }}>
 
         {/* Header */}
         <div style={{ padding: "18px 18px 12px", borderBottom: "1px solid rgba(0,0,0,.07)", flexShrink: 0 }}>
@@ -314,8 +342,12 @@ function StatusPanel({ status, allDays, onClose, onOpenDay }) {
                 <m.Icon size={17} color={m.color} />
               </div>
               <div>
-                <div style={{ fontFamily: "Montserrat", fontSize: 15, fontWeight: 800, color: "var(--t1)" }}>{m.label}</div>
-                <div style={{ fontSize: 11, color: "var(--t3)" }}>{allDays.length} дней · {grouped.length} стажировок</div>
+                <div style={{ fontFamily: "Montserrat", fontSize: 15, fontWeight: 800, color: "var(--t1)" }}>
+                  {panelTitle ? panelTitle : m.label}
+                </div>
+                <div style={{ fontSize: 11, color: "var(--t3)" }}>
+                  {panelTitle ? `${m.label} · ` : ""}{allDays.length} days · {grouped.length} internships
+                </div>
               </div>
             </div>
             <button onClick={onClose} style={{ width: 30, height: 30, border: "1px solid rgba(0,0,0,.1)", borderRadius: 8, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--t2)" }}>
@@ -324,20 +356,20 @@ function StatusPanel({ status, allDays, onClose, onOpenDay }) {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 7, background: "rgba(0,0,0,.04)", border: "1px solid rgba(0,0,0,.08)", borderRadius: 9, padding: "7px 11px" }}>
             <Search size={13} color="var(--t3)" />
-            <input placeholder="Поиск стажировки…" value={search} onChange={(e) => setSearch(e.target.value)}
+            <input placeholder="Search internship…" value={search} onChange={(e) => setSearch(e.target.value)}
               style={{ border: "none", outline: "none", background: "transparent", fontFamily: "Montserrat", fontSize: 12.5, color: "var(--t1)", flex: 1 }} />
           </div>
         </div>
 
         {/* List */}
-        <div style={{ flex: 1, overflowY: "auto" }}>
+        <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
           {grouped.length === 0 && (
-            <div style={{ textAlign: "center", padding: "40px 20px", color: "var(--t3)", fontSize: 13 }}>Ничего не найдено</div>
+            <div style={{ textAlign: "center", padding: "40px 20px", color: "var(--t3)", fontSize: 13 }}>Nothing found</div>
           )}
           {grouped.map((group, gi) => (
             <div key={group.id}>
               <div style={{ padding: "10px 18px 5px", fontSize: 10.5, fontWeight: 700, color: "var(--t3)", textTransform: "uppercase", letterSpacing: ".09em", borderTop: gi > 0 ? "1px solid rgba(0,0,0,.04)" : "none", background: "rgba(0,0,0,.018)" }}>
-                {group.name} · {group.days.length} {group.days.length === 1 ? "день" : "дней"}
+                {group.name} · {group.days.length} {group.days.length === 1 ? "day" : "days"}
               </div>
               {group.days.map((d, di) => (
                 <div key={di} onClick={() => onOpenDay(d.facultyId, d.dayIndex)}
@@ -346,15 +378,15 @@ function StatusPanel({ status, allDays, onClose, onOpenDay }) {
                   onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                 >
                   <div style={{ width: 40, height: 40, borderRadius: 10, background: m.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <span style={{ fontSize: 8.5, fontWeight: 700, color: m.color, lineHeight: 1 }}>ДЕНЬ</span>
+                    <span style={{ fontSize: 8.5, fontWeight: 700, color: m.color, lineHeight: 1 }}>DAY</span>
                     <span style={{ fontSize: 14, fontWeight: 800, color: m.color, lineHeight: 1 }}>{d.dayNumber}</span>
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--t1)" }}>День {d.dayNumber}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--t1)" }}>Day {d.dayNumber}</div>
                     <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 1 }}>{d.dateLabel}</div>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11.5, color: "#635bff", fontWeight: 700, flexShrink: 0 }}>
-                    Открыть <ArrowRight size={12} />
+                    Open <ArrowRight size={12} />
                   </div>
                 </div>
               ))}
@@ -363,18 +395,127 @@ function StatusPanel({ status, allDays, onClose, onOpenDay }) {
         </div>
 
         <div style={{ padding: "10px 18px", borderTop: "1px solid rgba(0,0,0,.06)", fontSize: 11, color: "var(--t3)", textAlign: "center", flexShrink: 0 }}>
-          Нажмите на день — откроется стажировка на нужном дне
+          Click a day to open the internship at that day
         </div>
       </div>
-    </>
+    </>,
+    document.body
+  );
+}
+
+/* ─────────────────────────────────────────────
+   STUDENTS PANEL
+───────────────────────────────────────────── */
+function StudentsPanel({ students, title, subtitle, onClose }) {
+  const isMobile = useIsMobile();
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    const sa = document.querySelector(".sa");
+    if (sa) sa.style.overflow = "hidden";
+    return () => { if (sa) sa.style.overflow = ""; };
+  }, []);
+
+  const getName = (s) => [s?.name, s?.surname, s?.lastname].filter(Boolean).join(" ").trim() || "Unnamed";
+  const getId   = (s) => String(s?.studentId || s?._id || s?.id || "").trim();
+  const getFac  = (s) => {
+    if (typeof s?.nameFaculty === "string" && s.nameFaculty.trim()) return s.nameFaculty.trim();
+    if (s?.faculty && typeof s.faculty === "object") return String(s.faculty.name || "").trim();
+    return "";
+  };
+
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase();
+    if (!q) return students;
+    return students.filter((s) => getName(s).toLowerCase().includes(q) || getId(s).toLowerCase().includes(q));
+  }, [students, search]);
+
+  return createPortal(
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.45)", backdropFilter: "blur(6px)", zIndex: 1000, animation: "fadeIn .18s ease" }} />
+      <div style={{
+        position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
+        width: isMobile ? "calc(100vw - 24px)" : "clamp(380px, 50vw, 620px)",
+        maxHeight: "80vh",
+        background: "#fff", borderRadius: 20, boxShadow: "0 24px 80px rgba(0,0,0,.22)",
+        zIndex: 1001, display: "flex", flexDirection: "column", overflow: "hidden",
+        animation: "modalIn .25s cubic-bezier(.22,1,.36,1)",
+      }}>
+
+        {/* Header */}
+        <div style={{ padding: "18px 18px 12px", borderBottom: "1px solid rgba(0,0,0,.07)", flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(239,68,68,.11)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <UserX size={17} color="#ef4444" />
+              </div>
+              <div>
+                <div style={{ fontFamily: "Montserrat", fontSize: 14, fontWeight: 800, color: "var(--t1)", lineHeight: 1.2 }}>{title}</div>
+                <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 2 }}>{subtitle || `${students.length} students`}</div>
+              </div>
+            </div>
+            <button onClick={onClose} style={{ width: 30, height: 30, border: "1px solid rgba(0,0,0,.1)", borderRadius: 8, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--t2)" }}>
+              <X size={14} />
+            </button>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 7, background: "rgba(0,0,0,.04)", border: "1px solid rgba(0,0,0,.08)", borderRadius: 9, padding: "7px 11px" }}>
+            <Search size={13} color="var(--t3)" />
+            <input placeholder="Search student…" value={search} onChange={(e) => setSearch(e.target.value)}
+              style={{ border: "none", outline: "none", background: "transparent", fontFamily: "Montserrat", fontSize: 12.5, color: "var(--t1)", flex: 1 }} />
+          </div>
+        </div>
+
+        {/* List */}
+        <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
+          {filtered.length === 0 && (
+            <div style={{ textAlign: "center", padding: "40px 20px", color: "var(--t3)", fontSize: 13 }}>Nothing found</div>
+          )}
+          {filtered.map((s, i) => {
+            const name = getName(s);
+            const sid  = getId(s);
+            const fac  = getFac(s);
+            const internship = s._internship || "";
+            return (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 18px", borderBottom: "1px solid rgba(0,0,0,.05)" }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(239,68,68,.09)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: "#ef4444" }}>{i + 1}</span>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--t1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</div>
+                  <div style={{ fontSize: 10.5, color: "var(--t3)", marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{fac ? `${fac}` : ""}{internship ? ` · ${internship}` : ""}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={{ padding: "10px 18px", borderTop: "1px solid rgba(0,0,0,.06)", fontSize: 11, color: "var(--t3)", textAlign: "center", flexShrink: 0 }}>
+          {filtered.length} of {students.length} students shown
+        </div>
+      </div>
+    </>,
+    document.body
   );
 }
 
 /* ─────────────────────────────────────────────
    FORM STATS SECTION
 ───────────────────────────────────────────── */
+const FORM_TABS = [
+  { key: "student",    label: "Student Self-Evaluation", endpoint: "/individual-student-evaluations", color: "#635bff", bg: "rgba(99,91,255,.1)" },
+  { key: "supervisor", label: "Supervisor Form",          endpoint: "/student-internship-reports",    color: "#06c9a0", bg: "rgba(6,201,160,.12)" },
+];
+
+function getFacultyStudents(f) {
+  if (Array.isArray(f?.numberOfStudents) && f.numberOfStudents.length > 0) return f.numberOfStudents;
+  if (Array.isArray(f?.students) && f.students.length > 0) return f.students;
+  return [];
+}
+
 function FormStatsSection({ faculties }) {
-  const [evals, setEvals] = useState([]);
+  const [tab, setTab] = useState("student");
+  const [data, setData] = useState({ student: [], supervisor: [] });
   const [loading, setLoading] = useState(true);
   const [sortKey, setSortKey] = useState("name");
   const [sortAsc, setSortAsc] = useState(true);
@@ -384,18 +525,22 @@ function FormStatsSection({ faculties }) {
     (async () => {
       try {
         setLoading(true);
-        const res = await get("/individual-student-evaluations");
-        const list = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [];
-        setEvals(list);
-      } catch {
-        setEvals([]);
+        const toList = (r) => Array.isArray(r) ? r : Array.isArray(r?.data) ? r.data : [];
+        const [sRes, rRes] = await Promise.all([
+          get("/individual-student-evaluations").catch(() => []),
+          get("/student-internship-reports").catch(() => []),
+        ]);
+        setData({ student: toList(sRes), supervisor: toList(rRes) });
       } finally {
         setLoading(false);
       }
     })();
   }, []);
 
-  /* submitted student IDs from evaluations */
+  const activeTab = FORM_TABS.find((t) => t.key === tab);
+
+  const evals = useMemo(() => data[tab] || [], [data, tab]);
+
   const submittedIds = useMemo(() => {
     const ids = new Set();
     for (const e of evals) {
@@ -405,39 +550,26 @@ function FormStatsSection({ faculties }) {
     return ids;
   }, [evals]);
 
-  /* evals grouped by company name */
-  const evalsByCompany = useMemo(() => {
-    const map = new Map();
-    for (const e of evals) {
-      const co = String(e?.companyInformation?.companyName || "").trim().toLowerCase();
-      if (!map.has(co)) map.set(co, []);
-      map.get(co).push(e);
-    }
-    return map;
-  }, [evals]);
-
-  const rows = useMemo(() => {
-    return faculties.map((f) => {
-      const name = f?.name || f?.title || f?.company || "Untitled";
-      const company = String(f?.company || "").trim();
-
-      /* count by student IDs attached to this faculty */
-      const students = Array.isArray(f?.students) ? f.students : [];
-      const totalStudents = students.length;
-      const submittedCount = students.filter((s) => {
-        const sid = String(s?.studentId || s?._id || s?.id || "").trim();
-        return sid && submittedIds.has(sid);
-      }).length;
-
-      /* fallback: match by company name if no students array */
-      const byCompany = evalsByCompany.get(company.toLowerCase()) || [];
-      const evalCount = totalStudents > 0 ? submittedCount : byCompany.length;
-      const total = totalStudents > 0 ? totalStudents : null;
-
-      const pct = total != null && total > 0 ? Math.round((evalCount / total) * 100) : null;
-      return { id: f?._id ?? f?.id ?? name, name, company, evalCount, total, pct };
+  const rows = useMemo(() => faculties.map((f) => {
+    const name = f?.name || f?.title || f?.company || "Untitled";
+    const company = String(f?.company || "").trim();
+    const students = getFacultyStudents(f);
+    const totalStudents = students.length;
+    const submitted = students.filter((s) => {
+      const sid = String(s?.studentId || s?._id || s?.id || "").trim();
+      return sid && submittedIds.has(sid);
     });
-  }, [faculties, submittedIds, evalsByCompany]);
+    const notSubmitted = students
+      .filter((s) => {
+        const sid = String(s?.studentId || s?._id || s?.id || "").trim();
+        return !sid || !submittedIds.has(sid);
+      })
+      .map((s) => ({ ...s, _internship: name }));
+    const total = totalStudents > 0 ? totalStudents : null;
+    const evalCount = totalStudents > 0 ? submitted.length : 0;
+    const pct = total != null && total > 0 ? Math.round((evalCount / total) * 100) : null;
+    return { id: f?._id ?? f?.id ?? name, name, company, evalCount, total, pct, notSubmittedStudents: notSubmitted };
+  }), [faculties, submittedIds]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -445,18 +577,19 @@ function FormStatsSection({ faculties }) {
     res.sort((a, b) => {
       if (sortKey === "name") return sortAsc ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
       if (sortKey === "evalCount") return sortAsc ? a.evalCount - b.evalCount : b.evalCount - a.evalCount;
-      if (sortKey === "pct") {
-        const ap = a.pct ?? -1, bp = b.pct ?? -1;
-        return sortAsc ? ap - bp : bp - ap;
-      }
+      if (sortKey === "pct") { const ap = a.pct ?? -1, bp = b.pct ?? -1; return sortAsc ? ap - bp : bp - ap; }
       return 0;
     });
     return res;
   }, [rows, search, sortKey, sortAsc]);
 
-  const totalSubmitted = evals.length;
-  const totalWithStudents = rows.filter((r) => r.total != null && r.total > 0).length;
   const totalComplete = rows.filter((r) => r.pct === 100).length;
+  const totalWithStudents = rows.filter((r) => r.total != null && r.total > 0).length;
+  const totalNotSent = filtered.filter((r) => r.total != null).reduce((s, r) => s + Math.max(0, r.total - r.evalCount), 0);
+  const totalSent = filtered.reduce((s, r) => s + r.evalCount, 0);
+  const allNotSubmitted = useMemo(() => rows.flatMap((r) => r.notSubmittedStudents), [rows]);
+
+  const [studentsPanel, setStudentsPanel] = useState(null);
 
   const toggleSort = (k) => {
     if (sortKey === k) setSortAsc((p) => !p);
@@ -467,74 +600,98 @@ function FormStatsSection({ faculties }) {
     <div style={{ background: "rgba(255,255,255,.84)", border: "1px solid rgba(255,255,255,.88)", borderRadius: 18, boxShadow: "0 4px 16px rgba(99,91,255,.07)", overflow: "hidden" }}>
 
       {/* Header */}
-      <div style={{ padding: "18px 20px 14px", borderBottom: "1px solid rgba(0,0,0,.06)" }}>
+      <div style={{ padding: "18px 20px 0", borderBottom: "1px solid rgba(0,0,0,.06)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(99,91,255,.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <FileText size={17} color="#635bff" />
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: activeTab.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <FileText size={17} color={activeTab.color} />
           </div>
           <div>
-            <div style={{ fontFamily: "Montserrat", fontSize: 14.5, fontWeight: 700, color: "var(--t1)" }}>Статистика по формам студентов</div>
-            <div style={{ fontSize: 11.5, color: "var(--t3)" }}>кто отправил форму самооценки, а кто нет</div>
+            <div style={{ fontFamily: "Montserrat", fontSize: 14.5, fontWeight: 700, color: "var(--t1)" }}>Form Statistics</div>
+            <div style={{ fontSize: 11.5, color: "var(--t3)" }}>who submitted the form and who didn't</div>
           </div>
         </div>
 
-        {/* Summary row */}
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          {[
-            { IconComp: FileText,  label: "Всего форм отправлено", value: totalSubmitted, color: "#635bff", bg: "rgba(99,91,255,.1)" },
-            { IconComp: UserCheck, label: "Стажировок 100% заполнено", value: totalComplete, color: "#22c55e", bg: "rgba(34,197,94,.12)" },
-            { IconComp: Users,     label: "Стажировок со студентами", value: totalWithStudents, color: "#3b82f6", bg: "rgba(59,130,246,.12)" },
-          ].map(({ IconComp, label, value, color, bg }) => (
-            <div key={label} style={{ flex: 1, minWidth: 130, padding: "12px 14px", background: bg, borderRadius: 12, display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 30, height: 30, borderRadius: 8, background: "rgba(255,255,255,.6)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <IconComp size={14} color={color} />
-              </div>
-              <div>
-                <div style={{ fontFamily: "Montserrat", fontSize: 18, fontWeight: 800, color, lineHeight: 1 }}>{value}</div>
-                <div style={{ fontSize: 10.5, color, opacity: .8, marginTop: 2 }}>{label}</div>
-              </div>
-            </div>
+        {/* Tabs */}
+        <div style={{ display: "flex", gap: 4 }}>
+          {FORM_TABS.map((t) => (
+            <button key={t.key} onClick={() => { setTab(t.key); setSearch(""); setSortKey("name"); setSortAsc(true); }}
+              style={{
+                padding: "8px 16px", borderRadius: "10px 10px 0 0", border: "none", cursor: "pointer",
+                fontFamily: "Montserrat", fontSize: 12.5, fontWeight: 700,
+                background: tab === t.key ? "#fff" : "transparent",
+                color: tab === t.key ? t.color : "var(--t3)",
+                borderBottom: tab === t.key ? `2px solid ${t.color}` : "2px solid transparent",
+                transition: "all .15s",
+              }}>
+              {t.label}
+              <span style={{ marginLeft: 6, fontSize: 10.5, fontWeight: 800, padding: "1px 6px", borderRadius: 999, background: t.bg, color: t.color }}>
+                {data[t.key]?.length ?? 0}
+              </span>
+            </button>
           ))}
         </div>
+      </div>
+
+      {/* Summary row */}
+      <div style={{ padding: "14px 20px", borderBottom: "1px solid rgba(0,0,0,.06)", display: "flex", gap: 12, flexWrap: "wrap" }}>
+        {[
+          { IconComp: FileText,  label: "Forms submitted",            value: evals.length,     color: activeTab.color, bg: activeTab.bg,           onClick: null },
+          { IconComp: UserCheck, label: "Internships 100% complete",  value: totalComplete,    color: "#22c55e",       bg: "rgba(34,197,94,.12)",   onClick: null },
+          { IconComp: UserX,     label: "Students haven't submitted", value: totalNotSent,     color: "#ef4444",       bg: "rgba(239,68,68,.11)",   onClick: allNotSubmitted.length > 0 ? () => setStudentsPanel({ students: allNotSubmitted, title: "Students haven't submitted", subtitle: `${allNotSubmitted.length} students across all internships` }) : null },
+          { IconComp: Users,     label: "Internships with students",  value: totalWithStudents, color: "#3b82f6",      bg: "rgba(59,130,246,.12)",  onClick: null },
+        ].map(({ IconComp, label, value, color, bg, onClick }) => (
+          <div key={label} onClick={onClick || undefined}
+            style={{ flex: 1, minWidth: 130, padding: "10px 13px", background: bg, borderRadius: 12, display: "flex", alignItems: "center", gap: 10, cursor: onClick ? "pointer" : "default", transition: "opacity .15s" }}
+            onMouseEnter={(e) => { if (onClick) e.currentTarget.style.opacity = ".82"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
+          >
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(255,255,255,.6)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <IconComp size={13} color={color} />
+            </div>
+            <div>
+              <div style={{ fontFamily: "Montserrat", fontSize: 18, fontWeight: 800, color, lineHeight: 1 }}>{value}</div>
+              <div style={{ fontSize: 10, color, opacity: .8, marginTop: 2 }}>{label}</div>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Toolbar */}
       <div style={{ padding: "10px 18px", borderBottom: "1px solid rgba(0,0,0,.06)", display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 7, background: "rgba(0,0,0,.04)", border: "1px solid rgba(0,0,0,.08)", borderRadius: 9, padding: "6px 11px", flex: 1, maxWidth: 240 }}>
           <Search size={12} color="var(--t3)" />
-          <input placeholder="Поиск…" value={search} onChange={(e) => setSearch(e.target.value)}
+          <input placeholder="Search…" value={search} onChange={(e) => setSearch(e.target.value)}
             style={{ border: "none", outline: "none", background: "transparent", fontFamily: "Montserrat", fontSize: 12, color: "var(--t1)", flex: 1 }} />
         </div>
-        <span style={{ fontSize: 11, color: "var(--t3)" }}>{filtered.length} стажировок</span>
+        <span style={{ fontSize: 11, color: "var(--t3)" }}>{filtered.length} internships</span>
       </div>
 
       {/* Table */}
       {loading
-        ? <div style={{ padding: "24px", textAlign: "center", color: "var(--t3)", fontSize: 13 }}>Загрузка…</div>
+        ? <div style={{ padding: "24px", textAlign: "center", color: "var(--t3)", fontSize: 13 }}>Loading…</div>
         : (
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 560 }}>
               <thead>
                 <tr style={{ background: "rgba(0,0,0,.025)" }}>
                   <th onClick={() => toggleSort("name")} style={{ padding: "10px 12px 10px 18px", fontSize: 11, fontWeight: 700, color: "var(--t2)", textAlign: "left", cursor: "pointer", userSelect: "none", whiteSpace: "nowrap", minWidth: 180 }}>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>Стажировка {sortKey === "name" ? (sortAsc ? <ChevronUp size={11} color="var(--a1)" /> : <ChevronDown size={11} color="var(--a1)" />) : <ChevronDown size={11} color="var(--t3)" />}</span>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>Internship {sortKey === "name" ? (sortAsc ? <ChevronUp size={11} color="var(--a1)" /> : <ChevronDown size={11} color="var(--a1)" />) : <ChevronDown size={11} color="var(--t3)" />}</span>
                   </th>
                   <th onClick={() => toggleSort("evalCount")} style={{ padding: "10px 12px", fontSize: 11, fontWeight: 700, color: "var(--t2)", textAlign: "center", cursor: "pointer", userSelect: "none", whiteSpace: "nowrap" }}>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>Отправили {sortKey === "evalCount" ? (sortAsc ? <ChevronUp size={11} color="var(--a1)" /> : <ChevronDown size={11} color="var(--a1)" />) : <ChevronDown size={11} color="var(--t3)" />}</span>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>Submitted {sortKey === "evalCount" ? (sortAsc ? <ChevronUp size={11} color="var(--a1)" /> : <ChevronDown size={11} color="var(--a1)" />) : <ChevronDown size={11} color="var(--t3)" />}</span>
                   </th>
-                  <th style={{ padding: "10px 12px", fontSize: 11, fontWeight: 700, color: "var(--t2)", textAlign: "center", whiteSpace: "nowrap" }}>Не отправили</th>
+                  <th style={{ padding: "10px 12px", fontSize: 11, fontWeight: 700, color: "var(--t2)", textAlign: "center", whiteSpace: "nowrap" }}>Not submitted</th>
                   <th onClick={() => toggleSort("pct")} style={{ padding: "10px 18px 10px 12px", fontSize: 11, fontWeight: 700, color: "var(--t2)", textAlign: "left", cursor: "pointer", userSelect: "none", minWidth: 160, whiteSpace: "nowrap" }}>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>Покрытие {sortKey === "pct" ? (sortAsc ? <ChevronUp size={11} color="var(--a1)" /> : <ChevronDown size={11} color="var(--a1)" />) : <ChevronDown size={11} color="var(--t3)" />}</span>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>Coverage {sortKey === "pct" ? (sortAsc ? <ChevronUp size={11} color="var(--a1)" /> : <ChevronDown size={11} color="var(--a1)" />) : <ChevronDown size={11} color="var(--t3)" />}</span>
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 && (
-                  <tr><td colSpan={4} style={{ textAlign: "center", padding: "28px 0", color: "var(--t3)", fontSize: 13 }}>Ничего не найдено</td></tr>
+                  <tr><td colSpan={4} style={{ textAlign: "center", padding: "28px 0", color: "var(--t3)", fontSize: 13 }}>Nothing found</td></tr>
                 )}
                 {filtered.map((r, i) => {
                   const notSent = r.total != null ? r.total - r.evalCount : null;
-                  const pctDisplay = r.pct != null ? r.pct : null;
                   return (
                     <tr key={r.id}
                       style={{ borderTop: "1px solid rgba(0,0,0,.05)", background: i % 2 ? "rgba(0,0,0,.012)" : "transparent" }}
@@ -553,25 +710,28 @@ function FormStatsSection({ faculties }) {
                           : <span style={{ fontSize: 12, color: "var(--t3)" }}>0</span>}
                         {r.total != null && <span style={{ fontSize: 10.5, color: "var(--t3)" }}> / {r.total}</span>}
                       </td>
-                      <td style={{ padding: "11px 12px", textAlign: "center" }}>
+                      <td
+                        style={{ padding: "11px 12px", textAlign: "center", cursor: notSent > 0 ? "pointer" : "default" }}
+                        onClick={notSent > 0 ? () => setStudentsPanel({ students: r.notSubmittedStudents, title: r.name, subtitle: `${notSent} student${notSent !== 1 ? "s" : ""} haven't submitted` }) : undefined}
+                      >
                         {notSent != null
                           ? notSent > 0
-                            ? <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontWeight: 700, fontSize: 13, color: "#ef4444" }}><UserX size={13} />{notSent}</span>
-                            : <span style={{ fontSize: 11, color: "#22c55e", fontWeight: 600 }}>—</span>
-                          : <span style={{ fontSize: 11, color: "var(--t3)" }}>—</span>}
+                            ? <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontWeight: 700, fontSize: 13, color: "#ef4444", borderBottom: "1.5px dashed #ef4444" }}><UserX size={13} />{notSent}</span>
+                            : <span style={{ fontSize: 13, color: "#22c55e", fontWeight: 700 }}>✓ all</span>
+                          : <span style={{ fontSize: 11, color: "var(--t3)" }}>no data</span>}
                       </td>
                       <td style={{ padding: "11px 18px 11px 12px" }}>
-                        {pctDisplay != null ? (
+                        {r.pct != null ? (
                           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                             <div style={{ flex: 1, height: 6, background: "rgba(0,0,0,.07)", borderRadius: 999, overflow: "hidden" }}>
-                              <div style={{ width: `${pctDisplay}%`, height: "100%", background: pctDisplay === 100 ? "#22c55e" : pctDisplay >= 50 ? "#3b82f6" : "#f59e0b", borderRadius: 999, transition: "width .5s" }} />
+                              <div style={{ width: `${r.pct}%`, height: "100%", background: r.pct === 100 ? "#22c55e" : r.pct >= 50 ? "#3b82f6" : "#f59e0b", borderRadius: 999, transition: "width .5s" }} />
                             </div>
-                            <span style={{ fontSize: 11, fontWeight: 700, color: "var(--t2)", minWidth: 30, textAlign: "right" }}>{pctDisplay}%</span>
+                            <span style={{ fontSize: 11, fontWeight: 700, color: "var(--t2)", minWidth: 30, textAlign: "right" }}>{r.pct}%</span>
                           </div>
                         ) : (
                           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                             <div style={{ flex: 1, height: 6, background: "rgba(0,0,0,.07)", borderRadius: 999 }} />
-                            <span style={{ fontSize: 10.5, color: "var(--t3)", minWidth: 30, textAlign: "right" }}>{r.evalCount} шт.</span>
+                            <span style={{ fontSize: 10.5, color: "var(--t3)", minWidth: 50, textAlign: "right" }}>no data</span>
                           </div>
                         )}
                       </td>
@@ -586,15 +746,20 @@ function FormStatsSection({ faculties }) {
 
       {!loading && filtered.length > 0 && (
         <div style={{ padding: "9px 18px", borderTop: "1px solid rgba(0,0,0,.06)", display: "flex", gap: 18, flexWrap: "wrap", background: "rgba(0,0,0,.018)" }}>
-          <span style={{ fontSize: 11.5, color: "#22c55e", fontWeight: 700 }}>
-            ✓ {filtered.reduce((s, r) => s + r.evalCount, 0)} форм отправлено
-          </span>
+          <span style={{ fontSize: 11.5, color: "#22c55e", fontWeight: 700 }}>✓ {totalSent} submitted</span>
           {filtered.some((r) => r.total != null) && (
-            <span style={{ fontSize: 11.5, color: "#ef4444", fontWeight: 700 }}>
-              ✗ {filtered.filter((r) => r.total != null).reduce((s, r) => s + Math.max(0, r.total - r.evalCount), 0)} не отправлено
-            </span>
+            <span style={{ fontSize: 11.5, color: "#ef4444", fontWeight: 700 }}>✗ {totalNotSent} not submitted</span>
           )}
         </div>
+      )}
+
+      {studentsPanel && (
+        <StudentsPanel
+          students={studentsPanel.students}
+          title={studentsPanel.title}
+          subtitle={studentsPanel.subtitle}
+          onClose={() => setStudentsPanel(null)}
+        />
       )}
     </div>
   );
@@ -603,11 +768,14 @@ function FormStatsSection({ faculties }) {
 /* ─────────────────────────────────────────────
    NUMBER CELL
 ───────────────────────────────────────────── */
-function Num({ v, c }) {
+function Num({ v, c, onClick }) {
   return (
-    <td style={{ padding: "11px 12px", textAlign: "center" }}>
+    <td
+      style={{ padding: "11px 12px", textAlign: "center", cursor: onClick && v > 0 ? "pointer" : "default" }}
+      onClick={onClick && v > 0 ? onClick : undefined}
+    >
       {v > 0
-        ? <span style={{ fontWeight: 700, fontSize: 13, color: c }}>{v}</span>
+        ? <span style={{ fontWeight: 700, fontSize: 13, color: c, borderBottom: onClick ? `1.5px dashed ${c}` : "none" }}>{v}</span>
         : <span style={{ fontSize: 12, color: "var(--t3)" }}>—</span>}
     </td>
   );
@@ -633,7 +801,7 @@ export default function AdminStatisticsPage({ onNavigate }) {
       const res = await get("/faculty");
       setFaculties(Array.isArray(res) ? res : []);
     } catch (err) {
-      toast.error(err?.message || "Ошибка загрузки данных");
+      toast.error(err?.message || "Failed to load data");
     } finally {
       setLoading(false);
     }
@@ -668,9 +836,9 @@ export default function AdminStatisticsPage({ onNavigate }) {
       days.forEach((day, idx) => {
         const status = getDayStatus(day);
         const dateRaw = String(day?.date || "").slice(0, 10);
-        let dateLabel = "Дата не указана";
+        let dateLabel = "Date not set";
         try {
-          if (dateRaw) dateLabel = new Date(dateRaw + "T00:00:00").toLocaleDateString("ru-RU", { day: "2-digit", month: "short", year: "numeric" });
+          if (dateRaw) dateLabel = new Date(dateRaw + "T00:00:00").toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" });
         } catch { /* noop */ }
         map[status].push({ facultyId: fId, internshipName: fName, dayIndex: idx, dayNumber: idx + 1, dateLabel });
       });
@@ -698,20 +866,22 @@ export default function AdminStatisticsPage({ onNavigate }) {
     [...rows].filter((r) => r.total > 0)
       .sort((a, b) => b.approvalRate - a.approvalRate)
       .slice(0, 5)
-      .map((r) => ({ name: r.name, sub: `${r.approved} одобрено из ${r.total} дней`, value: `${r.approvalRate}%`, valueColor: "#22c55e" })),
+      .map((r) => ({ name: r.name, sub: `${r.approved} approved of ${r.total} days`, value: `${r.approvalRate}%`, valueColor: "#22c55e" })),
     [rows]);
 
   const topMissed = useMemo(() =>
     [...rows].filter((r) => r.missed > 0)
       .sort((a, b) => b.missed - a.missed)
       .slice(0, 5)
-      .map((r) => ({ name: r.name, sub: `${r.missed} пропущено, ${r.rejected} отклонено`, value: String(r.missed), valueColor: "#f59e0b" })),
+      .map((r) => ({ name: r.name, sub: `${r.missed} missed, ${r.rejected} rejected`, value: String(r.missed), valueColor: "#f59e0b" })),
     [rows]);
 
   const handleOpenDay = useCallback((facultyId, dayIndex) => {
     if (onNavigate) onNavigate(facultyId, dayIndex);
     setActivePanel(null);
   }, [onNavigate]);
+
+  const isMobile = useIsMobile();
 
   const toggleSort = (key) => {
     if (sortKey === key) setSortAsc((p) => !p);
@@ -728,16 +898,16 @@ export default function AdminStatisticsPage({ onNavigate }) {
     </th>
   );
 
-  if (loading) return <div className="pp"><PageState variant="loading" title="Загрузка статистики…" /></div>;
-  if (faculties.length === 0) return <div className="pp"><PageState variant="empty" title="Нет стажировок" message="Данных для анализа пока нет." /></div>;
+  if (loading) return <div className="pp"><PageState variant="loading" title="Loading statistics…" /></div>;
+  if (faculties.length === 0) return <div className="pp"><PageState variant="empty" title="No internships" message="No data available for analysis." /></div>;
 
   const STATUS_FILTERS = [
-    { value: "all",          label: "Все стажировки" },
-    { value: "has_approved", label: "Есть одобренные" },
-    { value: "has_rejected", label: "Есть отклонённые" },
-    { value: "has_missed",   label: "Есть пропуски" },
-    { value: "complete",     label: "100% завершены" },
-    { value: "incomplete",   label: "Незавершённые" },
+    { value: "all",          label: "All internships" },
+    { value: "has_approved", label: "Has approved" },
+    { value: "has_rejected", label: "Has rejected" },
+    { value: "has_missed",   label: "Has missed" },
+    { value: "complete",     label: "100% complete" },
+    { value: "incomplete",   label: "Incomplete" },
   ];
 
   return (
@@ -750,20 +920,20 @@ export default function AdminStatisticsPage({ onNavigate }) {
             <TrendingUp size={19} color="#fff" />
           </div>
           <div>
-            <h2 style={{ fontFamily: "Montserrat", fontSize: 20, fontWeight: 800, color: "var(--t1)", margin: 0, lineHeight: 1 }}>Статистика</h2>
-            <p style={{ margin: "3px 0 0", fontSize: 12, color: "var(--t2)" }}>{faculties.length} стажировок · {global.total} дней всего</p>
+            <h2 style={{ fontFamily: "Montserrat", fontSize: 20, fontWeight: 800, color: "var(--t1)", margin: 0, lineHeight: 1 }}>Statistics</h2>
+            <p style={{ margin: "3px 0 0", fontSize: 12, color: "var(--t2)" }}>{faculties.length} internships · {global.total} days total</p>
           </div>
         </div>
         <button className="bg" onClick={fetchData} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
-          <RefreshCw size={13} /> Обновить
+          <RefreshCw size={13} /> Refresh
         </button>
       </div>
 
       {/* Summary KPI */}
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         {[
-          { IconComp: Briefcase, label: "Стажировок", value: faculties.length, color: "#635bff", bg: "rgba(99,91,255,.12)" },
-          { IconComp: Calendar,  label: "Дней всего", value: global.total,     color: "#06c9a0", bg: "rgba(6,201,160,.12)" },
+          { IconComp: Briefcase, label: "Internships", value: faculties.length, color: "#635bff", bg: "rgba(99,91,255,.12)" },
+          { IconComp: Calendar,  label: "Total days",  value: global.total,    color: "#06c9a0", bg: "rgba(6,201,160,.12)" },
         ].map(({ IconComp, label, value, color, bg }) => (
           <div key={label} style={{ flex: 1, minWidth: 130, padding: "16px 18px", background: `linear-gradient(135deg,${bg},rgba(255,255,255,.5))`, border: `1px solid ${color}22`, borderRadius: 16, boxShadow: "0 4px 16px rgba(99,91,255,.07)" }}>
             <div style={{ width: 34, height: 34, borderRadius: 9, background: bg, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
@@ -778,7 +948,7 @@ export default function AdminStatisticsPage({ onNavigate }) {
       {/* Clickable status cards */}
       <div>
         <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--t3)", letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 10 }}>
-          Нажмите на карточку — откроется список всех дней с этим статусом
+          Click a card to see all days with that status
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           {["approved", "submitted", "rejected", "missed", "empty"].map((s) => (
@@ -789,39 +959,39 @@ export default function AdminStatisticsPage({ onNavigate }) {
       </div>
 
       {/* Insights */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16 }}>
         <div style={{ background: "rgba(255,255,255,.84)", border: "1px solid rgba(255,255,255,.88)", borderRadius: 18, padding: "20px 22px", boxShadow: "0 4px 16px rgba(99,91,255,.07)" }}>
-          <div style={{ fontFamily: "Montserrat", fontSize: 13.5, fontWeight: 700, color: "var(--t1)", marginBottom: 16 }}>Распределение по статусам</div>
+          <div style={{ fontFamily: "Montserrat", fontSize: 13.5, fontWeight: 700, color: "var(--t1)", marginBottom: 16 }}>Status distribution</div>
           <DonutChart data={[
-            { label: "Одобрено",    value: global.approved,  color: "#22c55e" },
-            { label: "На проверке", value: global.submitted,  color: "#3b82f6" },
-            { label: "Отклонено",   value: global.rejected,   color: "#ef4444" },
-            { label: "Пропущено",   value: global.missed,     color: "#f59e0b" },
-            { label: "Пустые",      value: global.empty,      color: "#e5e7eb" },
+            { label: "Approved",     value: global.approved,  color: "#22c55e" },
+            { label: "Under Review", value: global.submitted, color: "#3b82f6" },
+            { label: "Rejected",     value: global.rejected,  color: "#ef4444" },
+            { label: "Missed",       value: global.missed,    color: "#f59e0b" },
+            { label: "Empty",        value: global.empty,     color: "#e5e7eb" },
           ]} />
         </div>
         <div style={{ background: "rgba(255,255,255,.84)", border: "1px solid rgba(255,255,255,.88)", borderRadius: 18, padding: "20px 22px", boxShadow: "0 4px 16px rgba(99,91,255,.07)" }}>
-          <div style={{ fontFamily: "Montserrat", fontSize: 13.5, fontWeight: 700, color: "var(--t1)", marginBottom: 2 }}>Прогресс стажировок</div>
-          <div style={{ fontSize: 11.5, color: "var(--t3)", marginBottom: 14 }}>сколько стажировок на каком % выполнения</div>
+          <div style={{ fontFamily: "Montserrat", fontSize: 13.5, fontWeight: 700, color: "var(--t1)", marginBottom: 2 }}>Internship progress</div>
+          <div style={{ fontSize: 11.5, color: "var(--t3)", marginBottom: 14 }}>how many internships are at each completion %</div>
           <ProgressHistogram rows={rows} />
         </div>
       </div>
 
       {/* Spotlight */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-        <SpotlightCard title="Лучшие по одобрению" IconComp={Award} iconColor="#22c55e" iconBg="rgba(34,197,94,.12)"
-          items={topApproved} emptyText="Нет одобренных дней" />
-        <SpotlightCard title="Больше всего пропусков" IconComp={AlertCircle} iconColor="#f59e0b" iconBg="rgba(245,158,11,.12)"
-          items={topMissed} emptyText="Пропусков нет 🎉" />
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16 }}>
+        <SpotlightCard title="Top by approval rate" IconComp={Award} iconColor="#22c55e" iconBg="rgba(34,197,94,.12)"
+          items={topApproved} emptyText="No approved days" />
+        <SpotlightCard title="Most missed days" IconComp={AlertCircle} iconColor="#f59e0b" iconBg="rgba(245,158,11,.12)"
+          items={topMissed} emptyText="No missed days" />
       </div>
 
       {/* Per-internship table */}
       <div style={{ background: "rgba(255,255,255,.84)", border: "1px solid rgba(255,255,255,.88)", borderRadius: 18, boxShadow: "0 4px 16px rgba(99,91,255,.07)", overflow: "hidden" }}>
         <div style={{ padding: "14px 18px", borderBottom: "1px solid rgba(0,0,0,.06)", display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-          <span style={{ fontFamily: "Montserrat", fontSize: 13.5, fontWeight: 700, color: "var(--t1)", flex: 1, minWidth: 140 }}>По каждой стажировке</span>
+          <span style={{ fontFamily: "Montserrat", fontSize: 13.5, fontWeight: 700, color: "var(--t1)", flex: 1, minWidth: 140 }}>Per internship</span>
           <div style={{ display: "flex", alignItems: "center", gap: 7, background: "rgba(0,0,0,.04)", border: "1px solid rgba(0,0,0,.08)", borderRadius: 9, padding: "6px 11px" }}>
             <Search size={12} color="var(--t3)" />
-            <input placeholder="Поиск…" value={search} onChange={(e) => setSearch(e.target.value)}
+            <input placeholder="Search…" value={search} onChange={(e) => setSearch(e.target.value)}
               style={{ border: "none", outline: "none", background: "transparent", fontFamily: "Montserrat", fontSize: 12, color: "var(--t1)", width: 130 }} />
           </div>
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
@@ -835,19 +1005,19 @@ export default function AdminStatisticsPage({ onNavigate }) {
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 680 }}>
             <thead>
               <tr style={{ background: "rgba(0,0,0,.025)" }}>
-                <ThCell k="name"      label="Стажировка" style={{ paddingLeft: 18, minWidth: 180 }} />
-                <ThCell k="total"     label="Дней"       align="center" />
-                <ThCell k="approved"  label="Одобр."     align="center" />
-                <ThCell k="submitted" label="На пров."   align="center" />
-                <ThCell k="rejected"  label="Откл."      align="center" />
-                <ThCell k="missed"    label="Пропущ."    align="center" />
-                <ThCell k="empty"     label="Пустых"     align="center" />
-                <ThCell k="progress"  label="Прогресс"   style={{ minWidth: 160, paddingRight: 18 }} />
+                <ThCell k="name"      label="Internship"  style={{ paddingLeft: 18, minWidth: 180 }} />
+                <ThCell k="total"     label="Days"        align="center" />
+                <ThCell k="approved"  label="Approved"    align="center" />
+                <ThCell k="submitted" label="In review"   align="center" />
+                <ThCell k="rejected"  label="Rejected"    align="center" />
+                <ThCell k="missed"    label="Missed"      align="center" />
+                <ThCell k="empty"     label="Empty"       align="center" />
+                <ThCell k="progress"  label="Progress"    style={{ minWidth: 160, paddingRight: 18 }} />
               </tr>
             </thead>
             <tbody>
               {tableRows.length === 0 && (
-                <tr><td colSpan={8} style={{ textAlign: "center", padding: "32px 0", color: "var(--t3)", fontSize: 13 }}>Нет стажировок по фильтру</td></tr>
+                <tr><td colSpan={8} style={{ textAlign: "center", padding: "32px 0", color: "var(--t3)", fontSize: 13 }}>No internships match the filter</td></tr>
               )}
               {tableRows.map((r, i) => (
                 <tr key={r.id}
@@ -885,11 +1055,11 @@ export default function AdminStatisticsPage({ onNavigate }) {
         {tableRows.length > 0 && (
           <div style={{ padding: "9px 18px", borderTop: "1px solid rgba(0,0,0,.06)", display: "flex", gap: 18, flexWrap: "wrap", background: "rgba(0,0,0,.018)" }}>
             {[
-              { label: "всего дней",    v: tableRows.reduce((s, r) => s + r.total, 0),     c: "var(--t2)" },
-              { label: "✓ одобрено",    v: tableRows.reduce((s, r) => s + r.approved, 0),  c: "#22c55e" },
-              { label: "● на проверке", v: tableRows.reduce((s, r) => s + r.submitted, 0), c: "#3b82f6" },
-              { label: "✗ отклонено",   v: tableRows.reduce((s, r) => s + r.rejected, 0),  c: "#ef4444" },
-              { label: "! пропущено",   v: tableRows.reduce((s, r) => s + r.missed, 0),    c: "#f59e0b" },
+              { label: "total days",   v: tableRows.reduce((s, r) => s + r.total, 0),     c: "var(--t2)" },
+              { label: "✓ approved",   v: tableRows.reduce((s, r) => s + r.approved, 0),  c: "#22c55e" },
+              { label: "● in review",  v: tableRows.reduce((s, r) => s + r.submitted, 0), c: "#3b82f6" },
+              { label: "✗ rejected",   v: tableRows.reduce((s, r) => s + r.rejected, 0),  c: "#ef4444" },
+              { label: "! missed",     v: tableRows.reduce((s, r) => s + r.missed, 0),    c: "#f59e0b" },
             ].map(({ label, v, c }) => (
               <span key={label} style={{ fontSize: 11.5, fontWeight: 700, color: c }}>{v} {label}</span>
             ))}

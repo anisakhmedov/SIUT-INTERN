@@ -407,6 +407,8 @@ export default function InternshipPage({
   const [selectedStudentIds, setSelectedStudentIds] = useState([]);
   const [selectedStudentFaculty, setSelectedStudentFaculty] = useState("all");
   const attendanceScrollRef = useRef(null);
+  const isInternshipEditModeRef = useRef(false);
+  const submittingRef = useRef(false);
 
   const [isMobile, setIsMobile] = useState(false);
 
@@ -431,19 +433,19 @@ export default function InternshipPage({
   const dayCarouselRef = useRef(null);
   const dayItemRefs = useRef([]);
 
+  useEffect(() => { isInternshipEditModeRef.current = isInternshipEditMode; }, [isInternshipEditMode]);
+  useEffect(() => { submittingRef.current = submitting; }, [submitting]);
+
   const fetchFaculty = useCallback(
     async (opts = {}) => {
-      // opts.skipIfEditing: don't overwrite local edit state when true
       try {
         if (!opts || typeof opts !== "object") opts = {};
-        setLoading(true);
+        if (!opts.silent) setLoading(true);
         const data = await get(`/faculty/${facultyId}`);
-        // If caller asked to avoid overwriting while user is editing, keep existing faculty
         if (
               opts.skipIfEditing &&
-              (isInternshipEditMode || submitting)
+              (isInternshipEditModeRef.current || submittingRef.current)
             ) {
-          // still return fetched data for callers that want to inspect it
           setError("");
           return data;
         }
@@ -456,10 +458,10 @@ export default function InternshipPage({
         console.error("Error fetching faculty:", err);
         return null;
       } finally {
-        setLoading(false);
+        if (!opts.silent) setLoading(false);
       }
     },
-    [facultyId, isInternshipEditMode, submitting],
+    [facultyId],
   );
 
   const fetchAttendance = useCallback(async () => { 
@@ -547,9 +549,29 @@ export default function InternshipPage({
       : [];
     if (draftDays.length === 0) return;
 
+    const originalDays = Array.isArray(attendance?.attendance)
+      ? attendance.attendance
+      : [];
+
+    const changedDays = draftDays.filter((draftDay) => {
+      const dayId = String(draftDay?.id ?? draftDay?._id ?? "");
+      const originalDay = originalDays.find(
+        (od) => String(od?.id ?? od?._id ?? "") === dayId,
+      );
+      return (
+        JSON.stringify(draftDay?.students ?? []) !==
+        JSON.stringify(originalDay?.students ?? [])
+      );
+    });
+
+    if (changedDays.length === 0) {
+      toast.success("No changes to save.");
+      return;
+    }
+
     setAttendanceSaving(true);
     try {
-      for (const day of draftDays) {
+      for (const day of changedDays) {
         const dayId = day?.id ?? day?._id;
         if (!dayId) {
           throw new Error("Attendance day could not be identified.");
@@ -578,7 +600,7 @@ export default function InternshipPage({
     } finally {
       setAttendanceSaving(false);
     }
-  }, [attendanceDraft, facultyId, fetchAttendance]);
+  }, [attendance, attendanceDraft, facultyId, fetchAttendance]);
 
   useEffect(() => {
     fetchFaculty();
@@ -666,7 +688,7 @@ export default function InternshipPage({
           tutorIDs: next,
           tutorID: next[0] || "",
         });
-        await fetchFaculty();
+        await fetchFaculty({ silent: true });
         toast.success(
           shouldAssign
             ? "Tutor added to internship."
@@ -697,7 +719,7 @@ export default function InternshipPage({
           tutorIDs: next,
           tutorID: next[0] || "",
         });
-        await fetchFaculty();
+        await fetchFaculty({ silent: true });
         toast.success("Tutor removed from internship.");
       } catch (err) {
         toast.error(err?.message || "Failed to remove tutor.");
@@ -1552,7 +1574,7 @@ export default function InternshipPage({
         await patch(`/faculty/${facultyId}`, {
           numberOfStudents: normalizedStudents,
         });
-        await fetchFaculty();
+        await fetchFaculty({ silent: true });
         toast.success(successMessage);
         return true;
       } catch (err) {
@@ -1713,10 +1735,9 @@ export default function InternshipPage({
       setSubmitting(true);
       try {
         await patch(`/faculty/${facultyId}/days/${dayId}`, payload);
-        const refreshedFaculty = await fetchFaculty(); // Refresh the data
+        const refreshedFaculty = await fetchFaculty({ silent: true });
         await syncFacultyDuration(refreshedFaculty);
         await attendanceApi.syncAttendance(facultyId);
-        await fetchAttendance();
         toast.success("Saved.");
       } catch (err) {
         toast.error(err.message || "Something went wrong.");
@@ -1724,7 +1745,7 @@ export default function InternshipPage({
         setSubmitting(false);
       }
     },
-    [facultyId, fetchAttendance, fetchFaculty, getDayId, syncFacultyDuration],
+    [facultyId, fetchFaculty, getDayId, syncFacultyDuration],
   );
 
   const handleBaseInfoSubmit = useCallback(
@@ -1796,11 +1817,10 @@ export default function InternshipPage({
         };
 
         await patch(`/faculty/${facultyId}`, payload);
-        const refreshedFaculty = await fetchFaculty();
+        const refreshedFaculty = await fetchFaculty({ silent: true });
         await syncFacultyProgress(refreshedFaculty);
         await syncFacultyDuration(refreshedFaculty);
         await attendanceApi.syncAttendance(facultyId);
-        await fetchAttendance();
         toast.success("Internship information saved.");
         setIsInternshipEditMode(false);
       } catch (err) {
@@ -1822,8 +1842,6 @@ export default function InternshipPage({
       baseInfoProgressAll,
       baseInfoPlan,
       fetchFaculty,
-      fetchAttendance,
-      getDayId,
       syncFacultyProgress,
       syncFacultyDuration,
     ],
@@ -2167,7 +2185,7 @@ export default function InternshipPage({
     setSubmitting(true);
     try {
       await patch(`/faculty/${facultyId}/days/${dayId}/approve`, { approved: 2 });
-      const refreshed = await fetchFaculty();
+      const refreshed = await fetchFaculty({ silent: true });
       await syncFacultyDuration(refreshed);
       toast.success("Saved.");
     } catch (err) {
@@ -2184,7 +2202,7 @@ export default function InternshipPage({
     setSubmitting(true);
     try {
       await patch(`/faculty/${facultyId}/days/${dayId}/approve`, { approved: 3 });
-      const refreshed = await fetchFaculty();
+      const refreshed = await fetchFaculty({ silent: true });
       await syncFacultyDuration(refreshed);
       toast.success("Saved.");
     } catch (err) {
@@ -2222,7 +2240,7 @@ export default function InternshipPage({
           `/faculty/${facultyId}/days/${dayId}/comments`,
           newCommentObj,
         );
-        await fetchFaculty();
+        await fetchFaculty({ silent: true });
         setNewComment("");
         toast.success("Comment added.");
       } catch {
@@ -2277,7 +2295,7 @@ export default function InternshipPage({
         );
         setEditingCommentId(null);
         setEditingCommentText("");
-        await fetchFaculty();
+        await fetchFaculty({ silent: true });
         toast.success("Comment updated.");
       } catch (err) {
         toast.error(err.message || "Failed to update comment.");
@@ -2305,7 +2323,7 @@ export default function InternshipPage({
         await del(
           `/faculty/${facultyId}/days/${dayId}/comments/${commentId}`,
         );
-        await fetchFaculty();
+        await fetchFaculty({ silent: true });
         toast.success("Comment deleted.");
       } catch (err) {
         toast.error(err.message || "Failed to delete comment.");
@@ -2332,11 +2350,10 @@ export default function InternshipPage({
         comments: [],
       };
       await post(`/faculty/${facultyId}/days`, newDay);
-      const refreshedFaculty = await fetchFaculty(); // Refresh the data
+      const refreshedFaculty = await fetchFaculty({ silent: true });
       await syncFacultyProgress(refreshedFaculty);
       await syncFacultyDuration(refreshedFaculty);
       await attendanceApi.syncAttendance(facultyId);
-      await fetchAttendance();
       setDayIndex(
         Math.max(0, (refreshedFaculty?.days?.length || days.length || 1) - 1),
       );
@@ -2352,7 +2369,6 @@ export default function InternshipPage({
     facultyId,
     days.length,
     newDayDate,
-    fetchAttendance,
     fetchFaculty,
     syncFacultyDuration,
     syncFacultyProgress,
@@ -2372,11 +2388,10 @@ export default function InternshipPage({
     setSubmitting(true);
     try {
       await del(`/faculty/${facultyId}/days/${dayId}`);
-      const refreshedFaculty = await fetchFaculty();
+      const refreshedFaculty = await fetchFaculty({ silent: true });
       await syncFacultyProgress(refreshedFaculty);
       await syncFacultyDuration(refreshedFaculty);
       await attendanceApi.syncAttendance(facultyId);
-      await fetchAttendance();
       setDayIndex((prev) => Math.max(0, prev - 1));
       toast.success("Day deleted.");
       setShowDeleteDayModal(false);
@@ -2389,7 +2404,6 @@ export default function InternshipPage({
     currentDay,
     dayIndex,
     facultyId,
-    fetchAttendance,
     fetchFaculty,
     getDayId,
     syncFacultyDuration,
@@ -2415,10 +2429,9 @@ export default function InternshipPage({
         ...currentDay,
         date: editDayDate,
       });
-      const refreshedFaculty = await fetchFaculty();
+      const refreshedFaculty = await fetchFaculty({ silent: true });
       await syncFacultyDuration(refreshedFaculty);
       await attendanceApi.syncAttendance(facultyId);
-      await fetchAttendance();
       toast.success("Date updated.");
       setShowEditDayDateModal(false);
     } catch (err) {
@@ -3215,6 +3228,121 @@ export default function InternshipPage({
                     </div>,
                     document.body,
                   )}
+              {showStudents &&
+                createPortal(
+                  <div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="Attached students"
+                    style={{
+                      position: "fixed",
+                      inset: 0,
+                      background: "rgba(0,0,0,.45)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      zIndex: 2200,
+                    }}
+                    onMouseDown={(e) => {
+                      if (e.target === e.currentTarget)
+                        setShowStudents(false);
+                    }}
+                  >
+                    <div
+                      style={{
+                        background: "#fff",
+                        borderRadius: 12,
+                        padding: 18,
+                        boxShadow: "0 24px 60px rgba(3,7,18,.32)",
+                        maxHeight: "80vh",
+                        width: "min(480px, 92vw)",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 12,
+                        overflow: "hidden",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: 12,
+                        }}
+                      >
+                        <h3 style={{ margin: 0, fontSize: 16 }}>
+                          Students ({attachedStudents.length} attached)
+                        </h3>
+                        <button
+                          type="button"
+                          className="ip-student-action-btn ip-student-action-btn--ghost"
+                          onClick={() => setShowStudents(false)}
+                        >
+                          Close
+                        </button>
+                      </div>
+                      <div style={{ overflowY: "auto", flex: 1 }}>
+                        {attachedStudents.length === 0 ? (
+                          <div className="ip-students-empty-state">
+                            <p className="ip-students-empty">
+                              No students attached to this internship.
+                            </p>
+                            {canManageStudents && (
+                              <button
+                                type="button"
+                                className="ip-student-action-btn"
+                                onClick={() => {
+                                  setShowStudents(false);
+                                  openStudentManager();
+                                }}
+                                disabled={
+                                  submitting ||
+                                  !Array.isArray(students) ||
+                                  students.length === 0
+                                }
+                              >
+                                Attach students
+                              </button>
+                            )}
+                          </div>
+                        ) : (
+                          <ul className="ip-students-list" style={{ margin: 0, padding: 0 }}>
+                            {attachedStudents.map((student, index) => {
+                              const studentId =
+                                getStudentId(student) || `student-${index}`;
+                              const studentName = getStudentName(student);
+                              return (
+                                <li key={studentId} className="ip-student-item">
+                                  <div className="ip-student-copy">
+                                    <span className="ip-student-name">
+                                      {studentName}
+                                    </span>
+                                    {getStudentFacultyName(student) && (
+                                      <span className="ip-student-faculty">
+                                        {getStudentFacultyName(student)}
+                                      </span>
+                                    )}
+                                  </div>
+                                  {canManageStudents && (
+                                    <button
+                                      type="button"
+                                      className="ip-student-action-btn ip-student-action-btn--ghost"
+                                      onClick={() => handleDetachStudent(student)}
+                                      disabled={submitting}
+                                    >
+                                      Detach
+                                    </button>
+                                  )}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
+                      </div>
+                    </div>
+                  </div>,
+                  document.body,
+                )}
               </div>
               {internshipMapData && (
                 <div className="ip-hero-item" style={{ gridColumn: "1 / -1" }}>
@@ -3379,13 +3507,8 @@ export default function InternshipPage({
                     <button
                       type="button"
                       className="ip-eye-btn"
-                      onClick={() => setShowStudents((prev) => !prev)}
-                      aria-label={
-                        showStudents
-                          ? "Hide attached students"
-                          : "Show attached students"
-                      }
-                      aria-expanded={showStudents}
+                      onClick={() => setShowStudents(true)}
+                      aria-label="Show attached students"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -3402,82 +3525,9 @@ export default function InternshipPage({
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                         <circle cx="12" cy="12" r="3"></circle>
                       </svg>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
-                        className={`ip-eye-chevron ${showStudents ? "ip-eye-chevron--open" : ""}`}
-                      >
-                        <polyline points="6 9 12 15 18 9"></polyline>
-                      </svg>
                     </button>
                   </div>
                 </div>
-
-                {showStudents && (
-                  <div className="ip-students-list-wrap">
-                    {attachedStudents.length === 0 ? (
-                      <div className="ip-students-empty-state">
-                        <p className="ip-students-empty">
-                          No students attached to this internship.
-                        </p>
-                        {canManageStudents && (
-                          <button
-                            type="button"
-                            className="ip-student-action-btn"
-                            onClick={openStudentManager}
-                            disabled={
-                              submitting ||
-                              !Array.isArray(students) ||
-                              students.length === 0
-                            }
-                          >
-                            Attach students
-                          </button>
-                        )}
-                      </div>
-                    ) : (
-                      <ul className="ip-students-list">
-                        {attachedStudents.map((student, index) => {
-                          const studentId =
-                            getStudentId(student) || `student-${index}`;
-                          const studentName = getStudentName(student);
-                          return (
-                            <li key={studentId} className="ip-student-item">
-                              <div className="ip-student-copy">
-                                <span className="ip-student-name">
-                                  {studentName}
-                                </span>
-                                {getStudentFacultyName(student) && (
-                                  <span className="ip-student-faculty">
-                                    {getStudentFacultyName(student)}
-                                  </span>
-                                )}
-                              </div>
-                              {canManageStudents && (
-                                <button
-                                  type="button"
-                                  className="ip-student-action-btn ip-student-action-btn--ghost"
-                                  onClick={() => handleDetachStudent(student)}
-                                  disabled={submitting}
-                                >
-                                  Detach
-                                </button>
-                              )}
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    )}
-                  </div>
-                )}
               </div>
 
               <div className="ip-attendance-card" aria-label="Attendance">

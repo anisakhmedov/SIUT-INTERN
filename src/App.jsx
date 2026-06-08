@@ -95,6 +95,7 @@ html,body{height:100%;font-family:'Montserrat',sans-serif;background:var(--bg);}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes slideR{from{opacity:0;transform:translateX(42px)}to{opacity:1;transform:translateX(0)}}
 @keyframes panelIn{from{transform:translateX(110%)}to{transform:translateX(0)}}
+@keyframes modalIn{from{opacity:0;transform:translate(-50%,-50%) scale(.94)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
 @keyframes scaleIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
 @keyframes pulse{0%,100%{opacity:.45;transform:scale(1)}50%{opacity:.72;transform:scale(1.07)}}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-13px)}}

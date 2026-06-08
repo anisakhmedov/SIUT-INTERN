@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Search, X, Plus, MapPinned, LocateFixed, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { get, post } from '../utils/apiClient';
 import { toast } from '../utils/toast';
+import { CustomSelect } from './ui';
 
 const YANDEX_MAPS_API_KEY = import.meta.env.VITE_YANDEX_MAPS_API_KEY || '0c6b088f-d754-40c6-93a9-86a33b9f28ea';
 const YANDEX_MAPS_SRC = YANDEX_MAPS_API_KEY
@@ -1589,16 +1590,16 @@ export default function CreatePage({ onSubmit, onCancel, students = [], tutors: 
                 
                 <div className="form-group">
                   <label className="form-label">Status</label>
-                  <select
-                    name="status"
+                  <CustomSelect
                     value={formData.status}
-                    onChange={handleChange}
-                    className="form-input"
-                  >
-                    <option value="Pending">Pending</option>
-                    <option value="In Progress">In Progress</option>
-                    <option value="Completed">Completed</option>
-                  </select>
+                    onChange={(v) => handleChange({ target: { name: 'status', value: v } })}
+                    options={[
+                      { value: 'Pending', label: 'Pending' },
+                      { value: 'In Progress', label: 'In Progress' },
+                      { value: 'Completed', label: 'Completed' },
+                    ]}
+                    placeholder="Select status"
+                  />
                 </div>
               </div>
               
@@ -1778,16 +1779,15 @@ export default function CreatePage({ onSubmit, onCancel, students = [], tutors: 
           
           {/* Faculty filter dropdown */}
           <div style={{ marginBottom: '16px' }}>
-            <select
-              className="form-input"
+            <CustomSelect
               value={selectedFaculty}
-              onChange={(e) => setSelectedFaculty(e.target.value)}
-            >
-              <option value="">All Faculties</option>
-              {faculties.map(faculty => (
-                <option key={faculty} value={faculty}>{faculty}</option>
-              ))}
-            </select>
+              onChange={setSelectedFaculty}
+              options={[
+                { value: '', label: 'All Faculties' },
+                ...faculties.map((f) => ({ value: f, label: f })),
+              ]}
+              placeholder="All Faculties"
+            />
           </div>
           
           {/* Show all students from API with improved UI */}

@@ -14,6 +14,7 @@ import { getAuthTokenFromStorage } from "../utils/storageUtils";
 import PageState from "./PageState";
 import { TextAlignEnd } from "lucide-react";
 import AttendanceMobile from "./AttendanceMobile";
+import { CustomSelect, CustomDatePicker } from "./ui";
 
 const INTERNSHIP_STATUS_OPTIONS = ["Pending", "In Progress", "Completed"];
 
@@ -2771,20 +2772,18 @@ export default function InternshipPage({
                 <span className="ip-hero-label">Duration</span>
                 {isInternshipEditMode ? (
                   <div className="ip-duration-pickers">
-                    <input
-                      type="date"
-                      className="ip-input ip-date-input ip-duration-date"
+                    <CustomDatePicker
                       value={baseInfoStartDate}
-                      onChange={(e) => setBaseInfoStartDate(e.target.value)}
-                      aria-label="Start date"
+                      onChange={setBaseInfoStartDate}
+                      placeholder="Start date"
+                      style={{ flex: 1 }}
                     />
                     <span className="ip-duration-sep">—</span>
-                    <input
-                      type="date"
-                      className="ip-input ip-date-input ip-duration-date"
+                    <CustomDatePicker
                       value={baseInfoEndDate}
-                      onChange={(e) => setBaseInfoEndDate(e.target.value)}
-                      aria-label="End date"
+                      onChange={setBaseInfoEndDate}
+                      placeholder="End date"
+                      style={{ flex: 1 }}
                     />
                   </div>
                 ) : (
@@ -2795,19 +2794,13 @@ export default function InternshipPage({
               </div>
               <div className="ip-hero-item">
                 <span className="ip-hero-label">Status</span>
-                <select
-                  className="ip-input ip-inline-field"
+                <CustomSelect
                   value={baseInfoStatus}
-                  onChange={(e) => setBaseInfoStatus(e.target.value)}
+                  onChange={setBaseInfoStatus}
                   disabled={!isInternshipEditMode}
-                  aria-label="Status"
-                >
-                  {INTERNSHIP_STATUS_OPTIONS.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
+                  options={INTERNSHIP_STATUS_OPTIONS.map((s) => ({ value: s, label: s }))}
+                  placeholder="Status"
+                />
               </div>
               <div className="ip-hero-item">
                 <span className="ip-hero-label">Progress</span>
@@ -3646,12 +3639,9 @@ export default function InternshipPage({
                     <label className="ip-label" htmlFor="ip-day-date">
                       Date
                     </label>
-                    <input
-                      id="ip-day-date"
-                      type="date"
+                    <CustomDatePicker
                       value={reportDayDate}
-                      onChange={(e) => setReportDayDate(e.target.value)}
-                      className="ip-input"
+                      onChange={setReportDayDate}
                     />
                   </div>
                 </div>
@@ -4570,12 +4560,10 @@ export default function InternshipPage({
                     <label className="ip-label" htmlFor="new-day-date">
                       Select date for the new day
                     </label>
-                    <input
-                      id="new-day-date"
-                      type="date"
+                    <CustomDatePicker
                       value={newDayDate}
-                      onChange={(e) => setNewDayDate(e.target.value)}
-                      className="ip-input ip-date-input"
+                      onChange={setNewDayDate}
+                      placeholder="Select date for the new day"
                     />
                   </div>
                   <div className="ip-modal-footer">
@@ -4638,12 +4626,10 @@ export default function InternshipPage({
                     <label className="ip-label" htmlFor="edit-day-date">
                       Select new date for Day {currentDay?.dayNumber}
                     </label>
-                    <input
-                      id="edit-day-date"
-                      type="date"
+                    <CustomDatePicker
                       value={editDayDate}
-                      onChange={(e) => setEditDayDate(e.target.value)}
-                      className="ip-input ip-date-input"
+                      onChange={setEditDayDate}
+                      placeholder="Select new date"
                     />
                   </div>
                   <div className="ip-modal-footer">

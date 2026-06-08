@@ -3,6 +3,7 @@ import { get } from '../utils/apiClient';
 import { toast } from '../utils/toast';
 import { Search, X, ChevronLeft, ChevronRight, Eye, Star } from 'lucide-react';
 import PageState from './PageState';
+import { CustomSelect } from './ui';
 
 const normList = (r) => (Array.isArray(r) ? r : Array.isArray(r?.data) ? r.data : []);
 const normTotal = (r, list) => (typeof r?.total === 'number' ? r.total : list.length);
@@ -252,11 +253,16 @@ export default function AdminSupervisorReportsPage() {
             </button>
           )}
         </div>
-        <select className="fi" style={{ width: 'auto', flex: '0 1 240px' }}
-          value={filterRec} onChange={(e) => { setFilterRec(e.target.value); setPage(1); }}>
-          <option value="">All recommendations</option>
-          {SUPER_RECS.map((r) => <option key={r} value={r}>{r}</option>)}
-        </select>
+        <CustomSelect
+          style={{ flex: '0 1 240px', minWidth: 160 }}
+          value={filterRec}
+          onChange={(v) => { setFilterRec(v); setPage(1); }}
+          options={[
+            { value: '', label: 'All recommendations' },
+            ...SUPER_RECS.map((r) => ({ value: r, label: r })),
+          ]}
+          placeholder="All recommendations"
+        />
         <button className="bp" onClick={applySearch} style={{ flexShrink: 0 }}>
           <Search size={13} /> Search
         </button>

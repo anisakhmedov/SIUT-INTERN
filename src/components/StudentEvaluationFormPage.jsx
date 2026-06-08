@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { createPortal } from 'react-dom';
 import { get, post } from '../utils/apiClient';
 import { toast } from '../utils/toast';
-import { ChevronDown, AlertCircle, CheckCircle2, Briefcase } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Briefcase } from 'lucide-react';
+import { CustomSelect, CustomDatePicker } from './ui';
 
 /* ── helpers ── */
 const getStudentId = (s) => String(s?._id || s?.id || s?.studentId || '').trim();
@@ -61,125 +61,6 @@ function useIsMobile() {
     return () => window.removeEventListener('resize', h);
   }, []);
   return mob;
-}
-
-/* ── CustomSelect ── */
-function CustomSelect({ value, onChange, options, placeholder, hasError, disabled }) {
-  const [open, setOpen] = useState(false);
-  const [hovered, setHovered] = useState(null);
-  const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
-  const triggerRef = useRef(null);
-  const panelRef = useRef(null);
-
-  const handleToggle = () => {
-    if (disabled) return;
-    if (open) { setOpen(false); return; }
-    const r = triggerRef.current?.getBoundingClientRect();
-    if (r) {
-      const left = Math.min(r.left, window.innerWidth - r.width - 8);
-      setPos({ top: r.bottom + 6, left: Math.max(left, 8), width: r.width });
-    }
-    setOpen(true);
-  };
-
-  useEffect(() => {
-    if (!open) return;
-    const onClose = (e) => {
-      if (!triggerRef.current?.contains(e.target) && !panelRef.current?.contains(e.target))
-        setOpen(false);
-    };
-    const onScroll = () => setOpen(false);
-    document.addEventListener('mousedown', onClose);
-    document.addEventListener('touchstart', onClose);
-    window.addEventListener('scroll', onScroll, true);
-    return () => {
-      document.removeEventListener('mousedown', onClose);
-      document.removeEventListener('touchstart', onClose);
-      window.removeEventListener('scroll', onScroll, true);
-    };
-  }, [open]);
-
-  const selected = options.find((o) => o.value === value);
-  const hasErr = hasError && !value;
-
-  return (
-    <div style={{ position: 'relative' }}>
-      <button
-        ref={triggerRef}
-        type="button"
-        disabled={disabled}
-        onClick={handleToggle}
-        style={{
-          width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '11px 14px', borderRadius: 10, gap: 8,
-          border: `1.5px solid ${open ? 'var(--a1)' : hasErr ? '#ef4444' : 'rgba(0,0,0,.12)'}`,
-          background: disabled ? 'rgba(0,0,0,.04)' : '#fff',
-          cursor: disabled ? 'not-allowed' : 'pointer',
-          fontFamily: 'inherit', fontSize: 14,
-          color: selected ? 'var(--t1)' : 'var(--t3)',
-          textAlign: 'left',
-          boxShadow: open ? '0 0 0 3px rgba(99,91,255,.12)' : 'none',
-          transition: 'border-color .18s, box-shadow .18s',
-        }}
-      >
-        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-          {selected ? selected.label : placeholder}
-        </span>
-        <ChevronDown
-          size={16}
-          style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform .2s', flexShrink: 0, color: 'var(--t3)' }}
-        />
-      </button>
-
-      {open && createPortal(
-        <div
-          ref={panelRef}
-          style={{
-            position: 'fixed',
-            top: pos.top, left: pos.left, width: pos.width,
-            zIndex: 99999,
-            background: '#fff', borderRadius: 12,
-            border: '1.5px solid rgba(99,91,255,.18)',
-            boxShadow: '0 8px 32px rgba(0,0,0,.18)',
-            maxHeight: 260, overflowY: 'auto',
-            WebkitOverflowScrolling: 'touch',
-          }}
-        >
-          {options.map((o) => {
-            const isSel = o.value === value;
-            return (
-              <button
-                key={o.value}
-                type="button"
-                onMouseEnter={() => setHovered(o.value)}
-                onMouseLeave={() => setHovered(null)}
-                onClick={() => { onChange(o.value); setOpen(false); setHovered(null); }}
-                style={{
-                  width: '100%', padding: '11px 16px', border: 'none',
-                  background: isSel ? 'rgba(99,91,255,.1)' : hovered === o.value ? 'rgba(99,91,255,.04)' : 'transparent',
-                  textAlign: 'left', cursor: 'pointer', fontSize: 14,
-                  color: isSel ? 'var(--a1)' : 'var(--t1)',
-                  fontWeight: isSel ? 600 : 400,
-                  transition: 'background .1s',
-                  display: 'flex', alignItems: 'center', gap: 8,
-                }}
-              >
-                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'left' }}>{o.label}</span>
-                {o.badge && (
-                  <span style={{
-                    fontSize: 10, fontWeight: 700, flexShrink: 0,
-                    background: 'rgba(6,201,160,.12)', color: '#06c9a0',
-                    borderRadius: 999, padding: '2px 8px',
-                  }}>{o.badge}</span>
-                )}
-              </button>
-            );
-          })}
-        </div>,
-        document.body
-      )}
-    </div>
-  );
 }
 
 /* ── RatingField (custom radio) ── */
@@ -570,18 +451,18 @@ export default function StudentEvaluationFormPage({ publicMode = false }) {
               </div>
               <div data-has-error={showErrors && !form.studentInformation.internshipStartDate.trim() ? "true" : undefined}>
                 <label className="fl">Internship Start Date *</label>
-                <input className="fi" type="date" value={form.studentInformation.internshipStartDate}
-                  onChange={(e) => setInfo('studentInformation', 'internshipStartDate', e.target.value)}
-                  style={{ borderColor: showErrors && !form.studentInformation.internshipStartDate.trim() ? '#ef4444' : undefined }} />
+                <CustomDatePicker value={form.studentInformation.internshipStartDate}
+                  onChange={(v) => setInfo('studentInformation', 'internshipStartDate', v)}
+                  hasError={showErrors} />
                 {showErrors && !form.studentInformation.internshipStartDate.trim() && (
                   <span style={{ fontSize: 11, color: '#ef4444' }}>This field is required</span>
                 )}
               </div>
               <div data-has-error={showErrors && !form.studentInformation.internshipEndDate.trim() ? "true" : undefined}>
                 <label className="fl">Internship End Date *</label>
-                <input className="fi" type="date" value={form.studentInformation.internshipEndDate}
-                  onChange={(e) => setInfo('studentInformation', 'internshipEndDate', e.target.value)}
-                  style={{ borderColor: showErrors && !form.studentInformation.internshipEndDate.trim() ? '#ef4444' : undefined }} />
+                <CustomDatePicker value={form.studentInformation.internshipEndDate}
+                  onChange={(v) => setInfo('studentInformation', 'internshipEndDate', v)}
+                  hasError={showErrors} />
                 {showErrors && !form.studentInformation.internshipEndDate.trim() && (
                   <span style={{ fontSize: 11, color: '#ef4444' }}>This field is required</span>
                 )}

@@ -3,6 +3,7 @@ import { get } from '../utils/apiClient';
 import { toast } from '../utils/toast';
 import { Search, X, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import PageState from './PageState';
+import { CustomSelect } from './ui';
 
 const normList = (r) => (Array.isArray(r) ? r : Array.isArray(r?.data) ? r.data : []);
 const normTotal = (r, list) => (typeof r?.total === 'number' ? r.total : list.length);
@@ -271,13 +272,16 @@ export default function AdminStudentEvaluationsPage() {
             </button>
           )}
         </div>
-        <select className="fi" style={{ width: 'auto', flex: '0 1 200px' }}
-          value={filterRating} onChange={(e) => { setFilterRating(e.target.value); setPage(1); }}>
-          <option value="">All ratings</option>
-          {[5, 4, 3, 2, 1].map((r) => (
-            <option key={r} value={r}>★ {r} — {RATING_LABELS[r]}</option>
-          ))}
-        </select>
+        <CustomSelect
+          style={{ flex: '0 1 200px', minWidth: 140 }}
+          value={filterRating}
+          onChange={(v) => { setFilterRating(v); setPage(1); }}
+          options={[
+            { value: '', label: 'All ratings' },
+            ...[5, 4, 3, 2, 1].map((r) => ({ value: String(r), label: `★ ${r} — ${RATING_LABELS[r]}` })),
+          ]}
+          placeholder="All ratings"
+        />
         <button className="bp" onClick={applySearch} style={{ flexShrink: 0 }}>
           <Search size={13} /> Search
         </button>

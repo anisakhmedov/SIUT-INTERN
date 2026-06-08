@@ -25,6 +25,7 @@ import {
   UserCheck,
   UserX,
 } from "lucide-react";
+import { CustomSelect } from "./ui";
 
 /* ─────────────────────────────────────────────
    DAY STATUS HELPERS  (mirrors InternshipPage)
@@ -994,10 +995,13 @@ export default function AdminStatisticsPage({ onNavigate }) {
             <input placeholder="Search…" value={search} onChange={(e) => setSearch(e.target.value)}
               style={{ border: "none", outline: "none", background: "transparent", fontFamily: "Montserrat", fontSize: 12, color: "var(--t1)", width: 130 }} />
           </div>
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-            style={{ padding: "6px 10px", borderRadius: 9, border: "1px solid rgba(0,0,0,.09)", background: "#fff", fontFamily: "Montserrat", fontSize: 12, color: "var(--t2)", outline: "none", cursor: "pointer" }}>
-            {STATUS_FILTERS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
-          </select>
+          <CustomSelect
+            style={{ minWidth: 160 }}
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={STATUS_FILTERS}
+            placeholder="All internships"
+          />
           <span style={{ fontSize: 11, color: "var(--t3)" }}>{tableRows.length} / {rows.length}</span>
         </div>
 

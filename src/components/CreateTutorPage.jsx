@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Edit3, Save, ShieldCheck, UserPlus, Users } from 'lucide-react';
 import { get, patch, post } from '../utils/apiClient';
 import { toast } from '../utils/toast';
+import { CustomSelect } from './ui';
 
 const ROLE_OPTIONS = ['Tutor', 'Admin', 'Rector', 'Professor', 'Student'];
 const BASE_EDIT_FIELDS = ['name', 'surname', 'login', 'password', 'role'];
@@ -623,11 +624,12 @@ export default function CreateTutorPage() {
 
               <label className="ctp-field ctp-field--full">
                 <span className="ctp-label">Role</span>
-                <select className="ctp-input" name="role" value={formData.role} onChange={handleCreateChange} required>
-                  {roleOptions.map((role) => (
-                    <option key={role} value={role}>{role}</option>
-                  ))}
-                </select>
+                <CustomSelect
+                  value={formData.role}
+                  onChange={(v) => handleCreateChange({ target: { name: 'role', value: v } })}
+                  options={roleOptions.map((r) => ({ value: r, label: r }))}
+                  placeholder="Select role"
+                />
               </label>
 
               <div className="ctp-contact-block">
@@ -696,16 +698,12 @@ export default function CreateTutorPage() {
                         <label key={field} className={`ctp-field ${field.length > 12 ? 'ctp-field--full' : ''}`}>
                           <span className="ctp-label">{field}</span>
                           {isRoleField ? (
-                            <select
-                              className="ctp-input"
-                              name={field}
+                            <CustomSelect
                               value={editFormData[field] ?? ''}
-                              onChange={handleEditChange}
-                            >
-                              {roleOptions.map((role) => (
-                                <option key={role} value={role}>{role}</option>
-                              ))}
-                            </select>
+                              onChange={(v) => handleEditChange({ target: { name: field, value: v } })}
+                              options={roleOptions.map((r) => ({ value: r, label: r }))}
+                              placeholder="Select role"
+                            />
                           ) : (
                             <input
                               className="ctp-input"

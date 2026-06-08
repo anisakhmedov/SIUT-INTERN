@@ -15,6 +15,7 @@ import {
   validateStudentImageFile,
 } from '../utils/studentApi';
 import { toast } from '../utils/toast';
+import { CustomSelect } from './ui';
 
 function getStudentId(student, fallbackIndex = 0) {
   return student?._id || student?.id || student?.studentId || `${student?.name || 'student'}-${fallbackIndex}`;
@@ -975,16 +976,15 @@ export default function StudentDocumentsPage({ students = [], search = '', onStu
                     <span className="student-filter-label"><Filter size={12} /> Faculty</span>
                     <small>{facultyOptions.length} options</small>
                   </div>
-                  <select
-                    className="student-filter-select"
+                  <CustomSelect
                     value={selectedFaculty}
-                    onChange={(event) => setSelectedFaculty(event.target.value)}
-                  >
-                    <option value="all">All faculties</option>
-                    {facultyOptions.map((faculty) => (
-                      <option key={faculty} value={faculty}>{faculty}</option>
-                    ))}
-                  </select>
+                    onChange={setSelectedFaculty}
+                    options={[
+                      { value: 'all', label: 'All faculties' },
+                      ...facultyOptions.map((f) => ({ value: f, label: f })),
+                    ]}
+                    placeholder="All faculties"
+                  />
                 </div>
 
                 <div className="student-filter-card">

@@ -147,12 +147,12 @@ export function CustomDatePicker({ value, onChange, hasError, disabled, placehol
     }
     const r = triggerRef.current?.getBoundingClientRect();
     if (r) {
-      const panelW = 280;
+      const panelW = 296;
       let left = r.left;
       if (left + panelW > window.innerWidth - 8) left = window.innerWidth - panelW - 8;
       left = Math.max(8, left);
       const spaceBelow = window.innerHeight - r.bottom;
-      const top = spaceBelow > 320 ? r.bottom + 4 : r.top - 324;
+      const top = spaceBelow > 320 ? r.bottom + 4 : r.top - 330;
       setPos({ top, left });
     }
     setOpen(true);
@@ -216,11 +216,11 @@ export function CustomDatePicker({ value, onChange, hasError, disabled, placehol
         <div
           ref={panelRef}
           style={{
-            position: 'fixed', top: pos.top, left: pos.left, width: 280,
+            position: 'fixed', top: pos.top, left: pos.left, width: 296,
             zIndex: 99999, background: '#fff', borderRadius: 14,
             border: '1.5px solid rgba(99,91,255,.18)',
-            boxShadow: '0 8px 32px rgba(0,0,0,.18)', padding: 12,
-            userSelect: 'none',
+            boxShadow: '0 8px 32px rgba(0,0,0,.18)', padding: '12px 10px',
+            userSelect: 'none', boxSizing: 'border-box',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -235,7 +235,7 @@ export function CustomDatePicker({ value, onChange, hasError, disabled, placehol
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2 }}>
             {cells.map((day, i) => {
-              if (!day) return <div key={i} />;
+              if (!day) return <div key={i} style={{ height: 32 }} />;
               const ts = new Date(viewYear, viewMonth, day).getTime();
               const isSel = ts === selectedTs;
               const isToday = ts === todayTs;
@@ -245,11 +245,13 @@ export function CustomDatePicker({ value, onChange, hasError, disabled, placehol
                   type="button"
                   onClick={() => selectDay(day)}
                   style={{
-                    width: '100%', aspectRatio: '1', border: 'none', borderRadius: 7,
+                    width: '100%', height: 32, border: 'none', borderRadius: 7,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
                     background: isSel ? 'var(--a1)' : isToday ? 'rgba(99,91,255,.12)' : 'transparent',
                     color: isSel ? '#fff' : isToday ? 'var(--a1)' : 'var(--t1)',
                     fontWeight: isSel || isToday ? 700 : 400,
                     fontSize: 12, cursor: 'pointer', transition: 'background .1s',
+                    padding: 0, boxSizing: 'border-box',
                   }}
                 >{day}</button>
               );

@@ -95,7 +95,6 @@ function isMissedDay(day) {
 }
 
 function getDayReportStatus(day) {
-  console.log("[status debug] full day =", JSON.stringify(day, null, 2));
   if (isApprovedDay(day)) return "approved";
   if (isRejectedDay(day)) return "rejected";
 
@@ -385,12 +384,14 @@ export default function InternshipPage({
   const [submitting, setSubmitting] = useState(false);
   const [showFeedbackView, setShowFeedbackView] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0); // 0-100 for progress tracking
+  const [isDragActive, setIsDragActive] = useState(false);
   const [showAddDayModal, setShowAddDayModal] = useState(false);
   const [newDayDate, setNewDayDate] = useState(
     new Date().toISOString().slice(0, 10),
   );
   const [showEditDayDateModal, setShowEditDayDateModal] = useState(false);
   const [editDayDate, setEditDayDate] = useState("");
+  const [showDeleteDayModal, setShowDeleteDayModal] = useState(false);
   const [attendance, setAttendance] = useState(null);
   const [attendanceLoading, setAttendanceLoading] = useState(false);
   const [attendanceError, setAttendanceError] = useState("");
@@ -1747,47 +1748,40 @@ export default function InternshipPage({
         if (!nextCompany) throw new Error("Company is required.");
         if (!nextLocation) throw new Error("Location is required.");
 
-        // Synchronize individual day dates with the new start/end date range
-        const daysList = Array.isArray(faculty.days) ? faculty.days : [];
-        if (daysList.length > 0) {
-          const originalStartDate = String(daysList[0]?.date || "").slice(0, 10);
+        // Create new days for dates in [start, end] that don't already exist; leave existing days untouched
+        if (baseInfoStartDate && baseInfoEndDate) {
+          const daysList = Array.isArray(faculty.days) ? faculty.days : [];
+          const existingDates = new Set(
+            daysList.map((d) => String(d.date || "").slice(0, 10)).filter(Boolean),
+          );
 
-          const startDeltaMs =
-            baseInfoStartDate && originalStartDate
-              ? new Date(baseInfoStartDate).getTime() - new Date(originalStartDate).getTime()
-              : 0;
+          const rangeStart = new Date(baseInfoStartDate + "T00:00:00Z");
+          const rangeEnd = new Date(baseInfoEndDate + "T00:00:00Z");
 
-          // Compute new date for every day (shifted by start delta)
-          const newDayDates = daysList.map((day) => {
-            if (!day.date) return null;
-            return new Date(
-              new Date(String(day.date).slice(0, 10)).getTime() + startDeltaMs
-            ).toISOString().slice(0, 10);
-          });
-
-          // Override last day's date if end date was explicitly changed
-          if (baseInfoEndDate && newDayDates.length > 0) {
-            const expectedEnd = newDayDates[newDayDates.length - 1];
-            if (expectedEnd !== baseInfoEndDate) {
-              newDayDates[newDayDates.length - 1] = baseInfoEndDate;
-            }
+          const datesToCreate = [];
+          const cur = new Date(rangeStart);
+          while (cur <= rangeEnd) {
+            const dateStr = cur.toISOString().slice(0, 10);
+            if (!existingDates.has(dateStr)) datesToCreate.push(dateStr);
+            cur.setUTCDate(cur.getUTCDate() + 1);
           }
 
-          // Patch only days whose dates actually changed
-          for (let i = 0; i < daysList.length; i++) {
-            const day = daysList[i];
-            const newDate = newDayDates[i];
-            if (!newDate) continue;
-            const currentDate = String(day.date || "").slice(0, 10);
-            if (newDate === currentDate) continue;
-            const dayId = getDayId(day);
-            if (!dayId) continue;
-            await patch(`/faculty/${facultyId}/days/${dayId}`, { ...day, date: newDate });
+          if (datesToCreate.length > 0) {
+            for (let i = 0; i < datesToCreate.length; i++) {
+              await post(`/faculty/${facultyId}/days`, {
+                dayNumber: String(daysList.length + i + 1),
+                date: datesToCreate[i],
+                approved: 1,
+                shortReport: null,
+                comments: [],
+              });
+            }
           }
         }
 
+        const { days: _days, ...facultyMeta } = normalizeFacultyDays(faculty);
         const payload = {
-          ...normalizeFacultyDays(faculty),
+          ...facultyMeta,
           name: nextName,
           company: nextCompany,
           location: nextLocation,
@@ -1979,7 +1973,7 @@ export default function InternshipPage({
           ...currentDay,
           dayNumber: currentDay.dayNumber,
           date: normalizedDayDate,
-          approved: normalizeApprovalCode(currentDay.approved),
+          approved: 1,
           images: finalImageUrls,
         };
 
@@ -2105,15 +2099,100 @@ export default function InternshipPage({
     setImagePreviews((prev) => prev.filter((img) => img.id !== imageId));
   };
 
+  const processDroppedFiles = (files) => {
+    const validImageTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp",
+      "image/gif",
+    ];
+    const newValidImages = files.filter((file) => {
+      if (!validImageTypes.includes(file.type)) {
+        toast.warning(
+          `${file.name} is not a valid image file. Only JPEG, PNG, WebP and GIF are allowed.`,
+        );
+        return false;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.warning(`${file.name} is too large. Maximum size is 5MB.`);
+        return false;
+      }
+      return true;
+    });
+    setReportImages((prev) => [...prev, ...newValidImages]);
+    newValidImages.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImagePreviews((prev) => [
+          ...prev,
+          { id: file.lastModified, src: reader.result, name: file.name },
+        ]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      processDroppedFiles(files);
+    }
+  };
+
   const handleApprove = useCallback(async () => {
     if (!currentDay) return;
-    await updateDay(currentDay, { ...currentDay, approved: true }, dayIndex);
-  }, [currentDay, updateDay, dayIndex]);
+    const dayId = getDayId(currentDay) ?? (dayIndex != null ? String(dayIndex) : null);
+    if (!dayId) { toast.error("Day could not be identified."); return; }
+    setSubmitting(true);
+    try {
+      await patch(`/faculty/${facultyId}/days/${dayId}/approve`, { approved: 2 });
+      const refreshed = await fetchFaculty();
+      await syncFacultyDuration(refreshed);
+      toast.success("Saved.");
+    } catch (err) {
+      toast.error(err.message || "Something went wrong.");
+    } finally {
+      setSubmitting(false);
+    }
+  }, [currentDay, dayIndex, facultyId, fetchFaculty, getDayId, syncFacultyDuration]);
 
   const handleUnapprove = useCallback(async () => {
     if (!currentDay) return;
-    await updateDay(currentDay, { ...currentDay, approved: false }, dayIndex);
-  }, [currentDay, updateDay, dayIndex]);
+    const dayId = getDayId(currentDay) ?? (dayIndex != null ? String(dayIndex) : null);
+    if (!dayId) { toast.error("Day could not be identified."); return; }
+    setSubmitting(true);
+    try {
+      await patch(`/faculty/${facultyId}/days/${dayId}/approve`, { approved: 3 });
+      const refreshed = await fetchFaculty();
+      await syncFacultyDuration(refreshed);
+      toast.success("Saved.");
+    } catch (err) {
+      toast.error(err.message || "Something went wrong.");
+    } finally {
+      setSubmitting(false);
+    }
+  }, [currentDay, dayIndex, facultyId, fetchFaculty, getDayId, syncFacultyDuration]);
 
   const handlePostComment = useCallback(
     async (e) => {
@@ -2275,6 +2354,44 @@ export default function InternshipPage({
     newDayDate,
     fetchAttendance,
     fetchFaculty,
+    syncFacultyDuration,
+    syncFacultyProgress,
+  ]);
+
+  const handleDeleteDayClick = useCallback(() => {
+    setShowDeleteDayModal(true);
+  }, []);
+
+  const handleDeleteDayConfirm = useCallback(async () => {
+    if (!currentDay) return;
+    const dayId = getDayId(currentDay) ?? (dayIndex != null ? String(dayIndex) : null);
+    if (!dayId) {
+      toast.error("Day could not be identified.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await del(`/faculty/${facultyId}/days/${dayId}`);
+      const refreshedFaculty = await fetchFaculty();
+      await syncFacultyProgress(refreshedFaculty);
+      await syncFacultyDuration(refreshedFaculty);
+      await attendanceApi.syncAttendance(facultyId);
+      await fetchAttendance();
+      setDayIndex((prev) => Math.max(0, prev - 1));
+      toast.success("Day deleted.");
+      setShowDeleteDayModal(false);
+    } catch (err) {
+      toast.error(err.message || "Failed to delete day.");
+    } finally {
+      setSubmitting(false);
+    }
+  }, [
+    currentDay,
+    dayIndex,
+    facultyId,
+    fetchAttendance,
+    fetchFaculty,
+    getDayId,
     syncFacultyDuration,
     syncFacultyProgress,
   ]);
@@ -3410,7 +3527,7 @@ export default function InternshipPage({
                   <button
                     type="button"
                     className="ip-btn ip-btn--danger"
-                    disabled={!currentDay || submitting || currentDayApprovalCode !== 2}
+                    disabled={!currentDay || submitting || !(currentDayApprovalCode === 2 || (currentDayApprovalCode === 1 && hasReportContent(currentDay)))}
                     onClick={handleUnapprove}
                   >
                     Not approved
@@ -3609,7 +3726,11 @@ export default function InternshipPage({
                   <div className="ip-image-upload-container">
                     <label
                       htmlFor="ip-report-images"
-                      className="ip-image-upload-area"
+                      className={`ip-image-upload-area${isDragActive ? " drag-active" : ""}`}
+                      onDragOver={handleDragOver}
+                      onDragEnter={handleDragEnter}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
                     >
                       <input
                         id="ip-report-images"
@@ -3966,6 +4087,34 @@ export default function InternshipPage({
                             <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
                           </svg>
                           Edit
+                        </button>
+                      )}
+                      {canWriteReport && (
+                        <button
+                          type="button"
+                          className="ip-day-delete-btn"
+                          onClick={handleDeleteDayClick}
+                          disabled={submitting}
+                          title="Delete this day"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                            <path d="M10 11v6" />
+                            <path d="M14 11v6" />
+                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                          </svg>
+                          Delete
                         </button>
                       )}
                     </div>
@@ -4409,7 +4558,7 @@ export default function InternshipPage({
                 onClick={() => setShowEditDayDateModal(false)}
               >
                 <div
-                  className="ip-modal"
+                  className="ip-modal-content"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="ip-modal-header">
@@ -4462,6 +4611,58 @@ export default function InternshipPage({
                       disabled={submitting || !editDayDate}
                     >
                       {submitting ? "Saving…" : "Save Date"}
+                    </button>
+                  </div>
+                </div>
+              </div>,
+              document.body,
+            )}
+
+          {showDeleteDayModal &&
+            typeof document !== "undefined" &&
+            createPortal(
+              <div
+                className="ip-modal-overlay"
+                onClick={() => setShowDeleteDayModal(false)}
+              >
+                <div
+                  className="ip-modal-content"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="ip-modal-header">
+                    <h3 className="ip-modal-title">Delete Day</h3>
+                    <button
+                      type="button"
+                      className="ip-close-btn"
+                      onClick={() => setShowDeleteDayModal(false)}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="ip-modal-body">
+                    <p style={{ margin: 0, color: "var(--t2, #5a6278)", fontSize: 14 }}>
+                      Are you sure you want to delete <strong>Day {currentDay?.dayNumber}</strong>
+                      {currentDay?.date ? ` (${currentDay.date})` : ""}? This action cannot be undone.
+                    </p>
+                  </div>
+                  <div className="ip-modal-footer">
+                    <button
+                      type="button"
+                      className="ip-btn ip-btn--secondary"
+                      onClick={() => setShowDeleteDayModal(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="ip-btn ip-btn--danger"
+                      onClick={handleDeleteDayConfirm}
+                      disabled={submitting}
+                    >
+                      {submitting ? "Deleting…" : "Delete Day"}
                     </button>
                   </div>
                 </div>
@@ -6317,6 +6518,30 @@ const ipStyles = `
     opacity: .5;
     cursor: not-allowed;
   }
+  .ip-day-delete-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 34px;
+    padding: 0 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(239,68,68,.24);
+    background: rgba(239,68,68,.08);
+    color: #b91c1c;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s ease;
+    white-space: nowrap;
+  }
+  .ip-day-delete-btn:hover:not(:disabled) {
+    background: rgba(239,68,68,.16);
+    border-color: rgba(239,68,68,.36);
+  }
+  .ip-day-delete-btn:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+  }
   @keyframes pulse-info {
     0%, 100% { opacity: 1; }
     50% { opacity: .6; }
@@ -6596,6 +6821,12 @@ const ipStyles = `
     background: linear-gradient(135deg, rgba(99,91,255,.08), rgba(6,201,160,.05));
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(99,91,255,.12);
+  }
+  .ip-image-upload-area.drag-active {
+    border-color: rgba(99,91,255,.7);
+    background: linear-gradient(135deg, rgba(99,91,255,.14), rgba(6,201,160,.08));
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 10px 30px rgba(99,91,255,.2);
   }
   .ip-image-input { display: none; }
   .ip-upload-content {

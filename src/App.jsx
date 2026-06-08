@@ -75,6 +75,7 @@ import SupervisorEvaluationFormPage from "./components/SupervisorEvaluationFormP
 import StudentEvaluationFormPage from "./components/StudentEvaluationFormPage";
 import AdminSupervisorReportsPage from "./components/AdminSupervisorReportsPage";
 import AdminStudentEvaluationsPage from "./components/AdminStudentEvaluationsPage";
+import AdminStatisticsPage from "./components/AdminStatisticsPage";
 
 /* ═══════════════════════════════════════════════
    STYLES
@@ -372,6 +373,7 @@ const NAV_PERMISSIONS = {
   "Student Self-Evaluation": ["admin", "tutor"],
   "Supervisor Reports (Admin)": ["admin"],
   "Student Evaluations (Admin)": ["admin"],
+  "Statistics (Admin)": ["admin"],
 };
 
 function normalizeRole(role) {
@@ -3077,6 +3079,7 @@ export default function App() {
           { I: Plus, label: "Create Internship" },
           { I: FileText, label: "Supervisor Reports (Admin)" },
           { I: Award, label: "Student Evaluations (Admin)" },
+          { I: TrendingUp, label: "Statistics (Admin)" },
         ],
       },
     ];
@@ -3462,6 +3465,24 @@ export default function App() {
         );
       }
       return <AdminStudentEvaluationsPage />;
+    }
+
+    if (nav === "Statistics (Admin)") {
+      if (!canAccessNav(user?.role, "Statistics (Admin)")) {
+        return (
+          <div className="pp">
+            <PageState variant="forbidden" title="Admin access required" message="Only administrators can view statistics." />
+          </div>
+        );
+      }
+      return (
+        <AdminStatisticsPage
+          onNavigate={(facultyId, dayIndex) => {
+            setOpenCommentTarget({ internshipId: facultyId, dayIndex });
+            setOpenIntern(facultyId);
+          }}
+        />
+      );
     }
 
     if (nav === "Settings") {

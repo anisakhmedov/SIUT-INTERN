@@ -7,6 +7,16 @@ import PageState from './PageState';
 const normList = (r) => (Array.isArray(r) ? r : Array.isArray(r?.data) ? r.data : []);
 const normTotal = (r, list) => (typeof r?.total === 'number' ? r.total : list.length);
 
+function useIsMobile(bp = 640) {
+  const [mob, setMob] = useState(() => typeof window !== 'undefined' && window.innerWidth < bp);
+  useEffect(() => {
+    const fn = () => setMob(window.innerWidth < bp);
+    window.addEventListener('resize', fn);
+    return () => window.removeEventListener('resize', fn);
+  }, [bp]);
+  return mob;
+}
+
 const fmtDate = (d) => {
   if (!d) return '—';
   const parsed = new Date(d);
@@ -41,6 +51,7 @@ function ScoreBar({ value }) {
 
 function DetailPanel({ record, onClose }) {
   if (!record) return null;
+  const isMobile = useIsMobile(480);
   const si = record.studentInformation || {};
   const ci = record.companyInformation || {};
   const io = record.internshipOverview || {};
@@ -75,18 +86,18 @@ function DetailPanel({ record, onClose }) {
   return (
     <>
       <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.38)', zIndex: 199, backdropFilter: 'blur(5px)', animation: 'fadeIn .18s ease' }} onClick={onClose} />
-      <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: 'clamp(320px,50vw,660px)', background: '#fff', boxShadow: '-6px 0 38px rgba(0,0,0,.13)', zIndex: 200, display: 'flex', flexDirection: 'column', animation: 'panelIn .33s cubic-bezier(.22,1,.36,1) both', overflow: 'hidden' }}>
+      <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: isMobile ? '100vw' : 'clamp(360px,55vw,660px)', background: '#fff', boxShadow: '-6px 0 38px rgba(0,0,0,.13)', zIndex: 200, display: 'flex', flexDirection: 'column', animation: 'panelIn .33s cubic-bezier(.22,1,.36,1) both', overflow: 'hidden' }}>
 
         {/* panel header */}
-        <div style={{ padding: '18px 22px 14px', borderBottom: '1px solid rgba(0,0,0,.07)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, background: 'linear-gradient(135deg,#0c0e18,#1a1d30)', color: '#fff' }}>
-          <div>
-            <div style={{ fontFamily: 'Montserrat', fontSize: 15, fontWeight: 800 }}>{si.fullname || '—'}</div>
-            <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,.5)', marginTop: 2 }}>
+        <div style={{ padding: isMobile ? '14px 16px 12px' : '18px 22px 14px', borderBottom: '1px solid rgba(0,0,0,.07)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, background: 'linear-gradient(135deg,#0c0e18,#1a1d30)', color: '#fff', gap: 10 }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ fontFamily: 'Montserrat', fontSize: isMobile ? 13 : 15, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{si.fullname || '—'}</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,.5)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {si.studentID && `ID: ${si.studentID} · `}{ci.companyName || ''}
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {rating ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            {rating && !isMobile ? (
               <span className="badge" style={{ background: rs.bg, color: rs.c, fontSize: 12 }}>
                 ★ {rating}/5 — {RATING_LABELS[rating] || ''}
               </span>
@@ -97,10 +108,10 @@ function DetailPanel({ record, onClose }) {
           </div>
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '18px 22px 32px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '14px 16px 28px' : '18px 22px 32px' }}>
 
           {/* student + company basics */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 20 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 8, marginBottom: 20 }}>
             {[
               ['Degree Program', si.degreeProgram],
               ['Year of Study', si.yearOfStudy],
@@ -338,12 +349,12 @@ export default function AdminStudentEvaluationsPage() {
 
       {/* pagination */}
       {totalPages > 1 && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'wrap', rowGap: 8 }}>
           <button className="bi" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} style={{ opacity: page <= 1 ? 0.35 : 1 }}>
             <ChevronLeft size={15} />
           </button>
-          {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
-            const p = totalPages <= 7 ? i + 1 : Math.max(1, Math.min(totalPages - 6, page - 3)) + i;
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            const p = totalPages <= 5 ? i + 1 : Math.max(1, Math.min(totalPages - 4, page - 2)) + i;
             return (
               <button key={p} onClick={() => setPage(p)}
                 style={{ width: 34, height: 34, borderRadius: 8, border: `1.5px solid ${p === page ? 'var(--a1)' : 'rgba(0,0,0,.1)'}`, background: p === page ? 'var(--a1)' : '#fff', color: p === page ? '#fff' : 'var(--t2)', fontFamily: 'Montserrat', fontWeight: 600, fontSize: 13, cursor: 'pointer', transition: 'all .18s' }}>
@@ -354,8 +365,8 @@ export default function AdminStudentEvaluationsPage() {
           <button className="bi" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} style={{ opacity: page >= totalPages ? 0.35 : 1 }}>
             <ChevronRight size={15} />
           </button>
-          <span style={{ fontSize: 12, color: 'var(--t3)', marginLeft: 6 }}>
-            Page {page} of {totalPages} · {total} records
+          <span style={{ fontSize: 12, color: 'var(--t3)', marginLeft: 4, whiteSpace: 'nowrap' }}>
+            {page}/{totalPages} · {total}
           </span>
         </div>
       )}

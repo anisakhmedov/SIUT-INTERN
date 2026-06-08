@@ -1,4 +1,14 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
+
+function useIsNarrow(bp = 920) {
+  const [narrow, setNarrow] = useState(() => typeof window !== 'undefined' && window.innerWidth < bp);
+  useEffect(() => {
+    const fn = () => setNarrow(window.innerWidth < bp);
+    window.addEventListener('resize', fn);
+    return () => window.removeEventListener('resize', fn);
+  }, [bp]);
+  return narrow;
+}
 
 const ROLE_GUIDES = {
   Admin: {
@@ -155,6 +165,7 @@ function ListBlock({ title, items }) {
 export default function UserEducationPage({ user }) {
   const initialRole = roleOrder.includes(user?.role) ? user.role : 'Admin';
   const [selectedRole, setSelectedRole] = useState(initialRole);
+  const isNarrow = useIsNarrow(920);
 
   const activeGuide = useMemo(() => ROLE_GUIDES[selectedRole] || ROLE_GUIDES.Admin, [selectedRole]);
 
@@ -212,7 +223,7 @@ export default function UserEducationPage({ user }) {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: '2fr 1fr',
+          gridTemplateColumns: isNarrow ? '1fr' : '2fr 1fr',
           gap: 14,
         }}
       >
@@ -275,13 +286,6 @@ export default function UserEducationPage({ user }) {
         </div>
       </div>
 
-      <style>{`
-        @media (max-width: 920px) {
-          .pp > div:nth-child(3) {
-            grid-template-columns: 1fr !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }

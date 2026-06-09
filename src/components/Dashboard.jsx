@@ -133,16 +133,6 @@ const formatDateValue = (value) => {
   return `${day}.${month}.${year}`;
 };
 
-const SORT_LABELS = {
-  "default": "Default",
-  "name-asc": "Name A→Z",
-  "name-desc": "Name Z→A",
-  "progress-asc": "Progress ↑",
-  "progress-desc": "Progress ↓",
-  "date-newest": "Date (Newest)",
-  "date-oldest": "Date (Oldest)",
-};
-
 export default function Dashboard({ onNewFaculty, onView, search = "", user = null }) {
   const [faculties, setFaculties] = useState([]);
   const [usersById, setUsersById] = useState({});
@@ -150,12 +140,7 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
 
   // Filter state
   const [localSearch, setLocalSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [companyFilter, setCompanyFilter] = useState("all");
-  const [sortBy, setSortBy] = useState("default");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [progressFilter, setProgressFilter] = useState("all");
 
   const getFacultyId = (faculty) => faculty?._id ?? faculty?.id ?? null;
 
@@ -383,126 +368,58 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
     return 0;
   };
 
-  // Unique companies for filter dropdown
-  const uniqueCompanies = [...new Set(faculties.map(f => f.company).filter(Boolean))].sort();
-
-  const hasActiveFilters = Boolean(
-    localSearch || statusFilter !== "all" || companyFilter !== "all" ||
-    sortBy !== "default" || dateFrom || dateTo
-  );
-
-  const clearAllFilters = () => {
-    setLocalSearch("");
-    setStatusFilter("all");
-    setCompanyFilter("all");
-    setSortBy("default");
-    setDateFrom("");
-    setDateTo("");
-  };
-
   // Combined search: local takes precedence, falls back to external prop
   const activeSearch = localSearch || search;
 
-  // Filter + sort faculties
-  let filteredFaculties = faculties.filter((faculty, index) => {
+  // Filter faculties
+  const filteredFaculties = faculties.filter((faculty, index) => {
     const userRole = String(user?.role || '').trim().toLowerCase();
 
     if (userRole === 'tutor') {
-        const userIds = [
-          user?._id,
-          user?.id,
-          user?.userId,
-          user?.login,
-          user?.email,
-        ].map((id) => normalizeIdentityValue(id)).filter(Boolean);
+      const userIds = [
+        user?._id, user?.id, user?.userId, user?.login, user?.email,
+      ].map((id) => normalizeIdentityValue(id)).filter(Boolean);
 
-        const facultyTutorIds = getFacultyTutorIds(faculty);
+      const facultyTutorIds = getFacultyTutorIds(faculty);
 
-        if (index === 0) {
-          console.log('[Dashboard] Tutor filter debug:', {
-            userIds,
-            facultyTutorIds,
-            hasMatch: userIds.some(uid => facultyTutorIds.includes(uid)),
-            tutors: getFacultyTutors(faculty),
-          });
-        }
+      if (index === 0) {
+        console.log('[Dashboard] Tutor filter debug:', {
+          userIds,
+          facultyTutorIds,
+          hasMatch: userIds.some(uid => facultyTutorIds.includes(uid)),
+          tutors: getFacultyTutors(faculty),
+        });
+      }
 
-        if (!userIds.some(uid => facultyTutorIds.includes(uid))) return false;
+      if (!userIds.some(uid => facultyTutorIds.includes(uid))) return false;
     }
 
     // Text search
     if (activeSearch) {
-      const searchLower = activeSearch.toLowerCase();
+      const q = activeSearch.toLowerCase();
       if (!(
-        faculty.name?.toLowerCase().includes(searchLower) ||
-        faculty.company?.toLowerCase().includes(searchLower) ||
-        faculty.location?.toLowerCase().includes(searchLower) ||
-        faculty.plan?.toLowerCase().includes(searchLower)
+        faculty.name?.toLowerCase().includes(q) ||
+        faculty.company?.toLowerCase().includes(q) ||
+        faculty.location?.toLowerCase().includes(q) ||
+        faculty.plan?.toLowerCase().includes(q)
       )) return false;
     }
 
-    // Status filter
-    if (statusFilter !== "all") {
-      if (normalizeStatus(faculty.status) !== statusFilter) return false;
-    }
-
-    // Company filter
-    if (companyFilter !== "all") {
-      if ((faculty.company || "") !== companyFilter) return false;
-    }
-
-    // Date range filter (by start date)
-    if (dateFrom || dateTo) {
-      const { start } = extractDateRange(faculty);
-      const startDate = parseDateValue(start);
-      if (dateFrom) {
-        const fromDate = parseDateValue(dateFrom);
-        if (!startDate || !fromDate || startDate < fromDate) return false;
-      }
-      if (dateTo) {
-        const toDate = parseDateValue(dateTo);
-        if (!startDate || !toDate || startDate > toDate) return false;
-      }
+    // Progress section filter
+    if (progressFilter !== "all") {
+      const p = getShortProgress(faculty);
+      if (progressFilter === "not-started" && p !== 0) return false;
+      if (progressFilter === "in-progress" && (p < 1 || p > 99)) return false;
+      if (progressFilter === "completed" && p !== 100) return false;
     }
 
     return true;
   });
 
-  // Sorting
-  if (sortBy !== "default") {
-    filteredFaculties = [...filteredFaculties].sort((a, b) => {
-      if (sortBy === "name-asc") return (a.name || "").localeCompare(b.name || "");
-      if (sortBy === "name-desc") return (b.name || "").localeCompare(a.name || "");
-      if (sortBy === "progress-asc") return getShortProgress(a) - getShortProgress(b);
-      if (sortBy === "progress-desc") return getShortProgress(b) - getShortProgress(a);
-      if (sortBy === "date-newest") {
-        const aDate = parseDateValue(extractDateRange(a).start);
-        const bDate = parseDateValue(extractDateRange(b).start);
-        return (bDate?.getTime() || 0) - (aDate?.getTime() || 0);
-      }
-      if (sortBy === "date-oldest") {
-        const aDate = parseDateValue(extractDateRange(a).start);
-        const bDate = parseDateValue(extractDateRange(b).start);
-        return (aDate?.getTime() || 0) - (bDate?.getTime() || 0);
-      }
-      return 0;
-    });
-  }
-
-  // Completed = 100% OR status "Completed"; others don't overlap
-  const completedFaculties = filteredFaculties.filter(f =>
-    getShortProgress(f) === 100 || normalizeStatus(f.status) === "Completed"
-  );
-  const inProgressFaculties = filteredFaculties.filter(f => {
-    if (getShortProgress(f) === 100 || normalizeStatus(f.status) === "Completed") return false;
-    const p = getShortProgress(f);
-    return (p > 0 && p < 100) || normalizeStatus(f.status) === "In Progress";
-  });
-  const notStartedFaculties = filteredFaculties.filter(f => {
-    const s = normalizeStatus(f.status);
-    const p = getShortProgress(f);
-    return p === 0 && s !== "Completed" && s !== "In Progress";
-  });
+  // Group purely by progress percentage, status is ignored
+  const notStartedFaculties = filteredFaculties.filter(f => getShortProgress(f) === 0);
+  const inProgressFaculties = filteredFaculties.filter(f => { const p = getShortProgress(f); return p >= 1 && p <= 99; });
+  const completedFaculties = filteredFaculties.filter(f => getShortProgress(f) === 100);
 
   const fetchFaculties = useCallback(async () => {
     try {
@@ -1044,45 +961,6 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
           border-color: rgba(220,38,38,.4);
         }
 
-        /* Filter chips */
-        .dw-filter-chips {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 6px;
-          margin-top: 12px;
-          padding-top: 12px;
-          border-top: 1px solid rgba(0,0,0,.06);
-        }
-        .dw-chip {
-          display: inline-flex;
-          align-items: center;
-          gap: 5px;
-          padding: 4px 10px;
-          border-radius: 999px;
-          background: rgba(99,91,255,.1);
-          border: 1px solid rgba(99,91,255,.2);
-          color: var(--a1, #635bff);
-          font-family: 'Montserrat', system-ui, sans-serif;
-          font-size: 11px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all .18s;
-        }
-        .dw-chip:hover { background: rgba(99,91,255,.18); }
-        .dw-chip--clear {
-          background: rgba(220,38,38,.08);
-          border-color: rgba(220,38,38,.2);
-          color: #c41e1e;
-        }
-        .dw-chip--clear:hover { background: rgba(220,38,38,.15); }
-        .dw-results-count {
-          font-size: 12px;
-          color: var(--t3, #9ba3bb);
-          font-weight: 500;
-          margin-top: 10px;
-          display: block;
-        }
-
         /* ── SECTIONS ── */
         .dw-sections {
           display: flex;
@@ -1365,8 +1243,6 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
         @media (max-width: 480px) {
           .dw-filters { padding: 12px 14px; border-radius: 14px; }
           .dw-filter-group { flex: 1 1 100%; min-width: 0; }
-          .dw-filter-chips { gap: 5px; }
-          .dw-chip { font-size: 11px; padding: 4px 10px; }
         }
         @media (max-width: 400px) {
           .dw-page { padding: 10px; }
@@ -1383,8 +1259,6 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
           .dw-filter-select, .dw-filter-date { font-size: 12px; padding: 7px 10px; border-radius: 8px; }
           .dw-filter-label { font-size: 10px; }
           .dw-clear-btn { font-size: 11px; padding: 7px 12px; }
-          .dw-chip { font-size: 10px; padding: 3px 8px; }
-          .dw-filter-chips { gap: 4px; margin-top: 8px; padding-top: 8px; }
           .dw-section-header { gap: 7px; margin-bottom: 12px; }
           .dw-section-icon-wrap { width: 28px; height: 28px; border-radius: 8px; }
           .dw-section-title { font-size: 14px; }
@@ -1448,165 +1322,26 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
                 )}
               </div>
 
-              {/* Status pills */}
+              {/* Progress filter pills */}
               <div className="dw-status-pills">
                 {[
-                  { value: "all", label: "All" },
-                  { value: "Pending", label: "Not Started" },
-                  { value: "In Progress", label: "In Progress" },
-                  { value: "Completed", label: "Completed" },
-                ].map(({ value, label }) => {
-                  const isActive = statusFilter === value;
-                  let activeClass = "";
-                  if (isActive) {
-                    activeClass = value === "all" ? "dw-status-pill--active-all"
-                      : value === "Pending" ? "dw-status-pill--active-pending"
-                      : value === "In Progress" ? "dw-status-pill--active-progress"
-                      : "dw-status-pill--active-completed";
-                  }
-                  return (
-                    <button
-                      key={value}
-                      className={`dw-status-pill ${activeClass}`}
-                      onClick={() => setStatusFilter(value)}
-                      type="button"
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
+                  { value: "all",         label: "All",         activeClass: "dw-status-pill--active-all" },
+                  { value: "in-progress", label: "In Progress", activeClass: "dw-status-pill--active-progress" },
+                  { value: "completed",   label: "Completed",   activeClass: "dw-status-pill--active-completed" },
+                  { value: "not-started", label: "Not Started", activeClass: "dw-status-pill--active-pending" },
+                ].map(({ value, label, activeClass }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className={`dw-status-pill${progressFilter === value ? ` ${activeClass}` : ""}`}
+                    onClick={() => setProgressFilter(value)}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
-
-              {/* Advanced filters toggle */}
-              <button
-                type="button"
-                className={`dw-advanced-btn${showAdvanced ? " dw-advanced-btn--open" : ""}`}
-                onClick={() => setShowAdvanced(v => !v)}
-              >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M1 3h12M3 7h8M5 11h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-                </svg>
-                Filters
-                {hasActiveFilters && !showAdvanced && <span className="dw-advanced-dot" />}
-                <svg
-                  className={`dw-advanced-chevron${showAdvanced ? " dw-advanced-chevron--open" : ""}`}
-                  width="12" height="12" viewBox="0 0 12 12" fill="none"
-                >
-                  <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
             </div>
 
-            {/* Advanced filters panel */}
-            {showAdvanced && (
-              <div className="dw-advanced-panel">
-                {/* Company */}
-                <div className="dw-filter-group">
-                  <label className="dw-filter-label">Company</label>
-                  <select
-                    className="dw-filter-select"
-                    value={companyFilter}
-                    onChange={e => setCompanyFilter(e.target.value)}
-                  >
-                    <option value="all">All companies</option>
-                    {uniqueCompanies.map(c => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Sort by */}
-                <div className="dw-filter-group">
-                  <label className="dw-filter-label">Sort by</label>
-                  <select
-                    className="dw-filter-select"
-                    value={sortBy}
-                    onChange={e => setSortBy(e.target.value)}
-                  >
-                    {Object.entries(SORT_LABELS).map(([val, label]) => (
-                      <option key={val} value={val}>{label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Date from */}
-                <div className="dw-filter-group">
-                  <label className="dw-filter-label">Start date from</label>
-                  <input
-                    type="date"
-                    className="dw-filter-date"
-                    value={dateFrom}
-                    onChange={e => setDateFrom(e.target.value)}
-                  />
-                </div>
-
-                {/* Date to */}
-                <div className="dw-filter-group">
-                  <label className="dw-filter-label">Start date to</label>
-                  <input
-                    type="date"
-                    className="dw-filter-date"
-                    value={dateTo}
-                    onChange={e => setDateTo(e.target.value)}
-                  />
-                </div>
-
-                {hasActiveFilters && (
-                  <button type="button" className="dw-clear-btn" onClick={clearAllFilters}>
-                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-                      <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-                    </svg>
-                    Clear all
-                  </button>
-                )}
-              </div>
-            )}
-
-            {/* Active filter chips */}
-            {hasActiveFilters && (
-              <div className="dw-filter-chips">
-                {localSearch && (
-                  <button className="dw-chip" type="button" onClick={() => setLocalSearch("")}>
-                    Search: "{localSearch}" ×
-                  </button>
-                )}
-                {statusFilter !== "all" && (
-                  <button className="dw-chip" type="button" onClick={() => setStatusFilter("all")}>
-                    {statusFilter} ×
-                  </button>
-                )}
-                {companyFilter !== "all" && (
-                  <button className="dw-chip" type="button" onClick={() => setCompanyFilter("all")}>
-                    {companyFilter} ×
-                  </button>
-                )}
-                {dateFrom && (
-                  <button className="dw-chip" type="button" onClick={() => setDateFrom("")}>
-                    From: {formatDateValue(dateFrom)} ×
-                  </button>
-                )}
-                {dateTo && (
-                  <button className="dw-chip" type="button" onClick={() => setDateTo("")}>
-                    To: {formatDateValue(dateTo)} ×
-                  </button>
-                )}
-                {sortBy !== "default" && (
-                  <button className="dw-chip" type="button" onClick={() => setSortBy("default")}>
-                    {SORT_LABELS[sortBy]} ×
-                  </button>
-                )}
-                <button className="dw-chip dw-chip--clear" type="button" onClick={clearAllFilters}>
-                  Clear all
-                </button>
-              </div>
-            )}
-
-            {/* Results count */}
-            {!loading && faculties.length > 0 && (
-              <span className="dw-results-count">
-                Showing {filteredFaculties.length} of {faculties.length} internship{faculties.length !== 1 ? "s" : ""}
-              </span>
-            )}
           </div>
         )}
 

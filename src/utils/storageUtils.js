@@ -5,6 +5,7 @@ const STORAGE_KEYS = {
   USER_ID: 'siut_user_id',
   USER_LOGIN: 'siut_user_login',
   AUTH_TOKEN: 'siut_auth_token',
+  REFRESH_TOKEN: 'siut_refresh_token',
 };
 
 /**
@@ -39,6 +40,18 @@ export const saveAuthTokenToStorage = (token) => {
  */
 export const getAuthTokenFromStorage = () => {
   return localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+};
+
+export const saveRefreshTokenToStorage = (token) => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, token || '');
+  } catch (error) {
+    console.error('Error saving refresh token:', error);
+  }
+};
+
+export const getRefreshTokenFromStorage = () => {
+  return localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
 };
 
 /**
@@ -81,6 +94,7 @@ export const clearUserFromStorage = () => {
     localStorage.removeItem(STORAGE_KEYS.USER_ID);
     localStorage.removeItem(STORAGE_KEYS.USER_LOGIN);
     localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
   } catch (error) {
     console.error('Error clearing user from localStorage:', error);
   }

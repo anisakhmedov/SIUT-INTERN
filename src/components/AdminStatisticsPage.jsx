@@ -787,6 +787,7 @@ function Num({ v, c, onClick }) {
 ───────────────────────────────────────────── */
 export default function AdminStatisticsPage({ onNavigate }) {
   const [faculties, setFaculties] = useState([]);
+  const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState("missed");
@@ -799,8 +800,18 @@ export default function AdminStatisticsPage({ onNavigate }) {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const res = await get("/faculty");
-      setFaculties(Array.isArray(res) ? res : []);
+      const [facultyRes, summaryRes] = await Promise.allSettled([
+        get("/faculty"),
+        get("/admin/statistics"),
+      ]);
+      if (facultyRes.status === "fulfilled") {
+        setFaculties(Array.isArray(facultyRes.value) ? facultyRes.value : []);
+      } else {
+        throw facultyRes.reason;
+      }
+      if (summaryRes.status === "fulfilled" && summaryRes.value) {
+        setSummary(summaryRes.value);
+      }
     } catch (err) {
       toast.error(err?.message || "Failed to load data");
     } finally {
@@ -933,8 +944,10 @@ export default function AdminStatisticsPage({ onNavigate }) {
       {/* Summary KPI */}
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         {[
-          { IconComp: Briefcase, label: "Internships", value: faculties.length, color: "#635bff", bg: "rgba(99,91,255,.12)" },
-          { IconComp: Calendar,  label: "Total days",  value: global.total,    color: "#06c9a0", bg: "rgba(6,201,160,.12)" },
+          { IconComp: Briefcase,  label: "Internships",     value: summary?.totalInternships ?? faculties.length,          color: "#635bff", bg: "rgba(99,91,255,.12)" },
+          { IconComp: Users,      label: "Students",         value: summary?.totalStudents    ?? "—",                       color: "#06c9a0", bg: "rgba(6,201,160,.12)" },
+          { IconComp: Calendar,   label: "Total days",       value: global.total,                                           color: "#f5a623", bg: "rgba(245,166,35,.12)" },
+          { IconComp: TrendingUp, label: "Completion rate",  value: summary?.completionRate != null ? `${Math.round(summary.completionRate * 100)}%` : `${global.total ? Math.round((global.approved / global.total) * 100) : 0}%`, color: "#22c55e", bg: "rgba(34,197,94,.12)" },
         ].map(({ IconComp, label, value, color, bg }) => (
           <div key={label} style={{ flex: 1, minWidth: 130, padding: "16px 18px", background: `linear-gradient(135deg,${bg},rgba(255,255,255,.5))`, border: `1px solid ${color}22`, borderRadius: 16, boxShadow: "0 4px 16px rgba(99,91,255,.07)" }}>
             <div style={{ width: 34, height: 34, borderRadius: 9, background: bg, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>

@@ -140,6 +140,7 @@ export default function AllInternships({ onView, search = "", user = null }) {
   const [usersById, setUsersById] = useState({});
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [serverTotalPages, setServerTotalPages] = useState(1);
 
   const getFacultyId = (faculty) => faculty?._id ?? faculty?.id ?? null;
 
@@ -280,66 +281,64 @@ export default function AllInternships({ onView, search = "", user = null }) {
     return 0;
   };
 
-  // Filter faculties based on search term (show all, no role-based filtering)
-  const filteredFaculties = faculties.filter((faculty) => {
-    const searchLower = search.toLowerCase();
-    return (
-      faculty.name?.toLowerCase().includes(searchLower) ||
-      faculty.company?.toLowerCase().includes(searchLower) ||
-      faculty.location?.toLowerCase().includes(searchLower) ||
-      faculty.plan?.toLowerCase().includes(searchLower)
-    );
-  });
-
-  const totalPages = Math.max(1, Math.ceil(filteredFaculties.length / PAGE_SIZE));
-  const safePage = Math.min(currentPage, totalPages);
-  const pagedFaculties = filteredFaculties.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
-
-  useEffect(() => {
-    fetchFaculties();
-  }, []);
-
   useEffect(() => {
     setCurrentPage(1);
   }, [search]);
 
-  const fetchFaculties = async () => {
-    try {
-      setLoading(true);
-      const canReadUsers = String(user?.role || '').toLowerCase() === 'admin';
+  useEffect(() => {
+    let cancelled = false;
+    const fetchFaculties = async () => {
+      try {
+        setLoading(true);
+        const canReadUsers = String(user?.role || '').toLowerCase() === 'admin';
 
-      const [facultyResponse, usersResponse] = await Promise.allSettled([
-        get("/faculty"),
-        canReadUsers ? get("/usersInternship") : Promise.resolve([]),
-      ]);
+        const params = new URLSearchParams({ page: currentPage, limit: PAGE_SIZE });
+        if (search) params.set('search', search);
 
-      if (facultyResponse.status === "fulfilled") {
-        setFaculties(
-          Array.isArray(facultyResponse.value) ? facultyResponse.value : [],
-        );
-      } else {
-        throw facultyResponse.reason;
+        const [facultyResponse, usersResponse] = await Promise.allSettled([
+          get(`/faculty?${params}`),
+          canReadUsers ? get("/usersInternship") : Promise.resolve([]),
+        ]);
+
+        if (cancelled) return;
+
+        if (facultyResponse.status === "fulfilled") {
+          const res = facultyResponse.value;
+          if (Array.isArray(res)) {
+            setFaculties(res);
+            setServerTotalPages(1);
+          } else {
+            setFaculties(Array.isArray(res?.data) ? res.data : []);
+            setServerTotalPages(res?.totalPages || 1);
+          }
+        } else {
+          throw facultyResponse.reason;
+        }
+
+        if (usersResponse.status === "fulfilled") {
+          const usersRaw = usersResponse.value;
+          const users = Array.isArray(usersRaw) ? usersRaw : usersRaw?.data || [];
+          const mappedUsers = users.reduce((acc, u) => {
+            const uid = String(u?._id ?? u?.id ?? "");
+            if (uid) acc[uid] = u;
+            return acc;
+          }, {});
+          setUsersById(mappedUsers);
+        } else {
+          setUsersById({});
+        }
+      } catch (err) {
+        if (!cancelled) {
+          toast.error(err?.message || "Failed to load internships.");
+          console.error("Error fetching faculties:", err);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-
-      if (usersResponse.status === "fulfilled") {
-        const usersRaw = usersResponse.value;
-        const users = Array.isArray(usersRaw) ? usersRaw : usersRaw?.data || [];
-        const mappedUsers = users.reduce((acc, user) => {
-          const userId = String(user?._id ?? user?.id ?? "");
-          if (userId) acc[userId] = user;
-          return acc;
-        }, {});
-        setUsersById(mappedUsers);
-      } else {
-        setUsersById({});
-      }
-    } catch (err) {
-      toast.error(err?.message || "Failed to load internships.");
-      console.error("Error fetching faculties:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+    fetchFaculties();
+    return () => { cancelled = true; };
+  }, [search, currentPage, user?.role]);
 
   const removeFaculty = async (id) => {
     if (!window.confirm("Are you sure you want to delete this internship?"))
@@ -723,7 +722,7 @@ export default function AllInternships({ onView, search = "", user = null }) {
           />
         ) : (
           <ul className="dw-list" aria-label="Internship list">
-            {pagedFaculties.map((faculty, index) => {
+            {faculties.map((faculty, index) => {
               const facultyId = getFacultyId(faculty) ?? `row-${index}`;
               const shortProgress = getShortProgress(faculty);
               const progressHue = Math.round((shortProgress / 100) * 120);
@@ -875,22 +874,22 @@ export default function AllInternships({ onView, search = "", user = null }) {
             })}
           </ul>
         )}
-        {!loading && totalPages > 1 && (
+        {!loading && serverTotalPages > 1 && (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "20px 0 4px" }}>
             <button
               className="bg"
-              disabled={safePage <= 1}
+              disabled={currentPage <= 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             >
               ← Prev
             </button>
             <span style={{ fontSize: 13, color: "var(--t2)", fontWeight: 600 }}>
-              Page {safePage} of {totalPages}
+              Page {currentPage} of {serverTotalPages}
             </span>
             <button
               className="bg"
-              disabled={safePage >= totalPages}
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage >= serverTotalPages}
+              onClick={() => setCurrentPage((p) => Math.min(serverTotalPages, p + 1))}
             >
               Next →
             </button>

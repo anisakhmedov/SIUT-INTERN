@@ -1,8 +1,10 @@
 import {
   clearUserFromStorage,
   getAuthTokenFromStorage,
+  getRefreshTokenFromStorage,
   getUserFromStorage,
   saveAuthTokenToStorage,
+  saveRefreshTokenToStorage,
   saveUserToStorage,
 } from './storageUtils';
 
@@ -50,7 +52,40 @@ export function isAuthenticated() {
   return !!token && !isTokenExpired(token);
 }
 
+let _isRefreshing = false;
+let _pendingRequests = [];
+
+async function tryRefreshToken() {
+  const refreshToken = getRefreshTokenFromStorage();
+  if (!refreshToken) return null;
+  try {
+    const res = await fetch(`${API_URL}/usersInternship/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ refreshToken }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json().catch(() => null);
+    if (!data?.token) return null;
+    saveAuthTokenToStorage(data.token);
+    if (data.refreshToken) saveRefreshTokenToStorage(data.refreshToken);
+    return data.token;
+  } catch {
+    return null;
+  }
+}
+
 export function logout(reason = 'logout') {
+  const refreshToken = getRefreshTokenFromStorage();
+  if (refreshToken) {
+    fetch(`${API_URL}/usersInternship/logout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ refreshToken }),
+    }).catch(() => {});
+  }
   clearUserFromStorage();
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(AUTH_SESSION_EXPIRED_EVENT, { detail: { reason } }));
@@ -112,6 +147,7 @@ export async function request(path, options = {}) {
     handleUnauthorized = true,
     body,
     headers,
+    _isRetry = false,
     ...rest
   } = options;
 
@@ -125,11 +161,31 @@ export async function request(path, options = {}) {
     ...rest,
     headers: finalHeaders,
     body,
+    credentials: 'include',
   });
 
   const payload = await parseResponse(response);
 
-  if (response.status === 401 && handleUnauthorized) {
+  if (response.status === 401 && handleUnauthorized && !_isRetry) {
+    if (_isRefreshing) {
+      return new Promise((resolve, reject) => {
+        _pendingRequests.push({ resolve, reject, path, options });
+      });
+    }
+
+    _isRefreshing = true;
+    const newToken = await tryRefreshToken();
+    _isRefreshing = false;
+
+    if (newToken) {
+      const pending = _pendingRequests.splice(0);
+      pending.forEach(({ resolve, reject, path: p, options: o }) => {
+        request(p, { ...o, _isRetry: true }).then(resolve).catch(reject);
+      });
+      return request(path, { ...options, _isRetry: true });
+    }
+
+    _pendingRequests.splice(0).forEach(({ reject }) => reject(new Error('Session expired')));
     logout('expired');
     throw Object.assign(new Error('Session expired. Please login again.'), {
       status: 401,
@@ -175,8 +231,9 @@ export function del(path, options = {}) {
   return request(path, { ...options, method: 'DELETE' });
 }
 
-export function setAuthSession({ token, user }) {
+export function setAuthSession({ token, refreshToken, user }) {
   if (token) saveAuthTokenToStorage(token);
+  if (refreshToken) saveRefreshTokenToStorage(refreshToken);
   if (user) saveUserToStorage(user);
 }
 

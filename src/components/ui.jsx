@@ -9,6 +9,7 @@ export function CustomSelect({ value, onChange, options, placeholder, hasError, 
   const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
   const triggerRef = useRef(null);
   const panelRef = useRef(null);
+  const optionTouchStartY = useRef(null);
 
   const handleToggle = () => {
     if (disabled) return;
@@ -27,7 +28,10 @@ export function CustomSelect({ value, onChange, options, placeholder, hasError, 
       if (!triggerRef.current?.contains(e.target) && !panelRef.current?.contains(e.target))
         setOpen(false);
     };
-    const onScroll = () => setOpen(false);
+    const onScroll = (e) => {
+      if (panelRef.current?.contains(e.target)) return;
+      setOpen(false);
+    };
     document.addEventListener('mousedown', onClose);
     document.addEventListener('touchstart', onClose);
     window.addEventListener('scroll', onScroll, true);
@@ -82,6 +86,7 @@ export function CustomSelect({ value, onChange, options, placeholder, hasError, 
             boxShadow: '0 8px 32px rgba(0,0,0,.18)',
             maxHeight: 260, overflowY: 'auto',
             WebkitOverflowScrolling: 'touch',
+            touchAction: 'pan-y',
           }}
         >
           {options.map((o) => {
@@ -92,6 +97,12 @@ export function CustomSelect({ value, onChange, options, placeholder, hasError, 
                 type="button"
                 onMouseEnter={() => setHovered(o.value)}
                 onMouseLeave={() => setHovered(null)}
+                onTouchStart={(e) => { optionTouchStartY.current = e.touches[0].clientY; }}
+                onTouchEnd={(e) => {
+                  const delta = Math.abs(e.changedTouches[0].clientY - (optionTouchStartY.current ?? e.changedTouches[0].clientY));
+                  if (delta < 10) { e.preventDefault(); onChange(o.value); setOpen(false); setHovered(null); }
+                  optionTouchStartY.current = null;
+                }}
                 onClick={() => { onChange(o.value); setOpen(false); setHovered(null); }}
                 style={{
                   width: '100%', padding: '11px 16px', border: 'none',

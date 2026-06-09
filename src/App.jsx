@@ -38,6 +38,7 @@ import {
   getUserInitials,
   canAccessNav,
 } from "./utils/internshipUtils";
+import { timeAgo } from "./utils/timeAgo";
 
 import ToastViewport from "./components/ToastViewport";
 import PageState from "./components/PageState";
@@ -45,7 +46,6 @@ import ErrorPage from "./components/ErrorPage";
 import ErrorBoundary from "./components/ErrorBoundary";
 
 const LoginPage = lazy(() => import("./components/LoginPage"));
-const Dashboard = lazy(() => import("./components/Dashboard"));
 const AllInternships = lazy(() => import("./components/AllInternships"));
 const CreatePage = lazy(() => import("./components/CreatePage"));
 const InternshipPage = lazy(() => import("./components/InternshipPage"));
@@ -211,7 +211,6 @@ export default function App() {
 
   const [TUTORS, setTutors] = useState([]);
   const [INTERNSHIPS, setInternships] = useState([]);
-  const [FEEDBACKS, setFeedbacks] = useState([]);
 
   const [page, setPage] = useState("login");
   const [user, setUser] = useState(null);
@@ -386,30 +385,6 @@ export default function App() {
           }
         }
 
-        setFeedbacks([
-          {
-            id: 1,
-            name: "John Smith",
-            role: "Intern",
-            company: "Tech Corp",
-            text: "Great learning experience during my internship",
-            rating: 4,
-            time: "2 days ago",
-            avB: "linear-gradient(135deg,#635bff,#06c9a0)",
-            av: "JS",
-          },
-          {
-            id: 2,
-            name: "Emma Johnson",
-            role: "Mentor",
-            company: "Innovate Inc",
-            text: "Impressive work from the students this semester",
-            rating: 5,
-            time: "1 week ago",
-            avB: "linear-gradient(135deg,#06c9a0,#ff5fa0)",
-            av: "EJ",
-          },
-        ]);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -478,18 +453,6 @@ export default function App() {
   );
 
   const commentFeedbacks = useMemo(() => {
-    const now = Date.now();
-    const toTimeLabel = (dateValue) => {
-      const date = new Date(dateValue);
-      if (Number.isNaN(date.getTime())) return "Unknown time";
-      const diffMs = Math.max(0, now - date.getTime());
-      const diffMin = Math.floor(diffMs / 60000);
-      if (diffMin < 1) return "just now";
-      if (diffMin < 60) return `${diffMin}m ago`;
-      const diffH = Math.floor(diffMin / 60);
-      if (diffH < 24) return `${diffH}h ago`;
-      return `${Math.floor(diffH / 24)}d ago`;
-    };
     const buildCommentKey = (comment, idx) => {
       if (!comment) return `idx-${idx}`;
       return String(comment._id || `${comment.date || ""}-${comment.text || ""}-${idx}`);
@@ -517,7 +480,7 @@ export default function App() {
             role,
             company: intern.company,
             text: comment?.text || String(comment || ""),
-            time: toTimeLabel(comment?.date),
+            time: timeAgo(comment?.date) || "Unknown time",
             date: comment?.date || null,
             av: initials,
             avB: "linear-gradient(135deg,#635bff,#06c9a0)",
@@ -711,12 +674,11 @@ export default function App() {
       <Route
         path="/"
         element={
-          <Dashboard
-            onNewFaculty={() => navigate("/create")}
-            onView={(id) => navigate(`/internship/${id}`)}
+          <DashView
+            internships={INTERNSHIPS}
+            feedbacks={commentFeedbacks}
+            onOpen={(intern) => navigate(`/internship/${intern.id}`)}
             user={user}
-            students={students}
-            search={search}
           />
         }
       />

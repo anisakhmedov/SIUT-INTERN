@@ -133,10 +133,29 @@ const formatDateValue = (value) => {
   return `${day}.${month}.${year}`;
 };
 
+const SORT_LABELS = {
+  "default": "Default",
+  "name-asc": "Name A→Z",
+  "name-desc": "Name Z→A",
+  "progress-asc": "Progress ↑",
+  "progress-desc": "Progress ↓",
+  "date-newest": "Date (Newest)",
+  "date-oldest": "Date (Oldest)",
+};
+
 export default function Dashboard({ onNewFaculty, onView, search = "", user = null }) {
   const [faculties, setFaculties] = useState([]);
   const [usersById, setUsersById] = useState({});
   const [loading, setLoading] = useState(true);
+
+  // Filter state
+  const [localSearch, setLocalSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [companyFilter, setCompanyFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("default");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const getFacultyId = (faculty) => faculty?._id ?? faculty?.id ?? null;
 
@@ -302,7 +321,7 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
     const tutorLabels = getFacultyTutorLabels(faculty);
     const supervisorLabel = tutorLabels[0] || getSupervisorLabel(faculty);
     if (!supervisorLabel || supervisorLabel === "Not assigned") return "U";
-    
+
     return supervisorLabel
       .split(" ")
       .filter(Boolean)
@@ -364,56 +383,116 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
     return 0;
   };
 
-  // Filter faculties based on role and search term
-  const filteredFaculties = faculties.filter((faculty, index) => {
-    // Role-based filtering
-    const userRole = String(user?.role || '').trim().toLowerCase();
-    
-    // Admin and rector can see all internships
-    if (userRole === 'admin' || userRole === 'rector') {
-      // Continue to search filtering
-    } 
-    // Tutors can only see internships they are assigned to
-    else if (userRole === 'tutor') {
-      // Get all possible user IDs
-      const userIds = [
-        user?._id,
-        user?.id,
-        user?.userId,
-        user?.login,
-        user?.email,
-      ].map((id) => normalizeIdentityValue(id)).filter(Boolean);
+  // Unique companies for filter dropdown
+  const uniqueCompanies = [...new Set(faculties.map(f => f.company).filter(Boolean))].sort();
 
-      const facultyTutorIds = getFacultyTutorIds(faculty);
-      
-      // Check if any user ID matches any faculty tutor ID
-      const hasMatch = userIds.some(userId => facultyTutorIds.includes(userId));
-      
-      // Debug log
-      if (index === 0) {
-        console.log('[Dashboard] Tutor filter debug:', {
-          userIds,
-          facultyTutorIds,
-          hasMatch,
-          tutors: getFacultyTutors(faculty),
-        });
+  const hasActiveFilters = Boolean(
+    localSearch || statusFilter !== "all" || companyFilter !== "all" ||
+    sortBy !== "default" || dateFrom || dateTo
+  );
+
+  const clearAllFilters = () => {
+    setLocalSearch("");
+    setStatusFilter("all");
+    setCompanyFilter("all");
+    setSortBy("default");
+    setDateFrom("");
+    setDateTo("");
+  };
+
+  // Combined search: local takes precedence, falls back to external prop
+  const activeSearch = localSearch || search;
+
+  // Filter + sort faculties
+  let filteredFaculties = faculties.filter((faculty, index) => {
+    const userRole = String(user?.role || '').trim().toLowerCase();
+
+    if (userRole === 'tutor') {
+        const userIds = [
+          user?._id,
+          user?.id,
+          user?.userId,
+          user?.login,
+          user?.email,
+        ].map((id) => normalizeIdentityValue(id)).filter(Boolean);
+
+        const facultyTutorIds = getFacultyTutorIds(faculty);
+
+        if (index === 0) {
+          console.log('[Dashboard] Tutor filter debug:', {
+            userIds,
+            facultyTutorIds,
+            hasMatch: userIds.some(uid => facultyTutorIds.includes(uid)),
+            tutors: getFacultyTutors(faculty),
+          });
+        }
+
+        if (!userIds.some(uid => facultyTutorIds.includes(uid))) return false;
+    }
+
+    // Text search
+    if (activeSearch) {
+      const searchLower = activeSearch.toLowerCase();
+      if (!(
+        faculty.name?.toLowerCase().includes(searchLower) ||
+        faculty.company?.toLowerCase().includes(searchLower) ||
+        faculty.location?.toLowerCase().includes(searchLower) ||
+        faculty.plan?.toLowerCase().includes(searchLower)
+      )) return false;
+    }
+
+    // Status filter
+    if (statusFilter !== "all") {
+      if (normalizeStatus(faculty.status) !== statusFilter) return false;
+    }
+
+    // Company filter
+    if (companyFilter !== "all") {
+      if ((faculty.company || "") !== companyFilter) return false;
+    }
+
+    // Date range filter (by start date)
+    if (dateFrom || dateTo) {
+      const { start } = extractDateRange(faculty);
+      const startDate = parseDateValue(start);
+      if (dateFrom) {
+        const fromDate = parseDateValue(dateFrom);
+        if (!startDate || !fromDate || startDate < fromDate) return false;
       }
-      
-      if (!hasMatch) {
-        return false;
+      if (dateTo) {
+        const toDate = parseDateValue(dateTo);
+        if (!startDate || !toDate || startDate > toDate) return false;
       }
     }
-    // Other roles (student, professor) see all
-    
-    // Apply search filter
-    const searchLower = search.toLowerCase();
-    return (
-      faculty.name?.toLowerCase().includes(searchLower) ||
-      faculty.company?.toLowerCase().includes(searchLower) ||
-      faculty.location?.toLowerCase().includes(searchLower) ||
-      faculty.plan?.toLowerCase().includes(searchLower)
-    );
+
+    return true;
   });
+
+  // Sorting
+  if (sortBy !== "default") {
+    filteredFaculties = [...filteredFaculties].sort((a, b) => {
+      if (sortBy === "name-asc") return (a.name || "").localeCompare(b.name || "");
+      if (sortBy === "name-desc") return (b.name || "").localeCompare(a.name || "");
+      if (sortBy === "progress-asc") return getShortProgress(a) - getShortProgress(b);
+      if (sortBy === "progress-desc") return getShortProgress(b) - getShortProgress(a);
+      if (sortBy === "date-newest") {
+        const aDate = parseDateValue(extractDateRange(a).start);
+        const bDate = parseDateValue(extractDateRange(b).start);
+        return (bDate?.getTime() || 0) - (aDate?.getTime() || 0);
+      }
+      if (sortBy === "date-oldest") {
+        const aDate = parseDateValue(extractDateRange(a).start);
+        const bDate = parseDateValue(extractDateRange(b).start);
+        return (aDate?.getTime() || 0) - (bDate?.getTime() || 0);
+      }
+      return 0;
+    });
+  }
+
+  // Group into sections by progress
+  const notStartedFaculties = filteredFaculties.filter(f => getShortProgress(f) === 0);
+  const inProgressFaculties = filteredFaculties.filter(f => { const p = getShortProgress(f); return p > 0 && p < 100; });
+  const completedFaculties = filteredFaculties.filter(f => getShortProgress(f) === 100);
 
   const fetchFaculties = useCallback(async () => {
     try {
@@ -472,6 +551,187 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
     }
   };
 
+  const renderCard = (faculty, index) => {
+    const facultyId = getFacultyId(faculty) ?? `row-${index}`;
+    const shortProgress = getShortProgress(faculty);
+    const progressHue = Math.round((shortProgress / 100) * 120);
+    const normalizedStatus = normalizeStatus(faculty.status);
+    const tutorLabels = getFacultyTutorLabels(faculty);
+    const hasMultipleTutors = tutorLabels.length > 1;
+    const tutorLabelText = hasMultipleTutors
+      ? `${tutorLabels.length} tutors appended`
+      : getSupervisorLabel(faculty);
+    const statusClass =
+      normalizedStatus === "Pending"
+        ? "dw-card-badge--pending"
+        : normalizedStatus === "In Progress"
+          ? "dw-card-badge--progress"
+          : "dw-card-badge--completed";
+
+    return (
+      <li key={facultyId}>
+        <article className="dw-card">
+          <div
+            role="button"
+            tabIndex={0}
+            className="dw-card-click"
+            onClick={() => { if (facultyId) onView(facultyId); }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                if (facultyId) onView(facultyId);
+              }
+            }}
+          >
+            <div className="dw-card-body">
+              <h3 className="dw-card-title">{faculty.name}</h3>
+              {normalizedStatus && (
+                <span className={`dw-card-badge ${statusClass}`}>
+                  {normalizedStatus}
+                </span>
+              )}
+              <div className="dw-card-meta">
+                <span>{faculty.company || "No company"}</span>
+                {normalizedStatus && (
+                  <>
+                    <div className="dw-card-meta-divider"></div>
+                    <span>{normalizedStatus}</span>
+                  </>
+                )}
+              </div>
+              <div className="dw-card-row">
+                Who:
+                {hasMultipleTutors ? (
+                  <strong style={{ display: 'block', marginTop: '4px' }}>
+                    {tutorLabelText}
+                  </strong>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                    <div
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: 6,
+                        background: 'linear-gradient(135deg,#635bff,#06c9a0)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontFamily: 'Syne',
+                        fontWeight: 700,
+                        color: '#fff',
+                        fontSize: 11,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {getSupervisorInitials(faculty)}
+                    </div>
+                    <strong>{tutorLabelText}</strong>
+                  </div>
+                )}
+              </div>
+              <div className="dw-card-row">
+                Where:
+                {getYandexMapUrl(faculty) && (
+                  <a
+                    href={getYandexMapUrl(faculty)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="dw-map-link"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Link
+                  </a>
+                )}
+              </div>
+              <div className="dw-card-row">
+                <span>When:</span> <strong>{getWhenLabel(faculty)}</strong>
+              </div>
+              <div className="dw-card-row">
+                <span>How long:</span> <strong>{getDurationLabel(faculty)}</strong>
+              </div>
+              <div className="dw-card-row">
+                Contact: <strong>{getSupervisorContact(faculty)}</strong>
+              </div>
+              <div
+                className="dw-progress"
+                aria-label={`Progress ${shortProgress}%`}
+              >
+                <div className="dw-progress-top">
+                  <span className="dw-progress-label">Progress:</span>
+                  <span
+                    className="dw-progress-value"
+                    style={{
+                      color: `hsl(${progressHue} 76% 30%)`,
+                      borderColor: `hsla(${progressHue}, 75%, 45%, .35)`,
+                      background: `linear-gradient(135deg, hsla(${Math.max(0, progressHue - 25)}, 95%, 92%, .95), hsla(${Math.min(120, progressHue + 20)}, 95%, 88%, .95))`,
+                    }}
+                  >
+                    {shortProgress}%
+                  </span>
+                </div>
+                <div className="dw-progress-track">
+                  <div
+                    className="dw-progress-fill"
+                    style={{
+                      width: `${shortProgress}%`,
+                      background: `linear-gradient(90deg, hsl(${Math.max(0, progressHue - 24)} 82% 56%), hsl(${Math.min(120, progressHue + 12)} 80% 44%))`,
+                    }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="dw-card-footer">
+            <button
+              type="button"
+              className="dw-card-open"
+              onClick={() => { if (facultyId) onView(facultyId); }}
+            >
+              View Details
+            </button>
+            {(['admin', 'developer'].includes(String(user?.role || '').toLowerCase())) && (
+              <button
+                type="button"
+                className="dw-btn-icon"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (facultyId) removeFaculty(facultyId);
+                }}
+                title="Delete internship"
+                aria-label="Delete internship"
+              >
+                ×
+              </button>
+            )}
+          </div>
+        </article>
+      </li>
+    );
+  };
+
+  const renderSection = (title, sectionFaculties, accentColor, iconPath) => {
+    if (sectionFaculties.length === 0) return null;
+    return (
+      <section className="dw-section" key={title}>
+        <div className="dw-section-header" style={{ '--sec-color': accentColor }}>
+          <div className="dw-section-icon-wrap" style={{ background: `${accentColor}18` }}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d={iconPath} fill={accentColor} />
+            </svg>
+          </div>
+          <span className="dw-section-title">{title}</span>
+          <span className="dw-section-badge" style={{ background: `${accentColor}18`, color: accentColor }}>
+            {sectionFaculties.length}
+          </span>
+        </div>
+        <ul className="dw-list" aria-label={`${title} internships`}>
+          {sectionFaculties.map((f, i) => renderCard(f, i))}
+        </ul>
+      </section>
+    );
+  };
+
   return (
     <div className="dw-page">
       <style>{`
@@ -499,14 +759,11 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
           align-items: flex-end;
           justify-content: space-between;
           gap: clamp(12px,3vw,24px);
-          margin-bottom: clamp(24px,5vw,44px);
+          margin-bottom: clamp(20px,4vw,32px);
           padding-bottom: clamp(16px,3vw,24px);
           border-bottom: 1px solid rgba(0,0,0,.06);
         }
-        .dw-head-group {
-          flex: 1;
-          min-width: 0;
-        }
+        .dw-head-group { flex: 1; min-width: 0; }
         .dw-eyebrow {
           font-size: clamp(11px,1.8vw,12px);
           font-weight: 700;
@@ -563,22 +820,303 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
           transform: translateY(-2px);
           box-shadow: 0 18px 48px rgba(99,91,255,.35);
         }
-        .dw-btn-primary:active {
-          transform: translateY(0);
+        .dw-btn-primary:active { transform: translateY(0); }
+
+        /* ── FILTER BAR ── */
+        .dw-filters {
+          background: rgba(255,255,255,.72);
+          border: 1px solid rgba(0,0,0,.08);
+          border-radius: 18px;
+          padding: clamp(14px,2.5vw,20px) clamp(16px,3vw,24px);
+          margin-bottom: clamp(20px,4vw,32px);
+          backdrop-filter: blur(20px);
+          box-shadow: 0 8px 32px rgba(99,91,255,.06);
         }
-        .dw-alert {
-          border-radius: 14px;
-          border: 1px solid rgba(220,38,38,.2);
-          background: linear-gradient(135deg, rgba(254,226,226,.6), rgba(254,242,242,.8));
-          color: #7f1d1d;
-          padding: 14px 16px;
-          margin-bottom: 24px;
-          font-size: 13px;
+        .dw-filter-bar {
           display: flex;
           align-items: center;
           gap: 10px;
-          backdrop-filter: blur(10px);
+          flex-wrap: wrap;
         }
+        .dw-search-wrap {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: rgba(255,255,255,.9);
+          border: 1.5px solid rgba(0,0,0,.1);
+          border-radius: 11px;
+          padding: 8px 14px;
+          flex: 1;
+          min-width: 180px;
+          max-width: 280px;
+          transition: border-color .2s, box-shadow .2s;
+        }
+        .dw-search-wrap:focus-within {
+          border-color: var(--a1, #635bff);
+          box-shadow: 0 0 0 3px rgba(99,91,255,.1);
+        }
+        .dw-search-icon {
+          color: var(--t3, #9ba3bb);
+          flex-shrink: 0;
+          width: 15px;
+          height: 15px;
+        }
+        .dw-search-input {
+          border: none;
+          outline: none;
+          background: transparent;
+          font-family: 'Montserrat', system-ui, sans-serif;
+          font-size: 13px;
+          color: var(--t1, #0c0e18);
+          flex: 1;
+          min-width: 0;
+        }
+        .dw-search-input::placeholder { color: var(--t3, #9ba3bb); }
+        .dw-search-clear {
+          background: none;
+          border: none;
+          padding: 0;
+          cursor: pointer;
+          color: var(--t3, #9ba3bb);
+          display: flex;
+          align-items: center;
+          transition: color .18s;
+          flex-shrink: 0;
+        }
+        .dw-search-clear:hover { color: var(--t2, #5a6278); }
+        .dw-status-pills {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          flex-wrap: wrap;
+        }
+        .dw-status-pill {
+          padding: 7px 13px;
+          border-radius: 999px;
+          border: 1.5px solid rgba(0,0,0,.1);
+          background: rgba(255,255,255,.85);
+          font-family: 'Montserrat', system-ui, sans-serif;
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--t2, #5a6278);
+          cursor: pointer;
+          transition: all .2s;
+          white-space: nowrap;
+        }
+        .dw-status-pill:hover {
+          border-color: rgba(99,91,255,.3);
+          color: var(--a1, #635bff);
+          background: rgba(99,91,255,.06);
+        }
+        .dw-status-pill--active-all {
+          background: linear-gradient(135deg, var(--a1,#635bff), var(--a2,#06c9a0));
+          color: #fff;
+          border-color: transparent;
+          box-shadow: 0 4px 14px rgba(99,91,255,.3);
+        }
+        .dw-status-pill--active-pending {
+          background: linear-gradient(135deg, #f5a623, #e08800);
+          color: #fff;
+          border-color: transparent;
+          box-shadow: 0 4px 14px rgba(245,166,35,.3);
+        }
+        .dw-status-pill--active-progress {
+          background: linear-gradient(135deg, #3b82f6, #2563eb);
+          color: #fff;
+          border-color: transparent;
+          box-shadow: 0 4px 14px rgba(59,130,246,.3);
+        }
+        .dw-status-pill--active-completed {
+          background: linear-gradient(135deg, #22c55e, #16a34a);
+          color: #fff;
+          border-color: transparent;
+          box-shadow: 0 4px 14px rgba(34,197,94,.3);
+        }
+        .dw-advanced-btn {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 8px 14px;
+          border-radius: 11px;
+          border: 1.5px solid rgba(0,0,0,.1);
+          background: rgba(255,255,255,.85);
+          font-family: 'Montserrat', system-ui, sans-serif;
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--t2, #5a6278);
+          cursor: pointer;
+          transition: all .2s;
+          white-space: nowrap;
+          position: relative;
+        }
+        .dw-advanced-btn:hover, .dw-advanced-btn--open {
+          border-color: rgba(99,91,255,.3);
+          color: var(--a1, #635bff);
+          background: rgba(99,91,255,.07);
+        }
+        .dw-advanced-dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: var(--a1, #635bff);
+          display: inline-block;
+          flex-shrink: 0;
+        }
+        .dw-advanced-chevron {
+          transition: transform .2s;
+        }
+        .dw-advanced-chevron--open {
+          transform: rotate(180deg);
+        }
+
+        /* Advanced panel */
+        .dw-advanced-panel {
+          margin-top: 14px;
+          padding-top: 14px;
+          border-top: 1px solid rgba(0,0,0,.07);
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          align-items: flex-end;
+        }
+        .dw-filter-group {
+          display: flex;
+          flex-direction: column;
+          gap: 5px;
+          flex: 1;
+          min-width: 140px;
+          max-width: 220px;
+        }
+        .dw-filter-label {
+          font-size: 10.5px;
+          font-weight: 700;
+          letter-spacing: .07em;
+          text-transform: uppercase;
+          color: var(--t3, #9ba3bb);
+        }
+        .dw-filter-select, .dw-filter-date {
+          width: 100%;
+          padding: 8px 12px;
+          border: 1.5px solid rgba(0,0,0,.1);
+          border-radius: 10px;
+          background: rgba(255,255,255,.9);
+          font-family: 'Montserrat', system-ui, sans-serif;
+          font-size: 13px;
+          color: var(--t1, #0c0e18);
+          outline: none;
+          transition: border-color .2s, box-shadow .2s;
+          cursor: pointer;
+          appearance: auto;
+        }
+        .dw-filter-select:focus, .dw-filter-date:focus {
+          border-color: var(--a1, #635bff);
+          box-shadow: 0 0 0 3px rgba(99,91,255,.1);
+        }
+        .dw-clear-btn {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 9px 16px;
+          border-radius: 10px;
+          border: 1.5px solid rgba(220,38,38,.25);
+          background: rgba(254,242,242,.9);
+          font-family: 'Montserrat', system-ui, sans-serif;
+          font-size: 12px;
+          font-weight: 600;
+          color: #c41e1e;
+          cursor: pointer;
+          transition: all .2s;
+          white-space: nowrap;
+          align-self: flex-end;
+        }
+        .dw-clear-btn:hover {
+          background: rgba(239,68,68,.15);
+          border-color: rgba(220,38,38,.4);
+        }
+
+        /* Filter chips */
+        .dw-filter-chips {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          margin-top: 12px;
+          padding-top: 12px;
+          border-top: 1px solid rgba(0,0,0,.06);
+        }
+        .dw-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 4px 10px;
+          border-radius: 999px;
+          background: rgba(99,91,255,.1);
+          border: 1px solid rgba(99,91,255,.2);
+          color: var(--a1, #635bff);
+          font-family: 'Montserrat', system-ui, sans-serif;
+          font-size: 11px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all .18s;
+        }
+        .dw-chip:hover { background: rgba(99,91,255,.18); }
+        .dw-chip--clear {
+          background: rgba(220,38,38,.08);
+          border-color: rgba(220,38,38,.2);
+          color: #c41e1e;
+        }
+        .dw-chip--clear:hover { background: rgba(220,38,38,.15); }
+        .dw-results-count {
+          font-size: 12px;
+          color: var(--t3, #9ba3bb);
+          font-weight: 500;
+          margin-top: 10px;
+          display: block;
+        }
+
+        /* ── SECTIONS ── */
+        .dw-sections {
+          display: flex;
+          flex-direction: column;
+          gap: clamp(28px, 5vw, 44px);
+        }
+        .dw-section-header {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: clamp(14px,2.5vw,20px);
+          padding-bottom: 12px;
+          border-bottom: 2px solid rgba(0,0,0,.06);
+        }
+        .dw-section-icon-wrap {
+          width: 34px;
+          height: 34px;
+          border-radius: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+        .dw-section-title {
+          font-family: 'Syne', system-ui, -apple-system, sans-serif;
+          font-size: clamp(16px,2.5vw,20px);
+          font-weight: 700;
+          color: var(--t1, #0c0e18);
+          flex: 1;
+          letter-spacing: -.01em;
+        }
+        .dw-section-badge {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 26px;
+          height: 26px;
+          padding: 0 9px;
+          border-radius: 999px;
+          font-size: 11.5px;
+          font-weight: 700;
+        }
+
+        /* ── CARDS ── */
         .dw-loading, .dw-empty {
           background: rgba(255,255,255,.65);
           border: 1px solid rgba(0,0,0,.08);
@@ -593,17 +1131,14 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
         .dw-list {
           display: grid;
           grid-template-columns: 1fr;
-          gap: clamp(16px,3vw,32px);
+          gap: clamp(16px,3vw,24px);
           list-style: none;
           margin: 0;
           padding: 0;
         }
-        @media (min-width: 640px) { .dw-list { grid-template-columns: repeat(2, 1fr); gap: clamp(20px,3vw,28px); } }
-        @media (min-width: 1024px) { .dw-list { grid-template-columns: repeat(3, 1fr); gap: clamp(20px,2.5vw,28px); } }
-        .dw-list li {
-          margin: 0;
-          padding: 0;
-        }
+        @media (min-width: 640px) { .dw-list { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 1024px) { .dw-list { grid-template-columns: repeat(3, 1fr); } }
+        .dw-list li { margin: 0; padding: 0; }
         .dw-card {
           display: flex;
           flex-direction: column;
@@ -621,9 +1156,7 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
         .dw-card::before {
           content: '';
           position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
+          top: 0; left: 0; right: 0;
           height: 3px;
           background: linear-gradient(90deg, var(--a1, #635bff), var(--a2, #06c9a0));
           opacity: 0;
@@ -635,14 +1168,8 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
           border-color: rgba(99,91,255,.15);
           background: rgba(255,255,255,.88);
         }
-        .dw-card:hover::before {
-          opacity: 1;
-        }
-        .dw-card:hover .dw-card-open {
-          opacity: 1;
-          color: var(--a1, #635bff);
-          gap: 12px;
-        }
+        .dw-card:hover::before { opacity: 1; }
+        .dw-card:hover .dw-card-open { opacity: 1; color: var(--a1, #635bff); gap: 12px; }
         .dw-card-click {
           flex: 1;
           display: flex;
@@ -678,11 +1205,7 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
           color: var(--t2, #5a6278);
           flex-wrap: wrap;
         }
-        .dw-card-meta-divider {
-          width: 1px;
-          height: 14px;
-          background: rgba(0,0,0,.1);
-        }
+        .dw-card-meta-divider { width: 1px; height: 14px; background: rgba(0,0,0,.1); }
         .dw-card-row {
           font-size: clamp(12px,1.8vw,13px);
           color: var(--t2, #5a6278);
@@ -693,11 +1216,7 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
           flex-wrap: wrap;
         }
         .dw-card-row:last-of-type { margin-bottom: clamp(8px,2vw,12px); }
-        .dw-progress {
-          margin: 10px 0 12px;
-          display: grid;
-          gap: 7px;
-        }
+        .dw-progress { margin: 10px 0 12px; display: grid; gap: 7px; }
         .dw-progress-top {
           display: flex;
           align-items: center;
@@ -739,19 +1258,7 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
           text-decoration-thickness: 1.5px;
           text-underline-offset: 2px;
         }
-        .dw-map-link:hover {
-          color: var(--a2, #06c9a0);
-        }
-        .dw-card-plan {
-          font-size: 12px;
-          color: var(--t3, #9ba3bb);
-          margin: 12px 0 0 0;
-          line-height: 1.5;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
+        .dw-map-link:hover { color: var(--a2, #06c9a0); }
         .dw-card-badge {
           display: inline-flex;
           align-items: center;
@@ -772,27 +1279,12 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
           border-radius: 50%;
           display: inline-block;
         }
-        .dw-card-badge--pending {
-          background: rgba(245,166,35,.15);
-          color: #92400e;
-        }
-        .dw-card-badge--pending::before {
-          background: #f5a623;
-        }
-        .dw-card-badge--progress {
-          background: rgba(59,130,246,.15);
-          color: #1d4ed8;
-        }
-        .dw-card-badge--progress::before {
-          background: #3b82f6;
-        }
-        .dw-card-badge--completed {
-          background: rgba(34,197,94,.15);
-          color: #166534;
-        }
-        .dw-card-badge--completed::before {
-          background: #22c55e;
-        }
+        .dw-card-badge--pending { background: rgba(245,166,35,.15); color: #92400e; }
+        .dw-card-badge--pending::before { background: #f5a623; }
+        .dw-card-badge--progress { background: rgba(59,130,246,.15); color: #1d4ed8; }
+        .dw-card-badge--progress::before { background: #3b82f6; }
+        .dw-card-badge--completed { background: rgba(34,197,94,.15); color: #166534; }
+        .dw-card-badge--completed::before { background: #22c55e; }
         .dw-card-footer {
           display: flex;
           align-items: center;
@@ -840,6 +1332,8 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
           border-color: rgba(220,38,38,.4);
         }
         @media (max-width: 768px) {
+          .dw-filter-group { min-width: 120px; max-width: 100%; }
+          .dw-search-wrap { max-width: 100%; }
           .dw-list { grid-template-columns: 1fr; }
           .dw-title { font-size: 32px; }
           .dw-head { flex-direction: column; align-items: flex-start; }
@@ -847,6 +1341,7 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
       `}</style>
 
       <div className="dw-shell">
+        {/* Header */}
         <div className="dw-head">
           <div className="dw-head-group">
             <div className="dw-eyebrow">Internship Overview</div>
@@ -865,6 +1360,195 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
           )}
         </div>
 
+        {/* Filter bar — shown only when there are internships */}
+        {!loading && faculties.length > 0 && (
+          <div className="dw-filters">
+            <div className="dw-filter-bar">
+              {/* Search */}
+              <div className="dw-search-wrap">
+                <svg className="dw-search-icon" viewBox="0 0 20 20" fill="none">
+                  <circle cx="9" cy="9" r="6" stroke="currentColor" strokeWidth="1.8"/>
+                  <path d="M13.5 13.5L17 17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                </svg>
+                <input
+                  className="dw-search-input"
+                  type="text"
+                  placeholder="Search internships..."
+                  value={localSearch}
+                  onChange={e => setLocalSearch(e.target.value)}
+                />
+                {localSearch && (
+                  <button className="dw-search-clear" onClick={() => setLocalSearch("")} aria-label="Clear search">
+                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                      <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                    </svg>
+                  </button>
+                )}
+              </div>
+
+              {/* Status pills */}
+              <div className="dw-status-pills">
+                {[
+                  { value: "all", label: "All" },
+                  { value: "Pending", label: "Not Started" },
+                  { value: "In Progress", label: "In Progress" },
+                  { value: "Completed", label: "Completed" },
+                ].map(({ value, label }) => {
+                  const isActive = statusFilter === value;
+                  let activeClass = "";
+                  if (isActive) {
+                    activeClass = value === "all" ? "dw-status-pill--active-all"
+                      : value === "Pending" ? "dw-status-pill--active-pending"
+                      : value === "In Progress" ? "dw-status-pill--active-progress"
+                      : "dw-status-pill--active-completed";
+                  }
+                  return (
+                    <button
+                      key={value}
+                      className={`dw-status-pill ${activeClass}`}
+                      onClick={() => setStatusFilter(value)}
+                      type="button"
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Advanced filters toggle */}
+              <button
+                type="button"
+                className={`dw-advanced-btn${showAdvanced ? " dw-advanced-btn--open" : ""}`}
+                onClick={() => setShowAdvanced(v => !v)}
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M1 3h12M3 7h8M5 11h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                </svg>
+                Filters
+                {hasActiveFilters && !showAdvanced && <span className="dw-advanced-dot" />}
+                <svg
+                  className={`dw-advanced-chevron${showAdvanced ? " dw-advanced-chevron--open" : ""}`}
+                  width="12" height="12" viewBox="0 0 12 12" fill="none"
+                >
+                  <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+
+            {/* Advanced filters panel */}
+            {showAdvanced && (
+              <div className="dw-advanced-panel">
+                {/* Company */}
+                <div className="dw-filter-group">
+                  <label className="dw-filter-label">Company</label>
+                  <select
+                    className="dw-filter-select"
+                    value={companyFilter}
+                    onChange={e => setCompanyFilter(e.target.value)}
+                  >
+                    <option value="all">All companies</option>
+                    {uniqueCompanies.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Sort by */}
+                <div className="dw-filter-group">
+                  <label className="dw-filter-label">Sort by</label>
+                  <select
+                    className="dw-filter-select"
+                    value={sortBy}
+                    onChange={e => setSortBy(e.target.value)}
+                  >
+                    {Object.entries(SORT_LABELS).map(([val, label]) => (
+                      <option key={val} value={val}>{label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Date from */}
+                <div className="dw-filter-group">
+                  <label className="dw-filter-label">Start date from</label>
+                  <input
+                    type="date"
+                    className="dw-filter-date"
+                    value={dateFrom}
+                    onChange={e => setDateFrom(e.target.value)}
+                  />
+                </div>
+
+                {/* Date to */}
+                <div className="dw-filter-group">
+                  <label className="dw-filter-label">Start date to</label>
+                  <input
+                    type="date"
+                    className="dw-filter-date"
+                    value={dateTo}
+                    onChange={e => setDateTo(e.target.value)}
+                  />
+                </div>
+
+                {hasActiveFilters && (
+                  <button type="button" className="dw-clear-btn" onClick={clearAllFilters}>
+                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                      <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                    </svg>
+                    Clear all
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Active filter chips */}
+            {hasActiveFilters && (
+              <div className="dw-filter-chips">
+                {localSearch && (
+                  <button className="dw-chip" type="button" onClick={() => setLocalSearch("")}>
+                    Search: "{localSearch}" ×
+                  </button>
+                )}
+                {statusFilter !== "all" && (
+                  <button className="dw-chip" type="button" onClick={() => setStatusFilter("all")}>
+                    {statusFilter} ×
+                  </button>
+                )}
+                {companyFilter !== "all" && (
+                  <button className="dw-chip" type="button" onClick={() => setCompanyFilter("all")}>
+                    {companyFilter} ×
+                  </button>
+                )}
+                {dateFrom && (
+                  <button className="dw-chip" type="button" onClick={() => setDateFrom("")}>
+                    From: {formatDateValue(dateFrom)} ×
+                  </button>
+                )}
+                {dateTo && (
+                  <button className="dw-chip" type="button" onClick={() => setDateTo("")}>
+                    To: {formatDateValue(dateTo)} ×
+                  </button>
+                )}
+                {sortBy !== "default" && (
+                  <button className="dw-chip" type="button" onClick={() => setSortBy("default")}>
+                    {SORT_LABELS[sortBy]} ×
+                  </button>
+                )}
+                <button className="dw-chip dw-chip--clear" type="button" onClick={clearAllFilters}>
+                  Clear all
+                </button>
+              </div>
+            )}
+
+            {/* Results count */}
+            {!loading && faculties.length > 0 && (
+              <span className="dw-results-count">
+                Showing {filteredFaculties.length} of {faculties.length} internship{faculties.length !== 1 ? "s" : ""}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Content */}
         {loading ? (
           <PageState
             variant="loading"
@@ -887,171 +1571,31 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
             className="dw-empty"
           />
         ) : (
-          <ul className="dw-list" aria-label="Internship list">
-            {filteredFaculties.map((faculty, index) => {
-              const facultyId = getFacultyId(faculty) ?? `row-${index}`;
-              const shortProgress = getShortProgress(faculty);
-              const progressHue = Math.round((shortProgress / 100) * 120);
-              const normalizedStatus = normalizeStatus(faculty.status);
-              const tutorLabels = getFacultyTutorLabels(faculty);
-              const hasMultipleTutors = tutorLabels.length > 1;
-              const tutorLabelText = hasMultipleTutors
-                ? `${tutorLabels.length} tutors appended`
-                : getSupervisorLabel(faculty);
-              const statusClass =
-                normalizedStatus === "Pending"
-                    ? "dw-card-badge--pending"
-                    : normalizedStatus === "In Progress"
-                      ? "dw-card-badge--progress"
-                    : "dw-card-badge--completed";
-              return (
-                <li key={facultyId}>
-                  <article className="dw-card">
-                    <div
-                      role="button"
-                      tabIndex={0}
-                      className="dw-card-click"
-                      onClick={() => {
-                        if (facultyId) onView(facultyId);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          if (facultyId) onView(facultyId);
-                        }
-                      }}
-                    >
-                      <div className="dw-card-body">
-                        <h3 className="dw-card-title">{faculty.name}</h3>
-                        {normalizedStatus && (
-                          <span className={`dw-card-badge ${statusClass}`}>
-                            {normalizedStatus}
-                          </span>
-                        )}
-                        <div className="dw-card-meta">
-                          <span>{faculty.company || "No company"}</span>
-                          {normalizedStatus && (
-                            <>
-                              <div className="dw-card-meta-divider"></div>
-                              <span>{normalizedStatus}</span>
-                            </>
-                          )}
-                        </div>
-                        <div className="dw-card-row">
-                          Who:
-                          {hasMultipleTutors ? (
-                            <strong style={{ display: 'block', marginTop: '4px' }}>
-                              {tutorLabelText}
-                            </strong>
-                          ) : (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                              <div
-                                style={{
-                                  width: 28,
-                                  height: 28,
-                                  borderRadius: 6,
-                                  background: 'linear-gradient(135deg,#635bff,#06c9a0)',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  fontFamily: 'Syne',
-                                  fontWeight: 700,
-                                  color: '#fff',
-                                  fontSize: 11,
-                                  flexShrink: 0,
-                                }}
-                              >
-                                {getSupervisorInitials(faculty)}
-                              </div>
-                              <strong>{tutorLabelText}</strong>
-                            </div>
-                          )}
-                        </div>
-                        <div className="dw-card-row">
-                          Where:
-                          {getYandexMapUrl(faculty) && (
-                            <a
-                              href={getYandexMapUrl(faculty)}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="dw-map-link"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              Link
-                            </a>
-                          )}
-                        </div>
-                        <div className="dw-card-row">
-                          <span>When:</span> <strong>{getWhenLabel(faculty)}</strong>
-                        </div>
-                        <div className="dw-card-row">
-                          <span>How long:</span> <strong>{getDurationLabel(faculty)}</strong>
-                        </div>
+          <div className="dw-sections">
+            {/* Not Started — 0% */}
+            {renderSection(
+              "Not Started",
+              notStartedFaculties,
+              "#f5a623",
+              "M8 1a7 7 0 100 14A7 7 0 008 1zm0 1.5a5.5 5.5 0 110 11 5.5 5.5 0 010-11zM8 4a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 018 4zm0 7.5a.875.875 0 110-1.75.875.875 0 010 1.75z"
+            )}
 
-                        <div className="dw-card-row">
-                          Contact:{" "}
-                          <strong>{getSupervisorContact(faculty)}</strong>
-                        </div>
-                        <div
-                          className="dw-progress"
-                          aria-label={`Progress ${shortProgress}%`}
-                        >
-                          <div className="dw-progress-top">
-                            <span className="dw-progress-label">Progress:</span>
-                            <span
-                              className="dw-progress-value"
-                              style={{
-                                color: `hsl(${progressHue} 76% 30%)`,
-                                borderColor: `hsla(${progressHue}, 75%, 45%, .35)`,
-                                background: `linear-gradient(135deg, hsla(${Math.max(0, progressHue - 25)}, 95%, 92%, .95), hsla(${Math.min(120, progressHue + 20)}, 95%, 88%, .95))`,
-                              }}
-                            >
-                              {shortProgress}%
-                            </span>
-                          </div>
-                          <div className="dw-progress-track">
-                            <div
-                              className="dw-progress-fill"
-                              style={{
-                                width: `${shortProgress}%`,
-                                background: `linear-gradient(90deg, hsl(${Math.max(0, progressHue - 24)} 82% 56%), hsl(${Math.min(120, progressHue + 12)} 80% 44%))`,
-                              }}
-                            ></div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="dw-card-footer">
-                      <button
-                        type="button"
-                        className="dw-card-open"
-                        onClick={() => {
-                          if (facultyId) onView(facultyId);
-                        }}
-                      >
-                        View Details
-                      </button>
-                      {(['admin', 'developer'].includes(String(user?.role || '').toLowerCase()) ) && (
-                        <button
-                          type="button"
-                          className="dw-btn-icon"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            if (facultyId) removeFaculty(facultyId);
-                          }}
-                          title="Delete internship"
-                          aria-label="Delete internship"
-                        >
-                          ×
-                        </button>
-                      )}
-                    </div>
-                  </article>
-                </li>
-              );
-            })}
-          </ul>
+            {/* In Progress — 1–99% */}
+            {renderSection(
+              "In Progress",
+              inProgressFaculties,
+              "#3b82f6",
+              "M8 1a7 7 0 100 14A7 7 0 008 1zM2.5 8a5.5 5.5 0 015.5-5.5V8l3.889 3.889A5.5 5.5 0 012.5 8z"
+            )}
+
+            {/* Completed — 100% */}
+            {renderSection(
+              "Completed",
+              completedFaculties,
+              "#22c55e",
+              "M8 1a7 7 0 100 14A7 7 0 008 1zm3.47 5.03a.75.75 0 010 1.06l-4 4a.75.75 0 01-1.06 0l-1.75-1.75a.75.75 0 011.06-1.06l1.22 1.22 3.47-3.47a.75.75 0 011.06 0z"
+            )}
+          </div>
         )}
       </div>
     </div>

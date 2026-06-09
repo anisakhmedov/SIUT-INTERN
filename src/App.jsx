@@ -3570,14 +3570,6 @@ export default function App() {
             >
               ← Back to Login
             </button>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 9, background: 'linear-gradient(135deg,#635bff,#06c9a0)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <GraduationCap size={16} color="#fff" />
-              </div>
-              <span style={{ color: '#fff', fontFamily: 'Montserrat', fontSize: 14, fontWeight: 700, letterSpacing: '-.2px' }}>
-                SIUT · Individual Student Internship Evaluation Form
-              </span>
-            </div>
           </div>
           <StudentEvaluationFormPage publicMode />
         </div>

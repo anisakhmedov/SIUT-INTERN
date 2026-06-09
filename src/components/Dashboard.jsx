@@ -857,7 +857,7 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
           border-radius: 11px;
           padding: 8px 14px;
           flex: 1;
-          min-width: 180px;
+          min-width: 0;
           max-width: 280px;
           transition: border-color .2s, box-shadow .2s;
         }
@@ -1300,7 +1300,7 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
           align-items: center;
           justify-content: space-between;
           gap: 12px;
-          padding: 18px 28px;
+          padding: clamp(10px,3vw,18px) clamp(14px,4vw,28px);
           border-top: 1px solid rgba(0,0,0,.06);
           background: linear-gradient(135deg, rgba(99,91,255,.02), rgba(6,201,160,.02));
         }
@@ -1343,23 +1343,11 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
         }
         @media (max-width: 768px) {
           .dw-head { flex-direction: column; align-items: flex-start; gap: 12px; }
-          .dw-title { font-size: 32px; }
+          .dw-title { font-size: 28px; }
           .dw-btn-primary { width: 100%; justify-content: center; }
           .dw-list { grid-template-columns: 1fr; }
-
-          /* Filter bar: stack vertically */
-          .dw-filter-bar {
-            flex-direction: column;
-            align-items: stretch;
-            gap: 8px;
-          }
-          .dw-search-wrap {
-            max-width: 100%;
-            min-width: 0;
-            width: 100%;
-          }
-
-          /* Status pills: horizontal scroll, no wrap */
+          .dw-filter-bar { flex-direction: column; align-items: stretch; gap: 8px; }
+          .dw-search-wrap { max-width: 100%; width: 100%; }
           .dw-status-pills {
             overflow-x: auto;
             flex-wrap: nowrap;
@@ -1369,42 +1357,48 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
           }
           .dw-status-pills::-webkit-scrollbar { display: none; }
           .dw-status-pill { flex-shrink: 0; }
-
-          /* Advanced button full-width */
-          .dw-advanced-btn {
-            width: 100%;
-            justify-content: center;
-          }
-
-          /* Advanced panel: two columns on tablet, full-width on phone */
-          .dw-advanced-panel {
-            gap: 8px;
-          }
-          .dw-filter-group {
-            min-width: 0;
-            max-width: 100%;
-            flex: 1 1 calc(50% - 4px);
-          }
-          .dw-clear-btn {
-            width: 100%;
-            justify-content: center;
-          }
+          .dw-advanced-btn { width: 100%; justify-content: center; }
+          .dw-advanced-panel { gap: 8px; }
+          .dw-filter-group { min-width: 0; max-width: 100%; flex: 1 1 calc(50% - 4px); }
+          .dw-clear-btn { width: 100%; justify-content: center; }
         }
         @media (max-width: 480px) {
-          .dw-filters {
-            padding: 12px 14px;
-            border-radius: 14px;
-          }
-          .dw-filter-group {
-            flex: 1 1 100%;
-          }
-          .dw-filter-chips {
-            gap: 5px;
-          }
-          .dw-chip {
-            font-size: 11px;
-            padding: 4px 10px;
-          }
+          .dw-filters { padding: 12px 14px; border-radius: 14px; }
+          .dw-filter-group { flex: 1 1 100%; min-width: 0; }
+          .dw-filter-chips { gap: 5px; }
+          .dw-chip { font-size: 11px; padding: 4px 10px; }
+        }
+        @media (max-width: 400px) {
+          .dw-page { padding: 10px; }
+          .dw-title { font-size: 22px; }
+          .dw-sub { font-size: 12px; }
+          .dw-filters { padding: 10px 12px; border-radius: 12px; margin-bottom: 14px; }
+          .dw-filter-bar { gap: 6px; }
+          .dw-search-wrap { padding: 7px 10px; border-radius: 9px; }
+          .dw-search-input { font-size: 12px; }
+          .dw-status-pill { padding: 5px 10px; font-size: 11px; }
+          .dw-advanced-btn { padding: 7px 12px; font-size: 11px; }
+          .dw-advanced-panel { gap: 6px; margin-top: 10px; padding-top: 10px; }
+          .dw-filter-group { flex: 1 1 100%; min-width: 0; }
+          .dw-filter-select, .dw-filter-date { font-size: 12px; padding: 7px 10px; border-radius: 8px; }
+          .dw-filter-label { font-size: 10px; }
+          .dw-clear-btn { font-size: 11px; padding: 7px 12px; }
+          .dw-chip { font-size: 10px; padding: 3px 8px; }
+          .dw-filter-chips { gap: 4px; margin-top: 8px; padding-top: 8px; }
+          .dw-section-header { gap: 7px; margin-bottom: 12px; }
+          .dw-section-icon-wrap { width: 28px; height: 28px; border-radius: 8px; }
+          .dw-section-title { font-size: 14px; }
+          .dw-section-badge { font-size: 10px; min-width: 22px; height: 22px; padding: 0 6px; }
+          .dw-card-click { padding: 14px; }
+          .dw-card-title { font-size: 14px; }
+          .dw-card-meta { font-size: 11px; }
+          .dw-card-row { font-size: 11px; }
+          .dw-card-footer { gap: 8px; }
+          .dw-card-open { font-size: 10px; }
+          .dw-btn-icon { width: 30px; height: 30px; font-size: 17px; border-radius: 8px; }
+          .dw-sections { gap: 20px; }
+          .dw-head { margin-bottom: 14px; padding-bottom: 14px; }
+          .dw-btn-primary { font-size: 13px; padding: 10px 16px; border-radius: 10px; }
         }
       `}</style>
 

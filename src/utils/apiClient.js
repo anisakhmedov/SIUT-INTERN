@@ -6,7 +6,7 @@ import {
   saveUserToStorage,
 } from './storageUtils';
 
-export const API_URL = import.meta.env.VITE_API_URL || 'https://siut-internships-5e35adaf79be.herokuapp.com';
+export const API_URL = import.meta.env.VITE_API_URL || 'https://siut-54236c4acf55.herokuapp.com';
 
 const AUTH_SESSION_EXPIRED_EVENT = 'auth:session-expired';
 

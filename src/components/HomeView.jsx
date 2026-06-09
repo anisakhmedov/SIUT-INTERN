@@ -19,8 +19,15 @@ function writeView(v) {
   } catch {}
 }
 
+const isAdmin = (user) =>
+  ["admin", "developer"].includes(String(user?.role || "").toLowerCase());
+
 export default function HomeView({ internships, feedbacks, user, students, search, onNewFaculty, onView }) {
-  const [view, setView] = useState(readView);
+  const canSeeOverview = isAdmin(user);
+  const [view, setView] = useState(() => {
+    const saved = readView();
+    return saved === "overview" && !isAdmin(user) ? "list" : saved;
+  });
 
   const switchView = (v) => {
     setView(v);
@@ -29,33 +36,35 @@ export default function HomeView({ internships, feedbacks, user, students, searc
 
   return (
     <>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "flex-end",
-          gap: 6,
-          padding: "12px 20px 0",
-        }}
-      >
-        <button
-          className={view === "list" ? "bp" : "bg"}
-          onClick={() => switchView("list")}
-          style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "6px 12px" }}
+      {canSeeOverview && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: 6,
+            padding: "12px 20px 0",
+          }}
         >
-          <LayoutDashboard size={13} />
-          Internships
-        </button>
-        <button
-          className={view === "overview" ? "bp" : "bg"}
-          onClick={() => switchView("overview")}
-          style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "6px 12px" }}
-        >
-          <BarChart2 size={13} />
-          Overview
-        </button>
-      </div>
+          <button
+            className={view === "list" ? "bp" : "bg"}
+            onClick={() => switchView("list")}
+            style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "6px 12px" }}
+          >
+            <LayoutDashboard size={13} />
+            Internships
+          </button>
+          <button
+            className={view === "overview" ? "bp" : "bg"}
+            onClick={() => switchView("overview")}
+            style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, padding: "6px 12px" }}
+          >
+            <BarChart2 size={13} />
+            Overview
+          </button>
+        </div>
+      )}
 
-      {view === "list" ? (
+      {view === "list" || !canSeeOverview ? (
         <Dashboard
           onNewFaculty={onNewFaculty}
           onView={onView}

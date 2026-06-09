@@ -413,6 +413,8 @@ export default function InternshipPage({
   const dayCarouselRef = useRef(null);
   const dayItemRefs = useRef([]);
 
+  useEffect(() => { window.scrollTo(0, 0); }, []);
+
   useEffect(() => { isInternshipEditModeRef.current = isInternshipEditMode; }, [isInternshipEditMode]);
   useEffect(() => { submittingRef.current = submitting; }, [submitting]);
 

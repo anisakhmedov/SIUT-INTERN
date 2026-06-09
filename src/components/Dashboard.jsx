@@ -116,6 +116,11 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
   const [localSearch, setLocalSearch] = useState("");
   const [progressFilter, setProgressFilter] = useState("all");
 
+  // Pagination per section
+  const SECTION_PAGE_SIZE = 6;
+  const [sectionPages, setSectionPages] = useState({ inProgress: 1, completed: 1, notStarted: 1 });
+  const resetSectionPages = () => setSectionPages({ inProgress: 1, completed: 1, notStarted: 1 });
+
   const getFacultyId = (faculty) => faculty?._id ?? faculty?.id ?? null;
 
   const normalizeIdentityValue = (value) => String(value || "").trim().toLowerCase();
@@ -611,8 +616,20 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
     );
   };
 
-  const renderSection = (title, sectionFaculties, accentColor, iconPath) => {
+  const renderSection = (title, sectionFaculties, accentColor, iconPath, sectionKey) => {
     if (sectionFaculties.length === 0) return null;
+
+    const currentPage = sectionPages[sectionKey] || 1;
+    const totalPages  = Math.max(1, Math.ceil(sectionFaculties.length / SECTION_PAGE_SIZE));
+    const safePage    = Math.min(currentPage, totalPages);
+    const paged       = sectionFaculties.slice((safePage - 1) * SECTION_PAGE_SIZE, safePage * SECTION_PAGE_SIZE);
+
+    const setSecPage = (updater) =>
+      setSectionPages((prev) => ({
+        ...prev,
+        [sectionKey]: typeof updater === "function" ? updater(prev[sectionKey] || 1) : updater,
+      }));
+
     return (
       <section className="dw-section" key={title}>
         <div className="dw-section-header" style={{ '--sec-color': accentColor }}>
@@ -627,8 +644,27 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
           </span>
         </div>
         <ul className="dw-list" aria-label={`${title} internships`}>
-          {sectionFaculties.map((f, i) => renderCard(f, i))}
+          {paged.map((f, i) => renderCard(f, i))}
         </ul>
+        {totalPages > 1 && (
+          <div className="dw-sec-pag">
+            <button
+              className="dw-sec-pag-btn"
+              onClick={() => setSecPage((p) => Math.max(1, p - 1))}
+              disabled={safePage === 1}
+            >
+              ← Prev
+            </button>
+            <span className="dw-sec-pag-info">{safePage} / {totalPages}</span>
+            <button
+              className="dw-sec-pag-btn"
+              onClick={() => setSecPage((p) => Math.min(totalPages, p + 1))}
+              disabled={safePage === totalPages}
+            >
+              Next →
+            </button>
+          </div>
+        )}
       </section>
     );
   };
@@ -1193,6 +1229,44 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
           background: rgba(239,68,68,.15);
           border-color: rgba(220,38,38,.4);
         }
+        .dw-sec-pag {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          margin-top: clamp(16px, 3vw, 24px);
+          padding-top: clamp(12px, 2vw, 18px);
+          border-top: 1px solid rgba(0,0,0,.06);
+        }
+        .dw-sec-pag-btn {
+          padding: 7px 16px;
+          border-radius: 10px;
+          border: 1.5px solid rgba(0,0,0,.1);
+          background: rgba(255,255,255,.85);
+          font-family: 'Montserrat', system-ui, sans-serif;
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--t2, #5a6278);
+          cursor: pointer;
+          transition: all .2s;
+        }
+        .dw-sec-pag-btn:hover:not(:disabled) {
+          border-color: rgba(99,91,255,.3);
+          color: var(--a1, #635bff);
+          background: rgba(99,91,255,.06);
+        }
+        .dw-sec-pag-btn:disabled {
+          opacity: 0.35;
+          cursor: default;
+        }
+        .dw-sec-pag-info {
+          font-family: 'Montserrat', system-ui, sans-serif;
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--t2, #5a6278);
+          min-width: 50px;
+          text-align: center;
+        }
         @media (max-width: 768px) {
           .dw-head { flex-direction: column; align-items: flex-start; gap: 12px; }
           .dw-title { font-size: 28px; }
@@ -1285,7 +1359,7 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
                   type="text"
                   placeholder="Search internships..."
                   value={localSearch}
-                  onChange={e => setLocalSearch(e.target.value)}
+                  onChange={e => { setLocalSearch(e.target.value); resetSectionPages(); }}
                 />
                 {localSearch && (
                   <button className="dw-search-clear" onClick={() => setLocalSearch("")} aria-label="Clear search">
@@ -1308,7 +1382,7 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
                     key={value}
                     type="button"
                     className={`dw-status-pill${progressFilter === value ? ` ${activeClass}` : ""}`}
-                    onClick={() => setProgressFilter(value)}
+                    onClick={() => { setProgressFilter(value); resetSectionPages(); }}
                   >
                     {label}
                   </button>
@@ -1348,7 +1422,8 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
               "In Progress",
               inProgressFaculties,
               "#3b82f6",
-              "M8 1a7 7 0 100 14A7 7 0 008 1zM2.5 8a5.5 5.5 0 015.5-5.5V8l3.889 3.889A5.5 5.5 0 012.5 8z"
+              "M8 1a7 7 0 100 14A7 7 0 008 1zM2.5 8a5.5 5.5 0 015.5-5.5V8l3.889 3.889A5.5 5.5 0 012.5 8z",
+              "inProgress"
             )}
 
             {/* Completed — 100% or status Completed */}
@@ -1356,7 +1431,8 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
               "Completed",
               completedFaculties,
               "#22c55e",
-              "M8 1a7 7 0 100 14A7 7 0 008 1zm3.47 5.03a.75.75 0 010 1.06l-4 4a.75.75 0 01-1.06 0l-1.75-1.75a.75.75 0 011.06-1.06l1.22 1.22 3.47-3.47a.75.75 0 011.06 0z"
+              "M8 1a7 7 0 100 14A7 7 0 008 1zm3.47 5.03a.75.75 0 010 1.06l-4 4a.75.75 0 01-1.06 0l-1.75-1.75a.75.75 0 011.06-1.06l1.22 1.22 3.47-3.47a.75.75 0 011.06 0z",
+              "completed"
             )}
 
             {/* Not Started — 0% and not marked active/completed */}
@@ -1364,7 +1440,8 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
               "Not Started",
               notStartedFaculties,
               "#f5a623",
-              "M8 1a7 7 0 100 14A7 7 0 008 1zm0 1.5a5.5 5.5 0 110 11 5.5 5.5 0 010-11zM8 4a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 018 4zm0 7.5a.875.875 0 110-1.75.875.875 0 010 1.75z"
+              "M8 1a7 7 0 100 14A7 7 0 008 1zm0 1.5a5.5 5.5 0 110 11 5.5 5.5 0 010-11zM8 4a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 018 4zm0 7.5a.875.875 0 110-1.75.875.875 0 010 1.75z",
+              "notStarted"
             )}
           </div>
         )}

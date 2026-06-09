@@ -5,7 +5,6 @@ import {
   MessageSquare,
   Star,
   TrendingUp,
-  ArrowRight,
   ChevronDown,
   Briefcase,
   ChevronRight,
@@ -13,7 +12,6 @@ import {
   Building2,
   Calendar,
 } from "lucide-react";
-import Stars from "../shared/Stars";
 import AnimNum from "../shared/AnimNum";
 import Reveal from "../shared/Reveal";
 import BarChart from "../shared/BarChart";
@@ -169,39 +167,6 @@ export default function DashView({ internships, feedbacks, onOpen, user }) {
           </div>
         </Reveal>
       </div>
-
-      {/* Recent Feedback */}
-      <Reveal delay={280}>
-        <div className="gc" style={{ padding: 21, marginBottom: 24 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-            <div style={{ fontFamily: "Montserrat", fontSize: 15, fontWeight: 700, color: "var(--t1)" }}>Recent Feedback</div>
-            <button className="bg" onClick={() => navigate("/feedback")}>View all <ArrowRight size={11} /></button>
-          </div>
-          <p style={{ fontSize: 12, color: "var(--t3)", marginBottom: 13 }}>Latest comments from internship days</p>
-          {feedbacks.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "24px 0", color: "var(--t3)", fontSize: 13 }}>
-              No feedback yet. Feedback appears when interns leave comments on their days.
-            </div>
-          ) : (
-            feedbacks.slice(0, 4).map((f, i) => (
-              <div key={f.id} className="fr" style={{ animationDelay: `${i * 65}ms`, cursor: "pointer" }}>
-                <div className="fa" style={{ background: f.avB, color: "#fff" }}>{f.av}</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 2 }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: "var(--t1)" }}>{f.name}</span>
-                    <span className="badge" style={{ background: ROLES[f.role]?.bg, color: ROLES[f.role]?.c }}>{f.role}</span>
-                  </div>
-                  <div style={{ fontSize: 12.5, color: "var(--t2)" }}>{f.text}</div>
-                </div>
-                <div style={{ textAlign: "right", flexShrink: 0 }}>
-                  <Stars n={f.rating} />
-                  <div style={{ fontSize: 10.5, color: "var(--t3)", marginTop: 2 }}>{f.time}</div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </Reveal>
 
       {/* Internship cards */}
       <Reveal delay={360}>

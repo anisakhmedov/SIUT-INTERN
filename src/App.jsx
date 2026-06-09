@@ -58,7 +58,7 @@ const StudentEvaluationFormPage = lazy(() => import("./components/StudentEvaluat
 const AdminSupervisorReportsPage = lazy(() => import("./components/AdminSupervisorReportsPage"));
 const AdminStudentEvaluationsPage = lazy(() => import("./components/AdminStudentEvaluationsPage"));
 const AdminStatisticsPage = lazy(() => import("./components/AdminStatisticsPage"));
-const DashView = lazy(() => import("./components/views/DashView"));
+const HomeView = lazy(() => import("./components/HomeView"));
 const FeedView = lazy(() => import("./components/views/FeedView"));
 const SetView = lazy(() => import("./components/views/SetView"));
 
@@ -674,11 +674,14 @@ export default function App() {
       <Route
         path="/"
         element={
-          <DashView
+          <HomeView
             internships={INTERNSHIPS}
             feedbacks={commentFeedbacks}
-            onOpen={(intern) => navigate(`/internship/${intern.id}`)}
             user={user}
+            students={students}
+            search={search}
+            onNewFaculty={() => navigate("/create")}
+            onView={(id) => navigate(`/internship/${id}`)}
           />
         }
       />

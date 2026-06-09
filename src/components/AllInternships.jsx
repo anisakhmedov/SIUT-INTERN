@@ -133,10 +133,13 @@ const normalizeStatus = (status) => {
   return "Pending";
 };
 
+const PAGE_SIZE = 20;
+
 export default function AllInternships({ onView, search = "", user = null }) {
   const [faculties, setFaculties] = useState([]);
   const [usersById, setUsersById] = useState({});
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const getFacultyId = (faculty) => faculty?._id ?? faculty?.id ?? null;
 
@@ -288,9 +291,17 @@ export default function AllInternships({ onView, search = "", user = null }) {
     );
   });
 
+  const totalPages = Math.max(1, Math.ceil(filteredFaculties.length / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const pagedFaculties = filteredFaculties.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
   useEffect(() => {
     fetchFaculties();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
 
   const fetchFaculties = async () => {
     try {
@@ -712,7 +723,7 @@ export default function AllInternships({ onView, search = "", user = null }) {
           />
         ) : (
           <ul className="dw-list" aria-label="Internship list">
-            {filteredFaculties.map((faculty, index) => {
+            {pagedFaculties.map((faculty, index) => {
               const facultyId = getFacultyId(faculty) ?? `row-${index}`;
               const shortProgress = getShortProgress(faculty);
               const progressHue = Math.round((shortProgress / 100) * 120);
@@ -863,6 +874,27 @@ export default function AllInternships({ onView, search = "", user = null }) {
               );
             })}
           </ul>
+        )}
+        {!loading && totalPages > 1 && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "20px 0 4px" }}>
+            <button
+              className="bg"
+              disabled={safePage <= 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            >
+              ← Prev
+            </button>
+            <span style={{ fontSize: 13, color: "var(--t2)", fontWeight: 600 }}>
+              Page {safePage} of {totalPages}
+            </span>
+            <button
+              className="bg"
+              disabled={safePage >= totalPages}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            >
+              Next →
+            </button>
+          </div>
         )}
       </div>
     </div>

@@ -4,10 +4,10 @@ import { get, post } from '../utils/apiClient';
 import { toast } from '../utils/toast';
 import { CustomSelect } from './ui';
 
-const YANDEX_MAPS_API_KEY = import.meta.env.VITE_YANDEX_MAPS_API_KEY || '0c6b088f-d754-40c6-93a9-86a33b9f28ea';
+const YANDEX_MAPS_API_KEY = import.meta.env.VITE_YANDEX_MAPS_API_KEY || '';
 const YANDEX_MAPS_SRC = YANDEX_MAPS_API_KEY
   ? `https://api-maps.yandex.ru/2.1/?lang=en_US&apikey=${YANDEX_MAPS_API_KEY}`
-  : 'https://api-maps.yandex.ru/2.1/?lang=en_US';
+  : '';
 const DEFAULT_MAP_CENTER = [41.3775, 69.1824]; // Center of Uzbekistan (Tashkent)
 
 function extractUsers(payload) {
@@ -534,6 +534,11 @@ function MapPicker({ value, onChange }) {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+
+    if (!YANDEX_MAPS_SRC) {
+      setMapError('Map unavailable: VITE_YANDEX_MAPS_API_KEY is not set.');
+      return undefined;
+    }
 
     const existingScript = document.querySelector('script[data-yandex-maps="true"]');
     const handleReady = () => {

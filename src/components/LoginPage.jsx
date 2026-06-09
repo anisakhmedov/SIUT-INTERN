@@ -94,17 +94,17 @@ export default function LoginPage({
             <GraduationCap size={24} color="#fff" />
           </div>
           <div>
-            <div style={{ fontFamily: 'Syne', fontSize: 18, fontWeight: 800, color: '#fff', letterSpacing: '-.35px' }}>
-              InternTrack
+            <div style={{ fontFamily: 'Montserrat', fontSize: 18, fontWeight: 800, color: '#fff', letterSpacing: '-.35px' }}>
+              SIUT
             </div>
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,.34)', fontWeight: 500 }}>
-              Institute of Technology · Portal
+              Internship Portal
             </div>
           </div>
         </div>
 
         <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontFamily: 'Syne', fontSize: 23, fontWeight: 800, color: '#fff', marginBottom: 6, letterSpacing: '-.4px' }}>
+          <h1 style={{ fontFamily: 'Montserrat', fontSize: 23, fontWeight: 800, color: '#fff', marginBottom: 6, letterSpacing: '-.4px' }}>
             Welcome back
           </h1>
           <p style={{ color: 'rgba(255,255,255,.36)', fontSize: 13 }}>

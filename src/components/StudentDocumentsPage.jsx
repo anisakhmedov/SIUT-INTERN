@@ -31,6 +31,8 @@ function getStudentImageValue(student, field) {
   return null;
 }
 
+const STUDENT_PAGE_SIZE = 20;
+
 export default function StudentDocumentsPage({ students = [], search = '', onStudentUpdated }) {
   const [localStudents, setLocalStudents] = useState(students);
   const [filtersOpen, setFiltersOpen] = useState(true);
@@ -39,6 +41,7 @@ export default function StudentDocumentsPage({ students = [], search = '', onStu
   const [passportFilter, setPassportFilter] = useState('all');
   const [medicineFilter, setMedicineFilter] = useState('all');
   const [selectedStudentId, setSelectedStudentId] = useState(() => getStudentId(students[0]));
+  const [studentPage, setStudentPage] = useState(1);
   const [uploadState, setUploadState] = useState({
     passport: { loading: false, progress: 0 },
     medicine: { loading: false, progress: 0 },
@@ -137,6 +140,13 @@ export default function StudentDocumentsPage({ students = [], search = '', onStu
     return filtered.sort((a, b) => getStudentFullName(a).localeCompare(getStudentFullName(b)));
   }, [getStudentFullName, hasImage, localSearch, localStudents, medicineFilter, passportFilter, search, selectedFaculty]);
 
+  const studentTotalPages = Math.max(1, Math.ceil(filteredStudents.length / STUDENT_PAGE_SIZE));
+  const safeStudentPage = Math.min(studentPage, studentTotalPages);
+  const pagedStudents = filteredStudents.slice(
+    (safeStudentPage - 1) * STUDENT_PAGE_SIZE,
+    safeStudentPage * STUDENT_PAGE_SIZE,
+  );
+
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (localSearch.trim()) count += 1;
@@ -151,7 +161,12 @@ export default function StudentDocumentsPage({ students = [], search = '', onStu
     setSelectedFaculty('all');
     setPassportFilter('all');
     setMedicineFilter('all');
+    setStudentPage(1);
   }, []);
+
+  useEffect(() => {
+    setStudentPage(1);
+  }, [search, localSearch, selectedFaculty, passportFilter, medicineFilter]);
 
   const selectedStudent = useMemo(() => {
     if (!filteredStudents.length) return null;
@@ -1033,7 +1048,7 @@ export default function StudentDocumentsPage({ students = [], search = '', onStu
 
           <div className="student-list">
             {filteredStudents.length > 0 ? (
-              filteredStudents.map((student, index) => {
+              pagedStudents.map((student, index) => {
                 const studentId = getStudentId(student, index);
                 const isSelected = studentId === getStudentId(selectedStudent);
                 const passportUrl = getStudentImageValue(student, 'passport');
@@ -1075,6 +1090,31 @@ export default function StudentDocumentsPage({ students = [], search = '', onStu
             ) : (
               <div className="student-list-empty">
                 No students match the current filters. Try clearing filters or changing search.
+              </div>
+            )}
+            {studentTotalPages > 1 && (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px 0 4px", borderTop: "1px solid rgba(0,0,0,.06)", marginTop: 6 }}>
+                <button
+                  type="button"
+                  className="bg"
+                  disabled={safeStudentPage <= 1}
+                  onClick={() => setStudentPage((p) => Math.max(1, p - 1))}
+                  style={{ fontSize: 12, padding: "5px 10px" }}
+                >
+                  ← Prev
+                </button>
+                <span style={{ fontSize: 12, color: "var(--t2)", fontWeight: 600 }}>
+                  {safeStudentPage} / {studentTotalPages}
+                </span>
+                <button
+                  type="button"
+                  className="bg"
+                  disabled={safeStudentPage >= studentTotalPages}
+                  onClick={() => setStudentPage((p) => Math.min(studentTotalPages, p + 1))}
+                  style={{ fontSize: 12, padding: "5px 10px" }}
+                >
+                  Next →
+                </button>
               </div>
             )}
           </div>

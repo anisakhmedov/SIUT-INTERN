@@ -12,35 +12,14 @@ import { toast } from "../utils/toast";
 import { generateFinalReport } from "../utils/finalReportApi";
 import { getAuthTokenFromStorage } from "../utils/storageUtils";
 import PageState from "./PageState";
-import { TextAlignEnd } from "lucide-react";
 import AttendanceMobile from "./AttendanceMobile";
 import { CustomSelect, CustomDatePicker } from "./ui";
+import { hasReportContent } from "../utils/reportUtils";
 
 const INTERNSHIP_STATUS_OPTIONS = ["Pending", "In Progress", "Completed"];
 
 const clampProgress = (value) =>
   Math.max(0, Math.min(100, Number.isFinite(value) ? value : 0));
-
-function hasReportContent(day) {
-  if (!day?.shortReport) return false;
-
-  const title =
-    typeof day.shortReport.title === "string"
-      ? day.shortReport.title.trim()
-      : "";
-  const description =
-    typeof day.shortReport.description === "string"
-      ? day.shortReport.description.trim()
-      : "";
-  const reportImages = Array.isArray(day.shortReport.images)
-    ? day.shortReport.images
-    : [];
-  const dayImages = Array.isArray(day.images) ? day.images : [];
-
-  return Boolean(
-    title || description || reportImages.length || dayImages.length,
-  );
-}
 
 function normalizeApprovalCode(value) {
   if (value === true) return 2;

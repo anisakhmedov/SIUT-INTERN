@@ -15,6 +15,7 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-indiana-drag-scroll": "^2.2.1",
+    "react-router-dom": "^7.17.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {

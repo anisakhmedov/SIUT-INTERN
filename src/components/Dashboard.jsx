@@ -2,30 +2,11 @@ import React, { useState, useEffect, useCallback } from "react";
 import { del, get } from "../utils/apiClient";
 import { toast } from "../utils/toast";
 import PageState from './PageState';
+import { normalizeStatus } from "../utils/internshipUtils";
+import { hasReportContent } from "../utils/reportUtils";
 
 const clampProgress = (value) =>
   Math.max(0, Math.min(100, Number.isFinite(value) ? value : 0));
-
-const hasReportContent = (day) => {
-  if (!day?.shortReport) return false;
-
-  const title =
-    typeof day.shortReport.title === "string"
-      ? day.shortReport.title.trim()
-      : "";
-  const description =
-    typeof day.shortReport.description === "string"
-      ? day.shortReport.description.trim()
-      : "";
-  const reportImages = Array.isArray(day.shortReport.images)
-    ? day.shortReport.images
-    : [];
-  const dayImages = Array.isArray(day.images) ? day.images : [];
-
-  return Boolean(
-    title || description || reportImages.length || dayImages.length,
-  );
-};
 
 const calculateProgressFromDays = (days) => {
   const dayList = Array.isArray(days) ? days : [];
@@ -43,13 +24,6 @@ const parseProgressValue = (value) => {
     if (Number.isFinite(parsed)) return clampProgress(Math.round(parsed));
   }
   return null;
-};
-
-const normalizeStatus = (status) => {
-  const raw = String(status || "").trim().toLowerCase();
-  if (raw === "completed") return "Completed";
-  if (raw === "in progress" || raw === "active") return "In Progress";
-  return "Pending";
 };
 
 const extractDateRange = (faculty) => {

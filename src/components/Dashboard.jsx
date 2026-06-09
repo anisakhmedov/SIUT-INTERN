@@ -489,10 +489,20 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
     });
   }
 
-  // Group into sections by progress
-  const notStartedFaculties = filteredFaculties.filter(f => getShortProgress(f) === 0);
-  const inProgressFaculties = filteredFaculties.filter(f => { const p = getShortProgress(f); return p > 0 && p < 100; });
-  const completedFaculties = filteredFaculties.filter(f => getShortProgress(f) === 100);
+  // Completed = 100% OR status "Completed"; others don't overlap
+  const completedFaculties = filteredFaculties.filter(f =>
+    getShortProgress(f) === 100 || normalizeStatus(f.status) === "Completed"
+  );
+  const inProgressFaculties = filteredFaculties.filter(f => {
+    if (getShortProgress(f) === 100 || normalizeStatus(f.status) === "Completed") return false;
+    const p = getShortProgress(f);
+    return (p > 0 && p < 100) || normalizeStatus(f.status) === "In Progress";
+  });
+  const notStartedFaculties = filteredFaculties.filter(f => {
+    const s = normalizeStatus(f.status);
+    const p = getShortProgress(f);
+    return p === 0 && s !== "Completed" && s !== "In Progress";
+  });
 
   const fetchFaculties = useCallback(async () => {
     try {
@@ -1332,11 +1342,69 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
           border-color: rgba(220,38,38,.4);
         }
         @media (max-width: 768px) {
-          .dw-filter-group { min-width: 120px; max-width: 100%; }
-          .dw-search-wrap { max-width: 100%; }
-          .dw-list { grid-template-columns: 1fr; }
+          .dw-head { flex-direction: column; align-items: flex-start; gap: 12px; }
           .dw-title { font-size: 32px; }
-          .dw-head { flex-direction: column; align-items: flex-start; }
+          .dw-btn-primary { width: 100%; justify-content: center; }
+          .dw-list { grid-template-columns: 1fr; }
+
+          /* Filter bar: stack vertically */
+          .dw-filter-bar {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+          }
+          .dw-search-wrap {
+            max-width: 100%;
+            min-width: 0;
+            width: 100%;
+          }
+
+          /* Status pills: horizontal scroll, no wrap */
+          .dw-status-pills {
+            overflow-x: auto;
+            flex-wrap: nowrap;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            padding-bottom: 2px;
+          }
+          .dw-status-pills::-webkit-scrollbar { display: none; }
+          .dw-status-pill { flex-shrink: 0; }
+
+          /* Advanced button full-width */
+          .dw-advanced-btn {
+            width: 100%;
+            justify-content: center;
+          }
+
+          /* Advanced panel: two columns on tablet, full-width on phone */
+          .dw-advanced-panel {
+            gap: 8px;
+          }
+          .dw-filter-group {
+            min-width: 0;
+            max-width: 100%;
+            flex: 1 1 calc(50% - 4px);
+          }
+          .dw-clear-btn {
+            width: 100%;
+            justify-content: center;
+          }
+        }
+        @media (max-width: 480px) {
+          .dw-filters {
+            padding: 12px 14px;
+            border-radius: 14px;
+          }
+          .dw-filter-group {
+            flex: 1 1 100%;
+          }
+          .dw-filter-chips {
+            gap: 5px;
+          }
+          .dw-chip {
+            font-size: 11px;
+            padding: 4px 10px;
+          }
         }
       `}</style>
 
@@ -1572,15 +1640,7 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
           />
         ) : (
           <div className="dw-sections">
-            {/* Not Started — 0% */}
-            {renderSection(
-              "Not Started",
-              notStartedFaculties,
-              "#f5a623",
-              "M8 1a7 7 0 100 14A7 7 0 008 1zm0 1.5a5.5 5.5 0 110 11 5.5 5.5 0 010-11zM8 4a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 018 4zm0 7.5a.875.875 0 110-1.75.875.875 0 010 1.75z"
-            )}
-
-            {/* In Progress — 1–99% */}
+            {/* In Progress — 1–99% or status In Progress */}
             {renderSection(
               "In Progress",
               inProgressFaculties,
@@ -1588,12 +1648,20 @@ export default function Dashboard({ onNewFaculty, onView, search = "", user = nu
               "M8 1a7 7 0 100 14A7 7 0 008 1zM2.5 8a5.5 5.5 0 015.5-5.5V8l3.889 3.889A5.5 5.5 0 012.5 8z"
             )}
 
-            {/* Completed — 100% */}
+            {/* Completed — 100% or status Completed */}
             {renderSection(
               "Completed",
               completedFaculties,
               "#22c55e",
               "M8 1a7 7 0 100 14A7 7 0 008 1zm3.47 5.03a.75.75 0 010 1.06l-4 4a.75.75 0 01-1.06 0l-1.75-1.75a.75.75 0 011.06-1.06l1.22 1.22 3.47-3.47a.75.75 0 011.06 0z"
+            )}
+
+            {/* Not Started — 0% and not marked active/completed */}
+            {renderSection(
+              "Not Started",
+              notStartedFaculties,
+              "#f5a623",
+              "M8 1a7 7 0 100 14A7 7 0 008 1zm0 1.5a5.5 5.5 0 110 11 5.5 5.5 0 010-11zM8 4a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 018 4zm0 7.5a.875.875 0 110-1.75.875.875 0 010 1.75z"
             )}
           </div>
         )}

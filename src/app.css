@@ -196,3 +196,29 @@ textarea.fi{resize:vertical;min-height:80px;}
 .lb{position:fixed;inset:0;background:rgba(0,0,0,.93);backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center;z-index:300;animation:fadeIn .18s ease;cursor:zoom-out;}
 .lbc{display:flex;flex-direction:column;align-items:center;gap:13px;cursor:default;}
 .lbi{border-radius:16px;box-shadow:0 32px 72px rgba(0,0,0,.6);animation:scaleIn .26s cubic-bezier(.22,1,.36,1);}
+
+/* SETTINGS VIEW */
+.set-root{max-width:600px;margin:0 auto;}
+.set-card{padding:24px;margin-bottom:16px;}
+.set-hero{background:linear-gradient(135deg,#0c0e18 0%,#1c2038 100%);border-radius:20px;padding:28px 24px;margin-bottom:16px;position:relative;overflow:hidden;}
+.set-hero-blob{position:absolute;border-radius:50%;pointer-events:none;}
+.set-hero-blob-1{width:200px;height:200px;background:rgba(99,91,255,.22);filter:blur(64px);top:-60px;right:-40px;}
+.set-hero-blob-2{width:130px;height:130px;background:rgba(6,201,160,.16);filter:blur(52px);bottom:-40px;left:10px;}
+.set-hero-inner{position:relative;z-index:1;display:flex;align-items:center;gap:18px;}
+.set-avatar{width:70px;height:70px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;font-size:24px;font-weight:800;color:#fff;flex-shrink:0;box-shadow:0 8px 28px rgba(99,91,255,.44);}
+.set-hero-name{font-family:'Montserrat',sans-serif;font-size:18px;font-weight:800;color:#fff;margin-bottom:4px;}
+.set-hero-role{font-size:12px;color:rgba(255,255,255,.48);text-transform:capitalize;letter-spacing:.05em;}
+.set-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.set-grid-full{grid-column:1/-1;}
+.set-actions{display:flex;justify-content:flex-end;margin-top:20px;}
+.set-notif-row{display:flex;align-items:center;justify-content:space-between;padding:15px 0;gap:16px;}
+@media(max-width:640px){
+  .set-grid{grid-template-columns:1fr;}
+  .set-grid-full{grid-column:auto;}
+  .set-hero{padding:20px 16px;}
+  .set-avatar{width:56px;height:56px;font-size:18px;border-radius:14px;}
+  .set-hero-name{font-size:15px;}
+  .set-card{padding:16px;}
+  .set-actions{justify-content:stretch;}
+  .set-actions .bp{width:100%;justify-content:center;}
+}

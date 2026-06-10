@@ -4,7 +4,7 @@ import { get, post } from '../utils/apiClient';
 import { toast } from '../utils/toast';
 import { CustomSelect } from './ui';
 
-const YANDEX_MAPS_API_KEY = import.meta.env.VITE_YANDEX_MAPS_API_KEY || '';
+const YANDEX_MAPS_API_KEY = 'a82d324e-b1dc-4510-b1f8-782e0913094e';
 const YANDEX_MAPS_SRC = YANDEX_MAPS_API_KEY
   ? `https://api-maps.yandex.ru/2.1/?lang=en_US&apikey=${YANDEX_MAPS_API_KEY}`
   : '';

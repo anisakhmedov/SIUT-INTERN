@@ -1,13 +1,47 @@
 import { useState, useEffect } from "react";
-import { Save, Lock, Eye, EyeOff, Bell, User, Shield } from "lucide-react";
+import { Save, Lock, Eye, EyeOff, Bell, User, Shield, Phone, AtSign, MessageCircle } from "lucide-react";
 import Reveal from "../shared/Reveal";
-import { get, patch, post } from "../../utils/apiClient";
+import { get, post, patch, del } from "../../utils/apiClient";
 import { toast } from "../../utils/toast";
 import { getUserInitials } from "../../utils/internshipUtils";
 
 const Spinner = ({ size = 14 }) => (
   <div style={{ width: size, height: size, border: "2px solid rgba(255,255,255,.3)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin .7s linear infinite" }} />
 );
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = atob(base64);
+  return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
+}
+
+async function subscribeToPush() {
+  if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+    throw new Error("Push notifications are not supported in this browser.");
+  }
+  const permission = await Notification.requestPermission();
+  if (permission !== "granted") {
+    throw new Error("Push notification permission denied.");
+  }
+  const reg = await navigator.serviceWorker.ready;
+  const { publicKey } = await get("/usersInternship/push-vapid-key");
+  const subscription = await reg.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(publicKey),
+  });
+  await post("/usersInternship/me/push-subscription", subscription.toJSON());
+}
+
+async function unsubscribeFromPush() {
+  if (!("serviceWorker" in navigator)) return;
+  const reg = await navigator.serviceWorker.ready;
+  const sub = await reg.pushManager.getSubscription();
+  if (sub) {
+    await sub.unsubscribe();
+    await del("/usersInternship/me/push-subscription").catch(() => {});
+  }
+}
 
 const Toggle = ({ checked, onChange, disabled }) => (
   <div
@@ -39,21 +73,51 @@ const SectionHeader = ({ icon, label, bg = "rgba(99,91,255,.1)" }) => (
   </div>
 );
 
+const Field = ({ label, value, onChange, placeholder, icon, readOnly }) => (
+  <div>
+    <label className="fl">{label}</label>
+    <div style={{ position: "relative" }}>
+      {icon && (
+        <div style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--t3)", display: "flex", pointerEvents: "none" }}>
+          {icon}
+        </div>
+      )}
+      <input
+        className={icon ? "fi has-icon" : "fi"}
+        value={value}
+        placeholder={placeholder || ""}
+        onChange={onChange}
+        readOnly={readOnly}
+        style={{
+          paddingLeft: icon ? 38 : 14,
+          opacity: readOnly ? 0.5 : 1,
+          cursor: readOnly ? "default" : undefined,
+        }}
+      />
+    </div>
+  </div>
+);
+
 export default function SetView({ user }) {
   const [n, setN] = useState({ email: true, push: false });
   const [nLoading, setNLoading] = useState(true);
   const [nSaving, setNSaving] = useState(false);
 
+  const c = user?.contact || {};
   const [form, setForm] = useState({
-    name: user?.name || "",
-    email: user?.login || user?.email || "",
-    department: user?.department || "",
+    name:      user?.name      || "",
+    surname:   user?.surname   || "",
+    login:     user?.login     || "",
+    email:     c.email         || user?.email    || "",
+    phone:     c.phone         || user?.phone    || "",
+    telegram:  c.telegram      || user?.telegram || "",
+    whatsapp:  c.whatsapp      || user?.whatsapp || "",
   });
   const [saving, setSaving] = useState(false);
 
-  const [pwd, setPwd] = useState({ current: "", next: "", confirm: "" });
+  const [pwd, setPwd] = useState({ next: "", confirm: "" });
   const [pwdSaving, setPwdSaving] = useState(false);
-  const [showPwd, setShowPwd] = useState({ current: false, next: false, confirm: false });
+  const [showPwd, setShowPwd] = useState({ next: false, confirm: false });
 
   useEffect(() => {
     get("/usersInternship/me/notifications")
@@ -64,7 +128,22 @@ export default function SetView({ user }) {
 
   const handleToggle = async (key) => {
     if (nSaving || nLoading) return;
-    const next = { ...n, [key]: !n[key] };
+    const enabling = !n[key];
+
+    if (key === "push") {
+      if (enabling) {
+        try {
+          await subscribeToPush();
+        } catch (err) {
+          toast.error(err?.message || "Failed to enable push notifications.");
+          return;
+        }
+      } else {
+        await unsubscribeFromPush();
+      }
+    }
+
+    const next = { ...n, [key]: enabling };
     setN(next);
     setNSaving(true);
     try {
@@ -77,10 +156,20 @@ export default function SetView({ user }) {
     }
   };
 
+  const f = (key) => (e) => setForm((p) => ({ ...p, [key]: e.target.value }));
+
   const handleSave = async () => {
     setSaving(true);
     try {
-      await patch("/usersInternship/me", { name: form.name, email: form.email });
+      const body = {};
+      if (form.name)     body.name     = form.name;
+      if (form.surname)  body.surname  = form.surname;
+      if (form.login)    body.login    = form.login;
+      if (form.email)    body.email    = form.email;
+      if (form.phone)    body.phone    = form.phone;
+      if (form.telegram) body.telegram = form.telegram;
+      if (form.whatsapp) body.whatsapp = form.whatsapp;
+      await patch("/usersInternship/me", body);
       toast.success("Profile updated.");
     } catch (err) {
       toast.error(err?.message || "Failed to save changes.");
@@ -90,14 +179,14 @@ export default function SetView({ user }) {
   };
 
   const handleChangePassword = async () => {
-    if (!pwd.current || !pwd.next) { toast.error("Fill in all password fields."); return; }
-    if (pwd.next.length < 8) { toast.error("New password must be at least 8 characters."); return; }
+    if (!pwd.next) { toast.error("Enter a new password."); return; }
+    if (pwd.next.length < 8) { toast.error("Password must be at least 8 characters."); return; }
     if (pwd.next !== pwd.confirm) { toast.error("Passwords do not match."); return; }
     setPwdSaving(true);
     try {
-      await post("/usersInternship/me/change-password", { currentPassword: pwd.current, newPassword: pwd.next });
+      await patch("/usersInternship/me", { password: pwd.next });
       toast.success("Password changed successfully.");
-      setPwd({ current: "", next: "", confirm: "" });
+      setPwd({ next: "", confirm: "" });
     } catch (err) {
       toast.error(err?.message || "Failed to change password.");
     } finally {
@@ -134,17 +223,14 @@ export default function SetView({ user }) {
         <div className="gc set-card">
           <SectionHeader icon={<User size={15} color="#635bff" />} label="Profile" />
           <div className="set-grid">
-            <div>
-              <label className="fl">Full Name</label>
-              <input className="fi" value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} />
-            </div>
-            <div>
-              <label className="fl">Login / Email</label>
-              <input className="fi" value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} />
-            </div>
+            <Field label="First Name"  value={form.name}     onChange={f("name")}     placeholder="Имя" />
+            <Field label="Last Name"   value={form.surname}  onChange={f("surname")}  placeholder="Фамилия" />
+            <Field label="Login"       value={form.login}    onChange={f("login")}    placeholder="login" />
+            <Field label="Email"       value={form.email}    onChange={f("email")}    placeholder="email@example.com" icon={<AtSign size={14} />} />
+            <Field label="Phone"       value={form.phone}    onChange={f("phone")}    placeholder="+7 999 000 00 00"  icon={<Phone size={14} />} />
+            <Field label="Telegram"    value={form.telegram} onChange={f("telegram")} placeholder="@username"         icon={<AtSign size={14} />} />
             <div className="set-grid-full">
-              <label className="fl">Department</label>
-              <input className="fi" value={form.department} onChange={(e) => setForm((p) => ({ ...p, department: e.target.value }))} />
+              <Field label="WhatsApp"  value={form.whatsapp} onChange={f("whatsapp")} placeholder="+7 999 000 00 00"  icon={<MessageCircle size={14} />} />
             </div>
           </div>
           <div className="set-actions">
@@ -161,7 +247,6 @@ export default function SetView({ user }) {
         <div className="gc set-card">
           <SectionHeader icon={<Shield size={15} color="#635bff" />} label="Security" />
           {[
-            { k: "current", label: "Current Password", placeholder: "" },
             { k: "next",    label: "New Password",     placeholder: "Min 8 characters" },
             { k: "confirm", label: "Confirm Password", placeholder: "" },
           ].map(({ k, label, placeholder }) => (

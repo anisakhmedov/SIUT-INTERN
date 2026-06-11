@@ -21,6 +21,7 @@ import {
   Shield,
   ToggleLeft,
   ToggleRight,
+  Activity,
 } from "lucide-react";
 
 import { getUserFromStorage, clearUserFromStorage } from "./utils/storageUtils";
@@ -58,6 +59,7 @@ const StudentEvaluationFormPage = lazy(() => import("./components/StudentEvaluat
 const AdminSupervisorReportsPage = lazy(() => import("./components/AdminSupervisorReportsPage"));
 const AdminStudentEvaluationsPage = lazy(() => import("./components/AdminStudentEvaluationsPage"));
 const AdminStatisticsPage = lazy(() => import("./components/AdminStatisticsPage"));
+const ActivityLogsPage = lazy(() => import("./components/ActivityLogsPage"));
 const HomeView = lazy(() => import("./components/HomeView"));
 const FeedView = lazy(() => import("./components/views/FeedView"));
 const SetView = lazy(() => import("./components/views/SetView"));
@@ -78,6 +80,7 @@ const NAV_PATH_MAP = {
   "Supervisor Reports (Admin)": "/admin/reports",
   "Student Evaluations (Admin)": "/admin/evaluations",
   "Statistics (Admin)": "/admin/statistics",
+  "Activity Logs (Admin)": "/admin/activity",
   Settings: "/settings",
 };
 
@@ -99,6 +102,7 @@ const NAV_PERMISSIONS = {
   "Supervisor Reports (Admin)": ["admin"],
   "Student Evaluations (Admin)": ["admin"],
   "Statistics (Admin)": ["admin"],
+  "Activity Logs (Admin)": ["admin", "developer"],
 };
 
 function readMaintenanceMode() {
@@ -535,6 +539,7 @@ export default function App() {
           { I: FileText, label: "Supervisor Reports (Admin)" },
           { I: Award, label: "Student Evaluations (Admin)" },
           { I: TrendingUp, label: "Statistics (Admin)" },
+          { I: Activity,  label: "Activity Logs (Admin)" },
         ],
       },
     ];
@@ -813,6 +818,19 @@ export default function App() {
             <Forbidden
               title="Admin access required"
               message="Only administrators can view statistics."
+            />
+          )
+        }
+      />
+      <Route
+        path="/admin/activity"
+        element={
+          canAccessNav(user?.role, "Activity Logs (Admin)") ? (
+            <ActivityLogsPage />
+          ) : (
+            <Forbidden
+              title="Admin access required"
+              message="Only administrators and developers can view activity logs."
             />
           )
         }

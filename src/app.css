@@ -137,6 +137,8 @@ textarea.fi{resize:vertical;min-height:80px;}
   .pp .tableWrap{overflow-x:auto;border-radius:12px !important;padding:6px !important;}
   .pp .headCell,.pp .rowLabel,.pp .ratingCell{padding:10px 8px !important;font-size:12px !important;}
   .pp .fi{padding:10px 12px !important;}
+  .set-root .fi{padding:10px 14px !important;}
+  .set-root .fi.has-icon{padding-left:38px !important;}
   .lcard{padding:32px 20px;border-radius:20px;max-width:calc(100vw - 24px);}
   .linput{font-size:13px;padding:11px 14px;}
   .lbtn{padding:12px;font-size:14px;}

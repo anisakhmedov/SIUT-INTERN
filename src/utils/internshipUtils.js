@@ -55,6 +55,7 @@ export const NAV_PERMISSIONS = {
   "Supervisor Reports (Admin)": ["admin"],
   "Student Evaluations (Admin)": ["admin"],
   "Statistics (Admin)": ["admin"],
+  "Activity Logs (Admin)": ["admin", "developer"],
 };
 
 export function canAccessNav(role, label) {

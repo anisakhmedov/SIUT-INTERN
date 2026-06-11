@@ -1,0 +1,1 @@
+function i(t){if(!t?.shortReport)return!1;const r=typeof t.shortReport.title=="string"?t.shortReport.title.trim():"",e=typeof t.shortReport.description=="string"?t.shortReport.description.trim():"",o=Array.isArray(t.shortReport.images)?t.shortReport.images:[],s=Array.isArray(t.images)?t.images:[];return!!(r||e||o.length||s.length)}export{i as h};

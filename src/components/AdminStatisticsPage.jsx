@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { get } from "../utils/apiClient";
 import { toast } from "../utils/toast";
 import PageState from "./PageState";
+import { useSEO } from "../utils/useSEO";
 import {
   TrendingUp,
   CheckCircle2,
@@ -786,6 +787,12 @@ function Num({ v, c, onClick }) {
    MAIN PAGE
 ───────────────────────────────────────────── */
 export default function AdminStatisticsPage({ onNavigate }) {
+  useSEO({
+    title: 'Statistics (Admin)',
+    description: 'Analytics and statistics on internships, student progress, and supervisor activity in SIUT.',
+    noIndex: true,
+  });
+
   const [faculties, setFaculties] = useState([]);
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);

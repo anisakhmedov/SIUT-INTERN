@@ -3,6 +3,7 @@ import { Search, X, Plus, MapPinned, LocateFixed, Calendar, ChevronLeft, Chevron
 import { get, post } from '../utils/apiClient';
 import { toast } from '../utils/toast';
 import { CustomSelect } from './ui';
+import { useSEO } from '../utils/useSEO';
 
 const YANDEX_MAPS_API_KEY = 'a82d324e-b1dc-4510-b1f8-782e0913094e';
 const YANDEX_MAPS_SRC = YANDEX_MAPS_API_KEY
@@ -783,7 +784,13 @@ function MapPicker({ value, onChange }) {
   );
 }
 
-export default function CreatePage({ onSubmit, onCancel, students = [], tutors: tutorCandidates = [], user = null }) { // Accept students as prop
+export default function CreatePage({ onSubmit, onCancel, students = [], tutors: tutorCandidates = [], user = null }) {
+  useSEO({
+    title: 'Create Internship',
+    description: 'Create a new internship in the SIUT system — set the company, dates, students, and supervisor.',
+    noIndex: true,
+  });
+
   const [formData, setFormData] = useState({
     name: '',
     company: '',

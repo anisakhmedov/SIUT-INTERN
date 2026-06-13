@@ -5,6 +5,7 @@ import React, {
   useRef,
   useMemo,
 } from "react";
+import { useSEO } from "../utils/useSEO";
 import { createPortal } from "react-dom";
 import { del, get, patch, post } from "../utils/apiClient";
 import * as attendanceApi from "../utils/attendanceApi";
@@ -340,6 +341,14 @@ export default function InternshipPage({
   const REPORT_DESCRIPTION_MIN_WORDS = 100;
 
   const [faculty, setFaculty] = useState(null);
+
+  useSEO({
+    title: faculty?.name ?? 'Internship Details',
+    description: faculty
+      ? `Internship diary at ${faculty.company || 'SIUT'}. Daily reports, attendance, and comments.`
+      : 'Detailed internship view with daily logs, attendance, and student comments.',
+    noIndex: true,
+  });
   const [dayIndex, setDayIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

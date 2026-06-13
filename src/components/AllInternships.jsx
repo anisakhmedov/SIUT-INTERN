@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { del, get } from "../utils/apiClient";
 import { toast } from "../utils/toast";
 import PageState from './PageState';
+import { useSEO } from '../utils/useSEO';
 
 const clampProgress = (value) =>
   Math.max(0, Math.min(100, Number.isFinite(value) ? value : 0));
@@ -136,6 +137,12 @@ const normalizeStatus = (status) => {
 const PAGE_SIZE = 20;
 
 export default function AllInternships({ onView, search = "", user = null }) {
+  useSEO({
+    title: 'All Internships',
+    description: 'Full list of all internships in the SIUT system with filtering by status, company, and date.',
+    noIndex: true,
+  });
+
   const [faculties, setFaculties] = useState([]);
   const [usersById, setUsersById] = useState({});
   const [loading, setLoading] = useState(true);

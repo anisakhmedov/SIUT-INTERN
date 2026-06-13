@@ -16,6 +16,7 @@ import {
 } from '../utils/studentApi';
 import { toast } from '../utils/toast';
 import { CustomSelect } from './ui';
+import { useSEO } from '../utils/useSEO';
 
 function getStudentId(student, fallbackIndex = 0) {
   return student?._id || student?.id || student?.studentId || `${student?.name || 'student'}-${fallbackIndex}`;
@@ -34,6 +35,12 @@ function getStudentImageValue(student, field) {
 const STUDENT_PAGE_SIZE = 20;
 
 export default function StudentDocumentsPage({ students = [], search = '', onStudentUpdated }) {
+  useSEO({
+    title: 'Students',
+    description: 'Manage student documents, passports, and medical records for SIUT internship participants.',
+    noIndex: true,
+  });
+
   const [localStudents, setLocalStudents] = useState(students);
   const [filtersOpen, setFiltersOpen] = useState(true);
   const [localSearch, setLocalSearch] = useState('');

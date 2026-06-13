@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { GraduationCap, ArrowRight, FileText } from 'lucide-react';
 import { post, setAuthSession } from '../utils/apiClient';
 import { toast } from '../utils/toast';
+import { useSEO } from '../utils/useSEO';
 
 export default function LoginPage({
   onLogin,
@@ -9,6 +10,11 @@ export default function LoginPage({
   onPublicForm,
   sessionMessage = '',
 }) {
+  useSEO({
+    title: 'Sign In',
+    description: 'Sign in to the SIUT Internship Portal to manage student internships, daily logs, and reports.',
+  });
+
   const [f, setF] = useState({ login: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [formMode, setFormMode] = useState(false);

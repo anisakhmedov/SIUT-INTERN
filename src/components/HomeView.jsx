@@ -2,6 +2,7 @@ import { useState } from "react";
 import { LayoutDashboard, BarChart2 } from "lucide-react";
 import Dashboard from "./Dashboard";
 import DashView from "./views/DashView";
+import { useSEO } from "../utils/useSEO";
 
 const VIEW_KEY = "siut_home_view";
 
@@ -23,6 +24,12 @@ const isAdmin = (user) =>
   ["admin", "developer"].includes(String(user?.role || "").toLowerCase());
 
 export default function HomeView({ internships, feedbacks, user, students, search, onNewFaculty, onView }) {
+  useSEO({
+    title: 'Dashboard',
+    description: 'Overview of internships, student feedback, and activity in your SIUT workspace.',
+    noIndex: true,
+  });
+
   const canSeeOverview = isAdmin(user);
   const [view, setView] = useState(() => {
     const saved = readView();

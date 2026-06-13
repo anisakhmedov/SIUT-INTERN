@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import { useSEO } from '../utils/useSEO';
 
 function useIsNarrow(bp = 920) {
   const [narrow, setNarrow] = useState(() => typeof window !== 'undefined' && window.innerWidth < bp);
@@ -163,6 +164,12 @@ function ListBlock({ title, items }) {
 }
 
 export default function UserEducationPage({ user }) {
+  useSEO({
+    title: 'User Education',
+    description: 'Training materials and user guides for all roles in the SIUT Internship Portal.',
+    noIndex: true,
+  });
+
   const initialRole = roleOrder.includes(user?.role) ? user.role : 'Admin';
   const [selectedRole, setSelectedRole] = useState(initialRole);
   const isNarrow = useIsNarrow(920);

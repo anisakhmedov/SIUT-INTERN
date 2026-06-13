@@ -3,6 +3,7 @@ import { Edit3, Save, ShieldCheck, UserPlus, Users } from 'lucide-react';
 import { get, patch, post } from '../utils/apiClient';
 import { toast } from '../utils/toast';
 import { CustomSelect } from './ui';
+import { useSEO } from '../utils/useSEO';
 
 const ROLE_OPTIONS = ['Tutor', 'Admin', 'Rector', 'Professor', 'Student'];
 const BASE_EDIT_FIELDS = ['name', 'surname', 'login', 'password', 'role'];
@@ -82,6 +83,12 @@ function buildEditableData(user) {
 }
 
 export default function CreateTutorPage() {
+  useSEO({
+    title: 'Manage Staff',
+    description: 'Create and edit tutor, supervisor, and professor accounts in the SIUT internship system.',
+    noIndex: true,
+  });
+
   const [formData, setFormData] = useState({
     name: '',
     surname: '',

@@ -2,8 +2,15 @@ import { useState, useMemo } from "react";
 import { Eye, MessageCircle } from "lucide-react";
 import Reveal from "../shared/Reveal";
 import { ROLES } from "../../utils/internshipUtils";
+import { useSEO } from "../../utils/useSEO";
 
 export default function FeedView({ feedbacks, onOpenFeedback }) {
+  useSEO({
+    title: 'Feedback',
+    description: 'View and process student comments across all SIUT internships.',
+    noIndex: true,
+  });
+
   const [filter, setFilter] = useState("All");
 
   const roleOptions = useMemo(() => {

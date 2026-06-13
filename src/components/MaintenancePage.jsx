@@ -1,7 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AlertCircle, Shield, Sparkles, RefreshCw } from 'lucide-react';
 
 export default function MaintenancePage() {
+  useEffect(() => {
+    document.title = 'Under Maintenance — SIUT';
+    const meta = document.querySelector('meta[name="robots"]');
+    if (meta) meta.setAttribute('content', 'noindex, nofollow');
+    return () => { document.title = 'SIUT — Internship Portal'; };
+  }, []);
   const buttonStyle = {
     border: 'none',
     borderRadius: 14,

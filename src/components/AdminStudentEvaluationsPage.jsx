@@ -4,6 +4,7 @@ import { toast } from '../utils/toast';
 import { Search, X, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import PageState from './PageState';
 import { CustomSelect } from './ui';
+import { useSEO } from '../utils/useSEO';
 
 const normList = (r) => (Array.isArray(r) ? r : Array.isArray(r?.data) ? r.data : []);
 const normTotal = (r, list) => (typeof r?.total === 'number' ? r.total : list.length);
@@ -203,6 +204,12 @@ function DetailPanel({ record, onClose }) {
 }
 
 export default function AdminStudentEvaluationsPage() {
+  useSEO({
+    title: 'Student Evaluations (Admin)',
+    description: 'Administrative view of student self-evaluations and final assessment scores in SIUT.',
+    noIndex: true,
+  });
+
   const [records, setRecords] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);

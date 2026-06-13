@@ -212,7 +212,7 @@ export default function DashView({ internships, feedbacks, onOpen, user }) {
       <Reveal>
         <div style={{ marginBottom: 18 }}>
           <div style={{ fontFamily: "Montserrat", fontSize: 20, fontWeight: 800, color: "var(--t1)", marginBottom: 3 }}>
-            ПОКА ЧТО НА РАЗРАБОТКЕ, {user?.name || "User"}
+            Work in progress, {user?.name || "User"}
           </div>
           <div style={{ fontSize: 13, color: "var(--t3)" }}>
             {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}

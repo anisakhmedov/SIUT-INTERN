@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { get } from "../utils/apiClient";
 import { toast } from "../utils/toast";
 import PageState from "./PageState";
+import { useSEO } from "../utils/useSEO";
 import {
   Activity, LogIn, LogOut, RefreshCw, Plus, Edit2, Trash2,
   User, UserPlus, UserCheck, UserX, FileText, Send, CheckCircle2,
@@ -291,6 +292,12 @@ function LogDetailModal({ log, onClose }) {
    MAIN PAGE
 ───────────────────────────────────────────── */
 export default function ActivityLogsPage() {
+  useSEO({
+    title: 'Activity Logs (Admin)',
+    description: 'Full audit log of all user actions in the SIUT internship management system.',
+    noIndex: true,
+  });
+
   const [logs,    setLogs]    = useState([]);
   const [total,   setTotal]   = useState(0);
   const [pages,   setPages]   = useState(1);

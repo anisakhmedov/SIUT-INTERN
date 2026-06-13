@@ -3,6 +3,7 @@ import { Save, Lock, Eye, EyeOff, Bell, User, Shield, Phone, AtSign, MessageCirc
 import Reveal from "../shared/Reveal";
 import { get, post, patch, del } from "../../utils/apiClient";
 import { toast } from "../../utils/toast";
+import { useSEO } from "../../utils/useSEO";
 import { getUserInitials } from "../../utils/internshipUtils";
 
 const Spinner = ({ size = 14 }) => (
@@ -99,6 +100,12 @@ const Field = ({ label, value, onChange, placeholder, icon, readOnly }) => (
 );
 
 export default function SetView({ user }) {
+  useSEO({
+    title: 'Settings',
+    description: 'Manage your profile, security, and notification preferences in the SIUT portal.',
+    noIndex: true,
+  });
+
   const [n, setN] = useState({ email: true, push: false });
   const [nLoading, setNLoading] = useState(true);
   const [nSaving, setNSaving] = useState(false);
@@ -223,8 +230,8 @@ export default function SetView({ user }) {
         <div className="gc set-card">
           <SectionHeader icon={<User size={15} color="#635bff" />} label="Profile" />
           <div className="set-grid">
-            <Field label="First Name"  value={form.name}     onChange={f("name")}     placeholder="Имя" />
-            <Field label="Last Name"   value={form.surname}  onChange={f("surname")}  placeholder="Фамилия" />
+            <Field label="First Name"  value={form.name}     onChange={f("name")}     placeholder="First name" />
+            <Field label="Last Name"   value={form.surname}  onChange={f("surname")}  placeholder="Last name" />
             <Field label="Login"       value={form.login}    onChange={f("login")}    placeholder="login" />
             <Field label="Email"       value={form.email}    onChange={f("email")}    placeholder="email@example.com" icon={<AtSign size={14} />} />
             <Field label="Phone"       value={form.phone}    onChange={f("phone")}    placeholder="+7 999 000 00 00"  icon={<Phone size={14} />} />

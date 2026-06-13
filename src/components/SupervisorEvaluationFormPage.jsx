@@ -3,6 +3,7 @@ import { get, post } from '../utils/apiClient';
 import { toast } from '../utils/toast';
 import { AlertCircle, CheckCircle2, Briefcase } from 'lucide-react';
 import { CustomSelect, CustomDatePicker, RatingField } from './ui';
+import { useSEO } from '../utils/useSEO';
 
 /* ── helpers ── */
 const getStudentId = (s) => String(s?._id || s?.id || s?.studentId || '').trim();
@@ -93,6 +94,12 @@ const OPEN_ENDED = [
 
 /* ── main component ── */
 export default function SupervisorEvaluationFormPage({ publicMode = false }) {
+  useSEO({
+    title: 'Supervisor Report',
+    description: 'Submit your internship supervisor evaluation report for SIUT student practical training.',
+    noIndex: true,
+  });
+
   const isMobile = useIsMobile();
   const apiOpts = useMemo(
     () => publicMode

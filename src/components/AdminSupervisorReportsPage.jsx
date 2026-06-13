@@ -4,6 +4,7 @@ import { toast } from '../utils/toast';
 import { Search, X, ChevronLeft, ChevronRight, Eye, Star } from 'lucide-react';
 import PageState from './PageState';
 import { CustomSelect } from './ui';
+import { useSEO } from '../utils/useSEO';
 
 const normList = (r) => (Array.isArray(r) ? r : Array.isArray(r?.data) ? r.data : []);
 const normTotal = (r, list) => (typeof r?.total === 'number' ? r.total : list.length);
@@ -184,6 +185,12 @@ function DetailPanel({ record, onClose }) {
 }
 
 export default function AdminSupervisorReportsPage() {
+  useSEO({
+    title: 'Supervisor Reports (Admin)',
+    description: 'Administrative view and analysis of all supervisor evaluation reports in the SIUT system.',
+    noIndex: true,
+  });
+
   const [records, setRecords] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);

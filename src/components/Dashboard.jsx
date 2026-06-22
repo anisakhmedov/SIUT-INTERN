@@ -9,11 +9,11 @@ const clampProgress = (value) =>
   Math.max(0, Math.min(100, Number.isFinite(value) ? value : 0));
 
 const calculateProgressFromDays = (days) => {
-  const dayList = Array.isArray(days) ? days : [];
-  if (dayList.length === 0) return null;
+  if (!Array.isArray(days)) return null;
+  if (days.length === 0) return 0;
 
-  const reported = dayList.filter((day) => hasReportContent(day)).length;
-  return clampProgress(Math.round((reported / dayList.length) * 100));
+  const reported = days.filter((day) => hasReportContent(day)).length;
+  return clampProgress(Math.round((reported / days.length) * 100));
 };
 
 const parseProgressValue = (value) => {
@@ -27,6 +27,18 @@ const parseProgressValue = (value) => {
 };
 
 const extractDateRange = (faculty) => {
+  // Derive dates directly from days array, same as InternshipPage
+  const dayList = Array.isArray(faculty?.days) ? faculty.days : [];
+  if (dayList.length > 0) {
+    const start = dayList[0]?.date ? String(dayList[0].date).slice(0, 10) : "";
+    const end = dayList[dayList.length - 1]?.date
+      ? String(dayList[dayList.length - 1].date).slice(0, 10)
+      : "";
+    if (start && end) return { start, end, durationText: "" };
+    if (start || end) return { start, end, durationText: "" };
+  }
+
+  // Fall back to stored duration / explicit date fields
   const duration = faculty?.duration;
 
   if (duration && typeof duration === "object") {

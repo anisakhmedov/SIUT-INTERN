@@ -1,0 +1,53 @@
+[
+  {
+    "_id": "697517fdfa94d76d1fdb295f",
+    "title": "Название",
+    "location": "Точная локация",
+    "openTime": "9:00",
+    "closeTime": "23:00",
+    "image": "https://demo2bpi.s3.us-east-1.amazonaws.com/1769281532942-56547778.png",
+    "description": "Описание",
+    "discount": "10",
+    "coords": [
+      "[number, number]"
+    ],
+    "type": "Ресторан",
+    "social": [
+      ""
+    ],
+    "images": [
+      "https://demo2bpi.s3.us-east-1.amazonaws.com/1769281532943-765203308.png",
+      "https://demo2bpi.s3.us-east-1.amazonaws.com/1769281532986-782321098.png",
+      "https://demo2bpi.s3.us-east-1.amazonaws.com/1769281532999-163155929.png"
+    ],
+    "created_at": "2026-01-24T19:05:33.190Z",
+    "__v": 0
+  },
+  {
+    "_id": "6975195e71808747e339bcbc",
+    "title": "Название",
+    "location": "Точная локация",
+    "openTime": "9:00",
+    "closeTime": "23:00",
+    "image": "https://demo2bpi.s3.us-east-1.amazonaws.com/1769281886212-818246248.png",
+    "description": "Описание",
+    "discount": "10",
+    "coords": [
+      "84.1235",
+      "65.4541"
+    ],
+    "type": "Ресторан",
+    "social": [
+      "{\n            icon: \"/_nuxt/public/social/inst.png\",\n            label: \"inst\",\n            link: \"https://www.instagram.com/family_park.uz/\",\n          },",
+      "{\n            icon: \"/_nuxt/public/social/inst.png\",\n            label: \"inst\",\n            link: \"https://www.instagram.com/family_park.uz/\",\n          },",
+      "{\n            icon: \"/_nuxt/public/social/inst.png\",\n            label: \"inst\",\n            link: \"https://www.instagram.com/family_park.uz/\",\n          },"
+    ],
+    "images": [
+      "https://demo2bpi.s3.us-east-1.amazonaws.com/1769281886213-544684622.png",
+      "https://demo2bpi.s3.us-east-1.amazonaws.com/1769281886235-262109887.png",
+      "https://demo2bpi.s3.us-east-1.amazonaws.com/1769281886253-264505809.png"
+    ],
+    "created_at": "2026-01-24T19:11:26.414Z",
+    "__v": 0
+  }
+]

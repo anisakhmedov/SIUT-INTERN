@@ -1,0 +1,117 @@
+[
+  {
+    "_id": "6a1a767c939c0d854f7a61ba",
+    "studentInformation": {
+      "fullname": "Amina Rahman",
+      "studentID": "SIUT-2026-0142",
+      "degreeProgram": "Software Engineering",
+      "yearOfStudy": 3,
+      "internshipStartDate": "2026-01-12T00:00:00.000Z",
+      "internshipEndDate": "2026-05-08T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "FutureTech Labs",
+      "department": "Product Engineering",
+      "supervisorContact": "+92 300 1234567"
+    },
+    "professionalism": {
+      "comments": "Consistently punctual, professional, and well prepared.",
+      "punctualityAndAttendance": 5,
+      "dressCodeAndAppearance": 4,
+      "adherenceToCompanyPolicies": 5
+    },
+    "workEthic": {
+      "comments": "Shows strong ownership and reliably meets deadlines.",
+      "initiativeAndProactiveness": 5,
+      "timeManagement": 4,
+      "abilityToMeetDeadlines": 5
+    },
+    "technicalSkills": {
+      "comments": "Quickly adapts to new tools and produces solid work.",
+      "applicationOfAcademicKnowledge": 4,
+      "abilityToLearnNewSkillsTools": 5,
+      "qualityOfWorkOutput": 4
+    },
+    "communicationSkills": {
+      "comments": "Communicates clearly and works well with the team.",
+      "verbalCommunication": 4,
+      "writtenCommunication": 4,
+      "teamCollaboration": 5
+    },
+    "problemSolvingSkills": {
+      "comments": "Approaches blockers calmly and proposes useful solutions.",
+      "analyticalThinking": 4,
+      "creativityAndInnovation": 4,
+      "abilityToHandleChallenges": 5
+    },
+    "overallPerformance": {
+      "comments": "A strong candidate for future placement opportunities.",
+      "contributionToTheTeam": 5,
+      "alignmentWithCompanyGoals": 4,
+      "potentialForFutureEmployment": 5
+    },
+    "openEndedQuestions": {
+      "strengths": "Reliable, proactive, and eager to learn.",
+      "areasOfImprovement": "Can continue building deeper domain expertise.",
+      "projectTaskFeedback": "Completed tasks thoughtfully and with good attention to detail.",
+      "learningAndGrowth": "Made clear progress throughout the internship.",
+      "teamDynamics": "Positive impact on team communication and collaboration.",
+      "adaptability": "Adjusted quickly to changing requirements and tools.",
+      "feedbackForStudent": "Keep challenging yourself with larger technical tasks.",
+      "feedbackForUniversity": "Great candidate with strong practical readiness."
+    },
+    "finalRecommendation": {
+      "finalRating": "3-4",
+      "supervisorRecommendation": "recommend-future-opportunities",
+      "declarationAccepted": true,
+      "supervisorFullName": "Muhammad Ali",
+      "date": "2026-05-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-05-30T05:32:44.904Z",
+    "updatedAt": "2026-05-30T05:32:44.904Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2341982526e20786ab29e9",
+    "studentInformation": {
+      "fullname": "Anis",
+      "studentID": "asdasdasd",
+      "degreeProgram": "acs",
+      "yearOfStudy": 225,
+      "internshipStartDate": "2026-06-18T00:00:00.000Z",
+      "internshipEndDate": "2026-06-25T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "asd",
+      "department": "asda",
+      "supervisorContact": "sada"
+    },
+    "internshipOverview": {
+      "internshipRole": "asdsd",
+      "keyProjectsTasks": "asdsdas",
+      "skillsDeveloped": "dsd",
+      "challengesFaced": "asdds",
+      "achievements": "asdasd"
+    },
+    "reflectionOnLearning": {
+      "alignmentWithAcademicKnowledge": "asdsda",
+      "newKnowledgeGained": "sdasd",
+      "careerGoals": "asdasd"
+    },
+    "feedback": {
+      "companySupport": "asdas",
+      "workEnvironment": "dasdsd",
+      "suggestionsForCompany": "asdasd",
+      "universityPreparation": "asdsdas",
+      "internshipCoordination": "asdas",
+      "suggestionsForUniversity": "asdasd",
+      "finalReport": "asdads",
+      "overallRating": 5,
+      "finalComments": "asdasdasdasdasd",
+      "studentDeclaration": true
+    },
+    "createdAt": "2026-06-05T21:37:28.303Z",
+    "updatedAt": "2026-06-05T21:37:28.303Z",
+    "__v": 0
+  }
+]

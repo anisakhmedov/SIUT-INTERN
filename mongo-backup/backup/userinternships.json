@@ -1,0 +1,725 @@
+[
+  {
+    "_id": "69aa845a3d054c06899c6b45",
+    "name": "Anis",
+    "surname": "Akhmedov",
+    "login": "akhmedovanis",
+    "password": "$2b$12$IYd3iELfuO7UPBpAbvvZK..J6tIOAB7tOJSA3wMhD6DCr6vzLuwoe",
+    "role": "Admin",
+    "__v": 0,
+    "updatedAt": "2026-07-15T19:08:01.375Z",
+    "contact": {
+      "email": "akhmedovanis5@gmail.com",
+      "phone": "+998915344421",
+      "telegram": "akhmedoanis",
+      "whatsapp": "+998951744169"
+    },
+    "notifications": {
+      "email": true,
+      "push": true
+    },
+    "refreshToken": "2a6389d4e9fc91a3f53278a80a9d014f94f357ab6606b880baa77c7af4de77b8f729feb62bdfaef1"
+  },
+  {
+    "_id": "69d8037412fbd80a405a0f89",
+    "name": "Garun",
+    "surname": "Georgievich",
+    "login": "garun",
+    "password": "$2b$12$0F08dAAVtYWX6/hnl4fA1OO5l/1H/lrrGn76W5T/xFyQo1G25hjY.",
+    "role": "Admin",
+    "__v": 0,
+    "updatedAt": "2026-07-19T14:44:23.956Z",
+    "contact": {
+      "email": "garun.ayrapetyan@gmail.com",
+      "phone": "+998993602411",
+      "telegram": "GarunAyrapetyan",
+      "whatsapp": "+998993602411"
+    },
+    "notifications": {
+      "email": true,
+      "push": false
+    },
+    "refreshToken": "729a1ca666c68f983b71eb3abdde0d0e6a110d3c78899c1adb1b779ec50dfa2a557e94a1a7e6fbbf"
+  },
+  {
+    "_id": "69d803a612fbd80a405a0f91",
+    "name": "Josiah",
+    "surname": "Ng",
+    "login": "josiahng",
+    "password": "$2b$12$m.81YtvzXqYkKe4HDB0hl.3bgQEAMuo6mb5KsZWBiUPpHH85N5Bom",
+    "role": "Tutor",
+    "__v": 0,
+    "updatedAt": "2026-07-10T04:14:44.123Z",
+    "contact": {
+      "email": "",
+      "phone": "",
+      "telegram": "",
+      "whatsapp": ""
+    },
+    "notifications": {
+      "email": false,
+      "push": false
+    },
+    "refreshToken": "0808c71064ce0ec33a33bd2d360bf8b1dfb64b62e683829e3fb39d45c9cb8cbb16c18c8ef360b8fb"
+  },
+  {
+    "_id": "69da4efca22dc591bcedaa8f",
+    "name": "Islom",
+    "surname": "Rashidov",
+    "login": "rashidovislom",
+    "password": "$2b$12$uwsjI11oepL5txDuWfe7purXaJEAFv6Ywvej4RdrsLge52ORq1a.e",
+    "role": "Tutor",
+    "createdAt": "2026-04-11T13:39:08.287Z",
+    "updatedAt": "2026-06-30T13:48:17.019Z",
+    "__v": 0,
+    "contact": {
+      "email": "",
+      "phone": "",
+      "telegram": "",
+      "whatsapp": ""
+    },
+    "notifications": {
+      "email": false,
+      "push": false
+    },
+    "refreshToken": "f78e3fc5a0f7d2231bd9756d0cd1c619775225c164295dac8e8ea793e11e4404020cefe1bb97a6d8"
+  },
+  {
+    "_id": "69da4f18a22dc591bcedaa92",
+    "name": "Jakhongir",
+    "surname": "Farkhodov",
+    "login": "farkhodovjakhongir",
+    "password": "$2b$12$vLSRNBCEOgMQC6C2KbyRmOv.QXzDVgKC/xTydwpmHwHy2TDmGpTZK",
+    "role": "Tutor",
+    "createdAt": "2026-04-11T13:39:36.679Z",
+    "updatedAt": "2026-07-17T12:54:56.256Z",
+    "__v": 0,
+    "contact": {
+      "email": "",
+      "phone": "",
+      "telegram": "",
+      "whatsapp": ""
+    },
+    "notifications": {
+      "email": false,
+      "push": false
+    },
+    "refreshToken": "d496f44d1cc7619f4379eb45cf5a1f646d48f1722e06a78fa5df41daef4da6e57eed33bb7f85d328"
+  },
+  {
+    "_id": "69da4f2ca22dc591bcedaa95",
+    "name": "Aziza",
+    "surname": "Kuldasheva",
+    "login": "kuldashevaaziza",
+    "password": "$2b$12$0rHwr2mCheu8AK2r3VElP.9MSYnoKRCewYPnpS5aBcN93btOk4UT2",
+    "role": "Tutor",
+    "createdAt": "2026-04-11T13:39:56.135Z",
+    "updatedAt": "2026-05-24T08:25:46.429Z",
+    "__v": 0,
+    "contact": {
+      "email": "",
+      "phone": "",
+      "telegram": "",
+      "whatsapp": ""
+    }
+  },
+  {
+    "_id": "69da4f3ba22dc591bcedaa98",
+    "name": "Sohib",
+    "surname": "Rashidi",
+    "login": "rashidisohib",
+    "password": "$2b$12$XIC.C214HXqiZcwTvW5oZ.hFoyGe56uztDTqzjtgErqZYGQMcksxO",
+    "role": "Tutor",
+    "createdAt": "2026-04-11T13:40:11.908Z",
+    "updatedAt": "2026-04-11T13:40:11.908Z",
+    "__v": 0
+  },
+  {
+    "_id": "69da4f53a22dc591bcedaa9b",
+    "name": "Ulugbek",
+    "surname": "Amonov",
+    "login": "amonovulugbek",
+    "password": "$2b$12$7tH.EsOXqxQ0Ww8GzoP9Delfn2pS7gusDSA6R66QT88lS121v2Ome",
+    "role": "Tutor",
+    "createdAt": "2026-04-11T13:40:35.096Z",
+    "updatedAt": "2026-06-22T10:56:35.777Z",
+    "__v": 0,
+    "contact": {
+      "email": "",
+      "phone": "",
+      "telegram": "",
+      "whatsapp": ""
+    },
+    "notifications": {
+      "email": false,
+      "push": false
+    },
+    "refreshToken": "6077f39be227bf13026d9eb8ac4cdbe2e6f580eb1ae2990d7d068675b50366c3c19bf822b18af4a4"
+  },
+  {
+    "_id": "69da4f64a22dc591bcedaa9e",
+    "name": "Albina",
+    "surname": "Sarvarova",
+    "login": "sarvarovaalbina",
+    "password": "$2b$12$Oy.YT971hIsqlEvbRwEPJ.W31K7uv47m8LAY3CWf80RVFrJ4F3osK",
+    "role": "Tutor",
+    "createdAt": "2026-04-11T13:40:52.598Z",
+    "updatedAt": "2026-07-10T10:14:38.107Z",
+    "__v": 0,
+    "contact": {
+      "email": "",
+      "phone": "",
+      "telegram": "",
+      "whatsapp": ""
+    },
+    "notifications": {
+      "email": false,
+      "push": false
+    },
+    "refreshToken": "3e3744c630e9f0f1646da53a2a4d4a63a2ab354e88e603140d378f5123dad3875d6e4ed3083083a0"
+  },
+  {
+    "_id": "69da4f74a22dc591bcedaaa1",
+    "name": "Maftuna",
+    "surname": "Khakimova",
+    "login": "khakimovamaftuna",
+    "password": "$2b$12$FkeCfXOx9H3xoudv8RxOkO5s5iy7PPyfvH3RY7az4tJeTYuLOcqbS",
+    "role": "Tutor",
+    "createdAt": "2026-04-11T13:41:08.715Z",
+    "updatedAt": "2026-04-11T13:41:08.715Z",
+    "__v": 0
+  },
+  {
+    "_id": "69da4f82a22dc591bcedaaa4",
+    "name": "Shakhnoza",
+    "surname": "Kodirova",
+    "login": "kodirovashakhnoza",
+    "password": "$2b$12$fUdxwizUQKQ6iP/drf3WfetOCvdxPijyaTQl33ncduzn4ry3bqOYi",
+    "role": "Tutor",
+    "createdAt": "2026-04-11T13:41:22.547Z",
+    "updatedAt": "2026-04-11T13:41:22.547Z",
+    "__v": 0
+  },
+  {
+    "_id": "69da4f92a22dc591bcedaaa7",
+    "name": "Farangiz",
+    "surname": "Bakhodirova",
+    "login": "bakhodirovafarangiz",
+    "password": "$2b$12$A8Lp8.n1mdBMItJeBCj4QurHQy4vlpmcSY7Fx7mxqJfxMMl.Wb7Mu",
+    "role": "Tutor",
+    "createdAt": "2026-04-11T13:41:38.732Z",
+    "updatedAt": "2026-04-11T13:41:38.732Z",
+    "__v": 0
+  },
+  {
+    "_id": "69da4fb1a22dc591bcedaaaa",
+    "name": "Garun",
+    "surname": "Ayrapetyan",
+    "login": "ayrapetyangarun",
+    "password": "$2b$12$s5FlYWWAy4/S4MzFHA9vZ.j/1jjflg56UvjO.zNBUANNEBC3pyI.G",
+    "role": "Tutor",
+    "createdAt": "2026-04-11T13:42:09.052Z",
+    "updatedAt": "2026-06-13T15:51:25.951Z",
+    "__v": 0,
+    "contact": {
+      "email": "",
+      "phone": "",
+      "telegram": "",
+      "whatsapp": ""
+    },
+    "notifications": {
+      "email": false,
+      "push": false
+    },
+    "refreshToken": "83e90f535c52f4ef30e49f6602e2832aa6056a6f348c7ab1c38e2a0c2e068925084f727de93a4e4e"
+  },
+  {
+    "_id": "69da4fbea22dc591bcedaaad",
+    "name": "Pulat",
+    "surname": "Nazarov",
+    "login": "nazarovpulat",
+    "password": "$2b$12$Y7cx2uazf0.gR7tBYYCnAOXxJE44rICAWeltcSDR2V/gPUmOYsv9y",
+    "role": "Tutor",
+    "createdAt": "2026-04-11T13:42:22.866Z",
+    "updatedAt": "2026-05-24T08:28:29.977Z",
+    "__v": 0,
+    "contact": {
+      "email": "",
+      "phone": "",
+      "telegram": "",
+      "whatsapp": ""
+    }
+  },
+  {
+    "_id": "69da4fcba22dc591bcedaab0",
+    "name": "Mavzuna",
+    "surname": "Mukhiddinova",
+    "login": "mukhiddinovamavzuna",
+    "password": "$2b$12$6dVdKtrBMkNqZ44mYQIAHua5yNORS0ff8o8DsXkQBP7GsL1Ir.lTC",
+    "role": "Tutor",
+    "createdAt": "2026-04-11T13:42:35.862Z",
+    "updatedAt": "2026-07-13T13:03:04.830Z",
+    "__v": 0,
+    "contact": {
+      "email": "",
+      "phone": "+998915266008",
+      "telegram": "",
+      "whatsapp": ""
+    },
+    "notifications": {
+      "email": false,
+      "push": false
+    },
+    "refreshToken": "0c12f17d89c694d87ac38951ece3bb1cc2c9770b2990f2d3a61d6ddc4d26185722fee834e9fe6d28"
+  },
+  {
+    "_id": "69da4fdaa22dc591bcedaab3",
+    "name": "Zukhro",
+    "surname": "Rustamova",
+    "login": "rustamovazukhro",
+    "password": "$2b$12$yVn5YOGbXM1WhyRne2YhxuoOgKUaIoKn0CTG6hqUgwtFMrXy6x6c.",
+    "role": "Tutor",
+    "createdAt": "2026-04-11T13:42:50.167Z",
+    "updatedAt": "2026-06-22T13:33:14.737Z",
+    "__v": 0,
+    "contact": {
+      "email": "",
+      "phone": "",
+      "telegram": "",
+      "whatsapp": ""
+    },
+    "notifications": {
+      "email": false,
+      "push": false
+    },
+    "refreshToken": "2d01214d180ee5ee91f4f35fc8aa835ceeffc2134e966c19904dd158c0ecc7bce5566fa73ed206e7"
+  },
+  {
+    "_id": "69da4fe8a22dc591bcedaab6",
+    "name": "Nilufar",
+    "surname": "Abrorova",
+    "login": "abrorovanilufar",
+    "password": "$2b$12$qbzyZ8m/Y8EkgWuKUqv9/eMGtcKGOXRtcEA/4mojR5JZF8NDMMuZ6",
+    "role": "Tutor",
+    "createdAt": "2026-04-11T13:43:04.360Z",
+    "updatedAt": "2026-07-10T04:33:04.970Z",
+    "__v": 0,
+    "contact": {
+      "email": "",
+      "phone": "+998979214304",
+      "telegram": "",
+      "whatsapp": ""
+    },
+    "notifications": {
+      "email": false,
+      "push": false
+    },
+    "refreshToken": "4a1b464f9863d9434c709ec6817fd71eeb735b4b2c6583d4212138b35a53efbd2c3904f772955ce9"
+  },
+  {
+    "_id": "69da4ffca22dc591bcedaab9",
+    "name": "Sherzod",
+    "surname": "Allayev",
+    "login": "allayevsherzod",
+    "password": "$2b$12$TbzUuvMay29LzJJOAeMsteu5CnlKGq/8/7nuTXxDMCrkdP7sb3pDK",
+    "role": "Tutor",
+    "createdAt": "2026-04-11T13:43:24.077Z",
+    "updatedAt": "2026-04-11T13:43:24.077Z",
+    "__v": 0
+  },
+  {
+    "_id": "69da500ea22dc591bcedaabc",
+    "name": "Abdullo",
+    "surname": "Khakimov",
+    "login": "khakimovabdullo",
+    "password": "$2b$12$TujHY4imDxa/DWg7EUb0Qe.pAbkspnPCOqbIqEgj2ybxInkWhHLSm",
+    "role": "Tutor",
+    "createdAt": "2026-04-11T13:43:42.222Z",
+    "updatedAt": "2026-05-24T08:32:03.249Z",
+    "__v": 0,
+    "contact": {
+      "email": "",
+      "phone": "",
+      "telegram": "",
+      "whatsapp": ""
+    }
+  },
+  {
+    "_id": "69da501ea22dc591bcedaabf",
+    "name": "Mars",
+    "surname": "Abutalipov",
+    "login": "abutalipovmars",
+    "password": "$2b$12$CA2DfMl2xFoBoiMypChffenDa2YHywJAMQmWfTP0XjPCFJbcE4iOi",
+    "role": "Tutor",
+    "createdAt": "2026-04-11T13:43:58.870Z",
+    "updatedAt": "2026-06-30T06:26:33.745Z",
+    "__v": 0,
+    "contact": {
+      "email": "",
+      "phone": "",
+      "telegram": "",
+      "whatsapp": ""
+    },
+    "notifications": {
+      "email": false,
+      "push": false
+    },
+    "refreshToken": "33ff710482fcffeab53746350ec650963f2421fc93b1239501e4397ad9a371638f9b4bd6d3f5e401"
+  },
+  {
+    "_id": "69da502fa22dc591bcedaac2",
+    "name": "Olimjon",
+    "surname": "Yalgashev",
+    "login": "yalgashevolimjon",
+    "password": "$2b$12$dgqj0iShpAOGy0uW8HGP8uJx.jD7P4Ux97LHIwFvHj/Ynw3e5/4Tq",
+    "role": "Tutor",
+    "createdAt": "2026-04-11T13:44:15.715Z",
+    "updatedAt": "2026-05-24T08:33:31.917Z",
+    "__v": 0,
+    "contact": {
+      "email": "",
+      "phone": "",
+      "telegram": "",
+      "whatsapp": ""
+    }
+  },
+  {
+    "_id": "69da5046a22dc591bcedaac5",
+    "name": "Sardor",
+    "surname": "Fayzullayev",
+    "login": "fayzullayevsardor",
+    "password": "$2b$12$8wOxrd1mf/Tb0v1cJxvrm.D0ME1Lz6scyihBQnzCMjd39INKz1zZS",
+    "role": "Tutor",
+    "createdAt": "2026-04-11T13:44:38.737Z",
+    "updatedAt": "2026-07-15T08:53:51.433Z",
+    "__v": 0,
+    "contact": {
+      "email": "",
+      "phone": "",
+      "telegram": "",
+      "whatsapp": ""
+    },
+    "notifications": {
+      "email": false,
+      "push": false
+    },
+    "refreshToken": "782a61ba36202a5afaeb2980fdfef61fcfcd9cb25d997e881b5ac2654eca449ba5ea3d3994d29e27"
+  },
+  {
+    "_id": "69da5054a22dc591bcedaac8",
+    "name": "Kseniya",
+    "surname": "Pak",
+    "login": "pakkseniya",
+    "password": "$2b$12$pH.NbGz0464ay3lMpC6zduSUhO72GRWCI.IzAVNIqAi/pT0I510Zq",
+    "role": "Tutor",
+    "createdAt": "2026-04-11T13:44:52.237Z",
+    "updatedAt": "2026-05-24T08:34:51.637Z",
+    "__v": 0,
+    "contact": {
+      "email": "",
+      "phone": "",
+      "telegram": "",
+      "whatsapp": ""
+    }
+  },
+  {
+    "_id": "69ea7cfc4add29daf2c50fcf",
+    "name": "Gulka",
+    "surname": "Akhmedova",
+    "login": "gulka",
+    "contact": {
+      "email": "",
+      "phone": "",
+      "telegram": "",
+      "whatsapp": ""
+    },
+    "password": "$2b$12$wKQcg7mICqYaD96Z9SBKpe1/o3UggigLa8SxzGjq4lNLwmvut.V32",
+    "role": "Admin",
+    "createdAt": "2026-04-23T20:11:40.980Z",
+    "updatedAt": "2026-04-23T20:11:40.980Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a0d6161587753337f450b8f",
+    "name": "Mohammad",
+    "surname": "Galety",
+    "login": "galetymohammad",
+    "contact": {
+      "email": "",
+      "phone": "",
+      "telegram": "@galety_143",
+      "whatsapp": ""
+    },
+    "password": "$2b$12$VuQexTDGWGaGjNxZ8PKXWuT0IFCRc8Mr8KCWPUMUNZGRhS9Gd.zD6",
+    "role": "Tutor",
+    "createdAt": "2026-05-20T07:23:13.605Z",
+    "updatedAt": "2026-06-13T06:45:41.007Z",
+    "__v": 0,
+    "notifications": {
+      "email": false,
+      "push": false
+    },
+    "refreshToken": "20bc3c3e9700d4e314053fd9a30731d2c2675fd29caeb64f75c67a27b64232ccf01c67056adbdf83"
+  },
+  {
+    "_id": "6a12b4ccd4a6859a0ae8c017",
+    "name": "Dilfuza",
+    "surname": "Ataullayeva",
+    "login": "dilfuza",
+    "contact": {
+      "email": "",
+      "phone": "",
+      "telegram": "",
+      "whatsapp": ""
+    },
+    "password": "$2b$12$b41H2jmJtBz6rIffbky3V.2DrVu./HKLhN380cfiYSY/ESDk/cK8G",
+    "role": "Tutor",
+    "createdAt": "2026-05-24T08:20:28.380Z",
+    "updatedAt": "2026-07-09T05:40:44.456Z",
+    "__v": 0,
+    "notifications": {
+      "email": false,
+      "push": false
+    },
+    "refreshToken": "bacca1385aedfdea114e04391aa8e4950aca2766437635e82498882c08945d3b37976475b11440e3"
+  },
+  {
+    "_id": "6a12b88dd4a6859a0ae8c05c",
+    "name": "Yusuf",
+    "surname": "Abdullayev",
+    "login": "yusufabdullayev",
+    "contact": {
+      "email": "",
+      "phone": "",
+      "telegram": "",
+      "whatsapp": ""
+    },
+    "password": "$2b$12$ulxlYLuRRDOuh5aW.cypBeqFhm.uG8DqaXMPnQAoFKFq.89JRnjKW",
+    "role": "Rector",
+    "createdAt": "2026-05-24T08:36:29.453Z",
+    "updatedAt": "2026-05-24T08:36:29.453Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a12b8c8d4a6859a0ae8c05f",
+    "name": "Bobby",
+    "surname": "Hall",
+    "login": "bobbyhall",
+    "contact": {
+      "email": "",
+      "phone": "",
+      "telegram": "",
+      "whatsapp": ""
+    },
+    "password": "$2b$12$OcNqv6ld/DhumJAzjpf7zOiMGVaG5Nx2EGF3Wd6JE99D9Z/yb3i8S",
+    "role": "Admin",
+    "createdAt": "2026-05-24T08:37:28.076Z",
+    "updatedAt": "2026-05-31T18:09:14.205Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a12b90cd4a6859a0ae8c064",
+    "name": "Anvar",
+    "surname": "Sayfullayev",
+    "login": "anvarsayfullayev",
+    "contact": {
+      "email": "",
+      "phone": "",
+      "telegram": "",
+      "whatsapp": ""
+    },
+    "password": "$2b$12$emzAtJ9Qr4n175QOqHec5ek/XWs/JUwmtWJ616mBqVCDQxJGHFtKW",
+    "role": "Admin",
+    "createdAt": "2026-05-24T08:38:36.630Z",
+    "updatedAt": "2026-05-24T08:39:31.879Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a12ba0dd4a6859a0ae8c087",
+    "name": "Mohammad Reza",
+    "surname": "Bahrami",
+    "login": "mohammadrezabahrami",
+    "contact": {
+      "email": "",
+      "phone": "",
+      "telegram": "",
+      "whatsapp": ""
+    },
+    "password": "$2b$12$rdk0L6nAad2j7jgLofxI/uvlSFo7651oARc4VcvcNmXuWH17TsYlS",
+    "role": "Admin",
+    "createdAt": "2026-05-24T08:42:53.503Z",
+    "updatedAt": "2026-06-13T15:34:19.331Z",
+    "__v": 0,
+    "notifications": {
+      "email": false,
+      "push": false
+    }
+  },
+  {
+    "_id": "6a12ba51d4a6859a0ae8c08a",
+    "name": "Ibragimov",
+    "surname": "Nozir",
+    "login": "ibragimovnozir",
+    "contact": {
+      "email": "",
+      "phone": "",
+      "telegram": "",
+      "whatsapp": ""
+    },
+    "password": "$2b$12$DX2AwmeDuAXgnts4b1KGOuqzdDMRjKWlr7JbbnstmbeeyXk0XIC3i",
+    "role": "Admin",
+    "createdAt": "2026-05-24T08:44:01.285Z",
+    "updatedAt": "2026-06-02T03:30:15.928Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a12e7e6d4a6859a0ae8c25c",
+    "name": "Umedullo",
+    "surname": "Maxmudov",
+    "login": "umedullomaxmudov",
+    "contact": {
+      "email": "",
+      "phone": "",
+      "telegram": "",
+      "whatsapp": ""
+    },
+    "password": "$2b$12$LSEPaTyZSGKRIiCO.jX7Vum7S30EgJa8hB5bvfNzywfQun7.TEoQC",
+    "role": "Tutor",
+    "createdAt": "2026-05-24T11:58:30.637Z",
+    "updatedAt": "2026-06-22T07:28:12.492Z",
+    "__v": 0,
+    "notifications": {
+      "email": false,
+      "push": false
+    },
+    "refreshToken": "9eaf61d1d95da80dec514f647f6e0755412445369b9244b5932ba2f0aa1c7c096f5a53a0ba1712e2"
+  },
+  {
+    "_id": "6a14813f9852acf66c576ebd",
+    "name": "Jamshed",
+    "surname": "Abdukhafizov",
+    "login": "jamshed",
+    "contact": {
+      "email": "",
+      "phone": "",
+      "telegram": "",
+      "whatsapp": ""
+    },
+    "password": "$2b$12$B3pGchlN/8xMoleqhlAb3.2l2uji/5ldAuj0XJ5xXkKaP.kAonf/e",
+    "role": "Admin",
+    "createdAt": "2026-05-25T17:05:03.803Z",
+    "updatedAt": "2026-07-12T05:07:00.101Z",
+    "__v": 0,
+    "notifications": {
+      "email": false,
+      "push": false
+    },
+    "refreshToken": "f11532db67012fba2dbe4a1e75668e8dda73254466c155c4f8054c51f6a301d5d5e719b597d2bc93"
+  },
+  {
+    "_id": "6a1885c7dba5f3569a866202",
+    "name": "Garun",
+    "surname": "Ayrapetyan",
+    "login": "garunayrapetyan",
+    "contact": {
+      "email": "",
+      "phone": "",
+      "telegram": "",
+      "whatsapp": ""
+    },
+    "password": "$2b$12$BSHEAuOCo0f3mHJXvhaob.zKdneAdWDWMmN/BsbHcYCPKaJtSW5U.",
+    "role": "Tutor",
+    "createdAt": "2026-05-28T18:13:27.340Z",
+    "updatedAt": "2026-06-30T05:46:42.409Z",
+    "__v": 0,
+    "notifications": {
+      "email": false,
+      "push": false
+    },
+    "refreshToken": "42c9e7452f04e3028a60498061def120469213f859309516f042c79186c0eb9cc5d9e2f307d090e1"
+  },
+  {
+    "_id": "6a1c1a406997049d06d68ff7",
+    "name": "Islom",
+    "surname": "Mamatov",
+    "login": "islommamatov",
+    "contact": {
+      "email": "",
+      "phone": "",
+      "telegram": "",
+      "whatsapp": ""
+    },
+    "password": "$2b$12$ubVKil8HruZ8RNzBZ4i8Gus/OdHrV6l5U2vnFQKBGeh/TlGxprmBq",
+    "role": "Tutor",
+    "createdAt": "2026-05-31T11:23:44.963Z",
+    "updatedAt": "2026-06-22T03:57:26.294Z",
+    "__v": 0,
+    "notifications": {
+      "email": false,
+      "push": false
+    },
+    "refreshToken": "5d647616271700565b6f8527a8ec3e918416bbf9dcc1d9ef1c9d2873e9eab094dfe250173313d450"
+  },
+  {
+    "_id": "6a1fa97130b45cbab1f4b42e",
+    "name": "Anis",
+    "surname": "Akhmedov",
+    "login": "anistutor",
+    "contact": {
+      "email": "",
+      "phone": "",
+      "telegram": "",
+      "whatsapp": ""
+    },
+    "password": "$2b$12$D3uK0uXsdns4wqbr2vGVoeJijMyn9Amc8bqiTqQHKiiLQ1HagVLli",
+    "role": "Tutor",
+    "createdAt": "2026-06-03T04:11:29.574Z",
+    "updatedAt": "2026-06-03T04:11:29.574Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a298993b529edf1caf14daf",
+    "name": "Ali",
+    "surname": "Shahnawaz",
+    "login": "shahnawazali",
+    "contact": {
+      "email": "",
+      "phone": "",
+      "telegram": "",
+      "whatsapp": ""
+    },
+    "password": "$2b$12$ycymyZRZxAEqeA9yzjHq3.QSm8M37VDZOz/qu5v2dbF7gE9nbSYeW",
+    "role": "Tutor",
+    "notifications": {
+      "email": false,
+      "push": false
+    },
+    "refreshToken": "ba075b4be1860f366d6d78610ea52f1f5f9736f99aa3021e00154fe018ef6d45c422bb40b27f556e",
+    "createdAt": "2026-06-10T15:58:11.779Z",
+    "updatedAt": "2026-06-16T13:54:33.675Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2b04f419f3a55c9b0ea96e",
+    "name": "Gulka",
+    "surname": "Akhmedova",
+    "login": "akhmedovagulka",
+    "contact": {
+      "email": "",
+      "phone": "",
+      "telegram": "",
+      "whatsapp": ""
+    },
+    "password": "$2b$12$kKtJhjc6V7IAPgF24UqNN.IDpaXnFe4QvBdAJ2/AaM.sVP/aJGw8m",
+    "role": "Admin",
+    "notifications": {
+      "email": false,
+      "push": false
+    },
+    "refreshToken": "6d8d13104579ba60f277db1c744ea0a4b825825d2da11b2496cc01e71e0f83a19e61cb66011fc811",
+    "pushSubscription": null,
+    "createdAt": "2026-06-11T18:56:52.267Z",
+    "updatedAt": "2026-06-11T18:57:53.451Z",
+    "__v": 0
+  }
+]

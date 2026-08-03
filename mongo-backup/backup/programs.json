@@ -1,0 +1,62 @@
+[
+  {
+    "_id": "688f25269c1f4b5c70efe19c",
+    "program_name": "Product Design",
+    "program_code": "PD01",
+    "department_id": 4,
+    "degree_level": "Bachelor",
+    "total_credits": 180,
+    "duration_years": 3,
+    "description": "Программа по промышленному дизайну",
+    "createdAt": "2025-08-03T09:00:22.311Z",
+    "__v": 0
+  },
+  {
+    "_id": "688f2a170e0f219e3e380671",
+    "program_name": "Artificial Intelligence",
+    "program_code": "AI01",
+    "department_id": "688f1faef26320f06bb79d01",
+    "degree_level": "Bachelor",
+    "total_credits": 240,
+    "duration_years": 4,
+    "description": "Программа по ИИ",
+    "created_at": "2025-08-03T09:21:27.400Z",
+    "__v": 0
+  },
+  {
+    "_id": "688f2a170e0f219e3e380674",
+    "program_name": "Cybersecurity",
+    "program_code": "CS01",
+    "department_id": "688f1fcff26320f06bb79d03",
+    "degree_level": "Bachelor",
+    "total_credits": 240,
+    "duration_years": 4,
+    "description": "Программа по кибербезопасности",
+    "created_at": "2025-08-03T09:21:27.409Z",
+    "__v": 0
+  },
+  {
+    "_id": "688f2a170e0f219e3e380676",
+    "program_name": "Graphic Design",
+    "program_code": "GD01",
+    "department_id": "688f1fdff26320f06bb79d07",
+    "degree_level": "Bachelor",
+    "total_credits": 180,
+    "duration_years": 3,
+    "description": "Программа по дизайну",
+    "created_at": "2025-08-03T09:21:27.410Z",
+    "__v": 0
+  },
+  {
+    "_id": "688f2a170e0f219e3e380678",
+    "program_name": "Renewable Energy",
+    "program_code": "RE01",
+    "department_id": "688f1fd8f26320f06bb79d05",
+    "degree_level": "Bachelor",
+    "total_credits": 240,
+    "duration_years": 4,
+    "description": "Энергетика будущего",
+    "created_at": "2025-08-03T09:21:27.412Z",
+    "__v": 0
+  }
+]

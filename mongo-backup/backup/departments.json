@@ -1,0 +1,79 @@
+[
+  {
+    "_id": "688f1faef26320f06bb79d01",
+    "department_name": "TechNova",
+    "department_code": "TN01",
+    "description": "IT компания для ИИ и Кибербезопасности",
+    "head_of_department": "Alice Smith",
+    "office_location": "Tower A",
+    "phone": "123-456-7890",
+    "createdAt": "2025-08-03T08:37:02.891Z",
+    "__v": 0
+  },
+  {
+    "_id": "688f1fcff26320f06bb79d03",
+    "department_name": "SafeNet",
+    "department_code": "SN01",
+    "description": "Компания по кибербезопасности",
+    "head_of_department": "Bob Johnson",
+    "office_location": "Block B",
+    "phone": "123-456-7891",
+    "createdAt": "2025-08-03T08:37:35.986Z",
+    "__v": 0
+  },
+  {
+    "_id": "688f1fd8f26320f06bb79d05",
+    "department_name": "GreenPower",
+    "department_code": "GP01",
+    "description": "Энергетическая компания",
+    "head_of_department": "Carol Green",
+    "office_location": "Block C",
+    "phone": "123-456-7892",
+    "createdAt": "2025-08-03T08:37:44.328Z",
+    "__v": 0
+  },
+  {
+    "_id": "688f1fdff26320f06bb79d07",
+    "department_name": "ArtFactory",
+    "department_code": "AF01",
+    "description": "Дизайн-студия",
+    "head_of_department": "David Blue",
+    "office_location": "Block D",
+    "phone": "123-456-7893",
+    "createdAt": "2025-08-03T08:37:51.463Z",
+    "__v": 0
+  },
+  {
+    "_id": "688f1fe6f26320f06bb79d09",
+    "department_name": "OilWorld",
+    "department_code": "OW01",
+    "description": "Нефтяная компания",
+    "head_of_department": "Eve Brown",
+    "office_location": "Block E",
+    "phone": "123-456-7894",
+    "createdAt": "2025-08-03T08:37:58.453Z",
+    "__v": 0
+  },
+  {
+    "_id": "688f1fedf26320f06bb79d0b",
+    "department_name": "EduSoft",
+    "department_code": "ES01",
+    "description": "Образовательный софт",
+    "head_of_department": "Frank White",
+    "office_location": "Block F",
+    "phone": "123-456-7895",
+    "createdAt": "2025-08-03T08:38:05.035Z",
+    "__v": 0
+  },
+  {
+    "_id": "688f1ff4f26320f06bb79d0d",
+    "department_name": "MedTech",
+    "department_code": "MT01",
+    "description": "Медицинские ИТ-решения",
+    "head_of_department": "Grace Gold",
+    "office_location": "Block G",
+    "phone": "123-456-7896",
+    "createdAt": "2025-08-03T08:38:12.005Z",
+    "__v": 0
+  }
+]

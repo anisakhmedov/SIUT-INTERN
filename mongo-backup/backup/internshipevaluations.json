@@ -1,0 +1,722 @@
+[
+  {
+    "_id": "6a1731568702bfd75a9ccece",
+    "studentInformation": {
+      "fullname": "John Doe",
+      "studentID": "20240001",
+      "degreeProgram": "Computer Science",
+      "yearOfStudy": 3,
+      "internshipStartDate": "2026-01-10T00:00:00.000Z",
+      "internshipEndDate": "2026-03-10T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Example Company",
+      "department": "Software Engineering",
+      "supervisorContact": "+998901234567"
+    },
+    "professionalism": {
+      "comments": "Always on time and professional.",
+      "punctualityAndAttendance": 5,
+      "dressCodeAndAppearance": 4,
+      "adherenceToCompanyPolicies": 5
+    },
+    "workEthic": {
+      "comments": "Completed tasks independently and on schedule.",
+      "initiativeAndProactiveness": 5,
+      "timeManagement": 4,
+      "abilityToMeetDeadlines": 5
+    },
+    "technicalSkills": {
+      "comments": "Learned the stack quickly and delivered solid work.",
+      "applicationOfAcademicKnowledge": 4,
+      "abilityToLearnNewSkillsTools": 5,
+      "qualityOfWorkOutput": 4
+    },
+    "communicationSkills": {
+      "comments": "Communicated clearly with the team.",
+      "verbalCommunication": 4,
+      "writtenCommunication": 4,
+      "teamCollaboration": 5
+    },
+    "problemSolvingSkills": {
+      "comments": "Handled new tasks well and adapted fast.",
+      "analyticalThinking": 4,
+      "creativityAndInnovation": 4,
+      "abilityToHandleChallenges": 5
+    },
+    "overallPerformance": {
+      "comments": "Strong overall performance and future potential.",
+      "contributionToTheTeam": 5,
+      "alignmentWithCompanyGoals": 5,
+      "potentialForFutureEmployment": 5
+    },
+    "openEndedQuestions": {
+      "strengths": "Quick learner and dependable team member.",
+      "areasOfImprovement": "Can keep improving confidence in presentations.",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "3-4",
+      "supervisorRecommendation": "recommend-future-opportunities",
+      "declarationAccepted": true,
+      "supervisorFullName": "Jane Smith",
+      "date": "2026-05-27T00:00:00.000Z"
+    },
+    "createdAt": "2026-05-27T18:00:54.874Z",
+    "updatedAt": "2026-05-27T18:00:54.874Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a1733cb8702bfd75a9cceea",
+    "studentInformation": {
+      "fullname": "Anis Akhmedov",
+      "studentID": "123123",
+      "degreeProgram": "CS",
+      "yearOfStudy": 2025,
+      "internshipStartDate": "2026-05-13T00:00:00.000Z",
+      "internshipEndDate": "2026-05-22T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "butterfly",
+      "department": "asd",
+      "supervisorContact": "asdasdasd"
+    },
+    "professionalism": {
+      "comments": "Comments on professionalism",
+      "punctualityAndAttendance": 1,
+      "dressCodeAndAppearance": 3,
+      "adherenceToCompanyPolicies": 2
+    },
+    "workEthic": {
+      "comments": "Comment on work ethic",
+      "initiativeAndProactiveness": 2,
+      "timeManagement": 4,
+      "abilityToMeetDeadlines": 3
+    },
+    "technicalSkills": {
+      "comments": "Comments on technical skills",
+      "applicationOfAcademicKnowledge": 3,
+      "abilityToLearnNewSkillsTools": 5,
+      "qualityOfWorkOutput": 4
+    },
+    "communicationSkills": {
+      "comments": "Comments on communication skills",
+      "verbalCommunication": 1,
+      "writtenCommunication": 2,
+      "teamCollaboration": 3
+    },
+    "problemSolvingSkills": {
+      "comments": "Comments on problem-solving skills",
+      "analyticalThinking": 5,
+      "creativityAndInnovation": 4,
+      "abilityToHandleChallenges": 2
+    },
+    "overallPerformance": {
+      "comments": "Comments on overall performance",
+      "contributionToTheTeam": 2,
+      "alignmentWithCompanyGoals": 4,
+      "potentialForFutureEmployment": 5
+    },
+    "openEndedQuestions": {
+      "strengths": "Strengths",
+      "areasOfImprovement": "Areas of improvement",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "3-4",
+      "supervisorRecommendation": "recommend-future-opportunities",
+      "declarationAccepted": true,
+      "supervisorFullName": "Anis Akhmedov",
+      "date": "2026-05-27T00:00:00.000Z"
+    },
+    "createdAt": "2026-05-27T18:11:23.303Z",
+    "updatedAt": "2026-05-27T18:11:23.303Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a1734a08702bfd75a9ccef4",
+    "studentInformation": {
+      "fullname": "John Doe111",
+      "studentID": "20240001",
+      "degreeProgram": "Computer Science",
+      "yearOfStudy": 3,
+      "internshipStartDate": "2026-01-10T00:00:00.000Z",
+      "internshipEndDate": "2026-03-10T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Example Company",
+      "department": "Software Engineering",
+      "supervisorContact": "+998901234567"
+    },
+    "professionalism": {
+      "comments": "Always on time and professional.",
+      "punctualityAndAttendance": 5,
+      "dressCodeAndAppearance": 4,
+      "adherenceToCompanyPolicies": 5
+    },
+    "workEthic": {
+      "comments": "Completed tasks independently and on schedule.",
+      "initiativeAndProactiveness": 5,
+      "timeManagement": 4,
+      "abilityToMeetDeadlines": 5
+    },
+    "technicalSkills": {
+      "comments": "Learned the stack quickly and delivered solid work.",
+      "applicationOfAcademicKnowledge": 4,
+      "abilityToLearnNewSkillsTools": 5,
+      "qualityOfWorkOutput": 4
+    },
+    "communicationSkills": {
+      "comments": "Communicated clearly with the team.",
+      "verbalCommunication": 4,
+      "writtenCommunication": 4,
+      "teamCollaboration": 5
+    },
+    "problemSolvingSkills": {
+      "comments": "Handled new tasks well and adapted fast.",
+      "analyticalThinking": 4,
+      "creativityAndInnovation": 4,
+      "abilityToHandleChallenges": 5
+    },
+    "overallPerformance": {
+      "comments": "Strong overall performance and future potential.",
+      "contributionToTheTeam": 5,
+      "alignmentWithCompanyGoals": 5,
+      "potentialForFutureEmployment": 5
+    },
+    "openEndedQuestions": {
+      "strengths": "Quick learner and dependable team member.",
+      "areasOfImprovement": "Can keep improving confidence in presentations.",
+      "projectTaskFeedback": "Handled assigned tasks carefully and delivered on time.",
+      "learningAndGrowth": "Showed steady improvement throughout the internship.",
+      "teamDynamics": "Worked well with the team and accepted feedback positively.",
+      "adaptability": "Adapted quickly to new tools and changing requirements.",
+      "feedbackForStudent": "Keep building confidence and continue practicing communication.",
+      "feedbackForUniversity": "Practical exposure and more project-based coursework would be helpful."
+    },
+    "finalRecommendation": {
+      "finalRating": "3-4",
+      "supervisorRecommendation": "recommend-future-opportunities",
+      "declarationAccepted": true,
+      "supervisorFullName": "Jane Smith",
+      "date": "2026-05-27T00:00:00.000Z"
+    },
+    "createdAt": "2026-05-27T18:14:56.466Z",
+    "updatedAt": "2026-05-27T18:14:56.466Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a1736228702bfd75a9ccefe",
+    "studentInformation": {
+      "fullname": "John Doejashdjashd",
+      "studentID": "20240001",
+      "degreeProgram": "Computer Science",
+      "yearOfStudy": 3,
+      "internshipStartDate": "2026-01-10T00:00:00.000Z",
+      "internshipEndDate": "2026-03-10T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Example Company",
+      "department": "Software Engineering",
+      "supervisorContact": "+998901234567"
+    },
+    "professionalism": {
+      "comments": "Always on time and professional.",
+      "punctualityAndAttendance": 5,
+      "dressCodeAndAppearance": 4,
+      "adherenceToCompanyPolicies": 5
+    },
+    "workEthic": {
+      "comments": "Completed tasks independently and on schedule.",
+      "initiativeAndProactiveness": 5,
+      "timeManagement": 4,
+      "abilityToMeetDeadlines": 5
+    },
+    "technicalSkills": {
+      "comments": "Learned the stack quickly and delivered solid work.",
+      "applicationOfAcademicKnowledge": 4,
+      "abilityToLearnNewSkillsTools": 5,
+      "qualityOfWorkOutput": 4
+    },
+    "communicationSkills": {
+      "comments": "Communicated clearly with the team.",
+      "verbalCommunication": 4,
+      "writtenCommunication": 4,
+      "teamCollaboration": 5
+    },
+    "problemSolvingSkills": {
+      "comments": "Handled new tasks well and adapted fast.",
+      "analyticalThinking": 4,
+      "creativityAndInnovation": 4,
+      "abilityToHandleChallenges": 5
+    },
+    "overallPerformance": {
+      "comments": "Strong overall performance and future potential.",
+      "contributionToTheTeam": 5,
+      "alignmentWithCompanyGoals": 5,
+      "potentialForFutureEmployment": 5
+    },
+    "openEndedQuestions": {
+      "strengths": "Quick learner and dependable team member.",
+      "areasOfImprovement": "Can keep improving confidence in presentations.",
+      "projectTaskFeedback": "Handled assigned tasks carefully and delivered on time.",
+      "learningAndGrowth": "Showed steady improvement throughout the internship.",
+      "teamDynamics": "Worked well with the team and accepted feedback positively.",
+      "adaptability": "Adapted quickly to new tools and changing requirements.",
+      "feedbackForStudent": "Keep building confidence and continue practicing communication.",
+      "feedbackForUniversity": "Practical exposure and more project-based coursework would be helpful."
+    },
+    "finalRecommendation": {
+      "finalRating": "3-4",
+      "supervisorRecommendation": "recommend-future-opportunities",
+      "declarationAccepted": true,
+      "supervisorFullName": "Jane Smith",
+      "date": "2026-05-27T00:00:00.000Z"
+    },
+    "createdAt": "2026-05-27T18:21:22.228Z",
+    "updatedAt": "2026-05-27T18:21:22.228Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a174184c1ca8b3a6437cf26",
+    "studentInformation": {
+      "fullname": "John Doe",
+      "studentID": "20240001",
+      "degreeProgram": "Computer Science",
+      "yearOfStudy": 3,
+      "internshipStartDate": "2026-01-10T00:00:00.000Z",
+      "internshipEndDate": "2026-03-10T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Example Company",
+      "department": "Software Engineering",
+      "supervisorContact": "+998901234567"
+    },
+    "professionalism": {
+      "comments": "Always on time and professional.",
+      "punctualityAndAttendance": 5,
+      "dressCodeAndAppearance": 4,
+      "adherenceToCompanyPolicies": 5
+    },
+    "workEthic": {
+      "comments": "Completed tasks independently and on schedule.",
+      "initiativeAndProactiveness": 5,
+      "timeManagement": 4,
+      "abilityToMeetDeadlines": 5
+    },
+    "technicalSkills": {
+      "comments": "Learned the stack quickly and delivered solid work.",
+      "applicationOfAcademicKnowledge": 4,
+      "abilityToLearnNewSkillsTools": 5,
+      "qualityOfWorkOutput": 4
+    },
+    "communicationSkills": {
+      "comments": "Communicated clearly with the team.",
+      "verbalCommunication": 4,
+      "writtenCommunication": 4,
+      "teamCollaboration": 5
+    },
+    "problemSolvingSkills": {
+      "comments": "Handled new tasks well and adapted fast.",
+      "analyticalThinking": 4,
+      "creativityAndInnovation": 4,
+      "abilityToHandleChallenges": 5
+    },
+    "overallPerformance": {
+      "comments": "Strong overall performance and future potential.",
+      "contributionToTheTeam": 5,
+      "alignmentWithCompanyGoals": 5,
+      "potentialForFutureEmployment": 5
+    },
+    "openEndedQuestions": {
+      "strengths": "Quick learner and dependable team member.",
+      "areasOfImprovement": "Can keep improving confidence in presentations.",
+      "projectTaskFeedback": "Handled assigned tasks carefully and delivered on time.",
+      "learningAndGrowth": "Showed steady improvement throughout the internship.",
+      "teamDynamics": "Worked well with the team and accepted feedback positively.",
+      "adaptability": "Adapted quickly to new tools and changing requirements.",
+      "feedbackForStudent": "Keep building confidence and continue practicing communication.",
+      "feedbackForUniversity": "Practical exposure and more project-based coursework would be helpful."
+    },
+    "finalRecommendation": {
+      "finalRating": "3-4",
+      "supervisorRecommendation": "recommend-future-opportunities",
+      "declarationAccepted": true,
+      "supervisorFullName": "Jane Smith",
+      "date": "2026-05-27T00:00:00.000Z"
+    },
+    "createdAt": "2026-05-27T19:09:56.938Z",
+    "updatedAt": "2026-05-27T19:09:56.938Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a174519c1ca8b3a6437cf28",
+    "studentInformation": {
+      "fullname": "John Doe",
+      "studentID": "20240001",
+      "degreeProgram": "Computer Science",
+      "yearOfStudy": 3,
+      "internshipStartDate": "2026-01-10T00:00:00.000Z",
+      "internshipEndDate": "2026-03-10T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Example Company",
+      "department": "Software Engineering",
+      "supervisorContact": "+998901234567"
+    },
+    "professionalism": {
+      "comments": "Always on time and professional.",
+      "punctualityAndAttendance": 5,
+      "dressCodeAndAppearance": 4,
+      "adherenceToCompanyPolicies": 5
+    },
+    "workEthic": {
+      "comments": "Completed tasks independently and on schedule.",
+      "initiativeAndProactiveness": 5,
+      "timeManagement": 4,
+      "abilityToMeetDeadlines": 5
+    },
+    "technicalSkills": {
+      "comments": "Learned the stack quickly and delivered solid work.",
+      "applicationOfAcademicKnowledge": 4,
+      "abilityToLearnNewSkillsTools": 5,
+      "qualityOfWorkOutput": 4
+    },
+    "communicationSkills": {
+      "comments": "Communicated clearly with the team.",
+      "verbalCommunication": 4,
+      "writtenCommunication": 4,
+      "teamCollaboration": 5
+    },
+    "problemSolvingSkills": {
+      "comments": "Handled new tasks well and adapted fast.",
+      "analyticalThinking": 4,
+      "creativityAndInnovation": 4,
+      "abilityToHandleChallenges": 5
+    },
+    "overallPerformance": {
+      "comments": "Strong overall performance and future potential.",
+      "contributionToTheTeam": 5,
+      "alignmentWithCompanyGoals": 5,
+      "potentialForFutureEmployment": 5
+    },
+    "openEndedQuestions": {
+      "strengths": "Quick learner and dependable team member.",
+      "areasOfImprovement": "Can keep improving confidence in presentations.",
+      "projectTaskFeedback": "Handled assigned tasks carefully and delivered on time.",
+      "learningAndGrowth": "Showed steady improvement throughout the internship.",
+      "teamDynamics": "Worked well with the team and accepted feedback positively.",
+      "adaptability": "Adapted quickly to new tools and changing requirements.",
+      "feedbackForStudent": "Keep building confidence and continue practicing communication.",
+      "feedbackForUniversity": "Practical exposure and more project-based coursework would be helpful."
+    },
+    "finalRecommendation": {
+      "finalRating": "3-4",
+      "supervisorRecommendation": "recommend-future-opportunities",
+      "declarationAccepted": true,
+      "supervisorFullName": "Jane Smith",
+      "date": "2026-05-27T00:00:00.000Z"
+    },
+    "createdAt": "2026-05-27T19:25:13.206Z",
+    "updatedAt": "2026-05-27T19:25:13.206Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a1807049f4170b204998a11",
+    "studentInformation": {
+      "fullname": "ааааааа",
+      "studentID": "ааааааааа",
+      "degreeProgram": "ааааааааа",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-12T00:00:00.000Z",
+      "internshipEndDate": "2026-05-23T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "111111",
+      "department": "11111111",
+      "supervisorContact": "11111111"
+    },
+    "professionalism": {
+      "comments": "Comments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalism",
+      "punctualityAndAttendance": 1,
+      "dressCodeAndAppearance": 2,
+      "adherenceToCompanyPolicies": 3
+    },
+    "workEthic": {
+      "comments": "Comments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalism",
+      "initiativeAndProactiveness": 1,
+      "timeManagement": 2,
+      "abilityToMeetDeadlines": 3
+    },
+    "technicalSkills": {
+      "comments": "Comments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalism",
+      "applicationOfAcademicKnowledge": 1,
+      "abilityToLearnNewSkillsTools": 2,
+      "qualityOfWorkOutput": 3
+    },
+    "communicationSkills": {
+      "comments": "Comments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalism",
+      "verbalCommunication": 2,
+      "writtenCommunication": 3,
+      "teamCollaboration": 4
+    },
+    "problemSolvingSkills": {
+      "comments": "Comments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalism",
+      "analyticalThinking": 3,
+      "creativityAndInnovation": 4,
+      "abilityToHandleChallenges": 5
+    },
+    "overallPerformance": {
+      "comments": "Comments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalism",
+      "contributionToTheTeam": 2,
+      "alignmentWithCompanyGoals": 1,
+      "potentialForFutureEmployment": 2
+    },
+    "openEndedQuestions": {
+      "strengths": "Comments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalism",
+      "areasOfImprovement": "Comments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalism",
+      "projectTaskFeedback": "Comments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalism",
+      "learningAndGrowth": "Comments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalism",
+      "teamDynamics": "Comments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalism",
+      "adaptability": "Comments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalism",
+      "feedbackForStudent": "Comments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalism",
+      "feedbackForUniversity": "Comments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalismComments on professionalism"
+    },
+    "finalRecommendation": {
+      "finalRating": "5",
+      "supervisorRecommendation": "recommend-future-opportunities",
+      "declarationAccepted": true,
+      "supervisorFullName": "ввв",
+      "date": "2026-05-01T00:00:00.000Z"
+    },
+    "createdAt": "2026-05-28T09:12:36.943Z",
+    "updatedAt": "2026-05-28T09:12:36.943Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a1979c74d513fad9358a216",
+    "studentInformation": {
+      "fullname": "Amina Rahman",
+      "studentID": "SIUT-2026-0142",
+      "degreeProgram": "Software Engineering",
+      "yearOfStudy": 3,
+      "internshipStartDate": "2026-01-12T00:00:00.000Z",
+      "internshipEndDate": "2026-05-08T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "FutureTech Labs",
+      "department": "Product Engineering",
+      "supervisorContact": "+92 300 1234567"
+    },
+    "professionalism": {
+      "comments": "Consistently punctual, professional, and well prepared.",
+      "punctualityAndAttendance": 5,
+      "dressCodeAndAppearance": 4,
+      "adherenceToCompanyPolicies": 5
+    },
+    "workEthic": {
+      "comments": "Shows strong ownership and reliably meets deadlines.",
+      "initiativeAndProactiveness": 5,
+      "timeManagement": 4,
+      "abilityToMeetDeadlines": 5
+    },
+    "technicalSkills": {
+      "comments": "Quickly adapts to new tools and produces solid work.",
+      "applicationOfAcademicKnowledge": 4,
+      "abilityToLearnNewSkillsTools": 5,
+      "qualityOfWorkOutput": 4
+    },
+    "communicationSkills": {
+      "comments": "Communicates clearly and works well with the team.",
+      "verbalCommunication": 4,
+      "writtenCommunication": 4,
+      "teamCollaboration": 5
+    },
+    "problemSolvingSkills": {
+      "comments": "Approaches blockers calmly and proposes useful solutions.",
+      "analyticalThinking": 4,
+      "creativityAndInnovation": 4,
+      "abilityToHandleChallenges": 5
+    },
+    "overallPerformance": {
+      "comments": "A strong candidate for future placement opportunities.",
+      "contributionToTheTeam": 5,
+      "alignmentWithCompanyGoals": 4,
+      "potentialForFutureEmployment": 5
+    },
+    "openEndedQuestions": {
+      "strengths": "Reliable, proactive, and eager to learn.",
+      "areasOfImprovement": "Can continue building deeper domain expertise.",
+      "projectTaskFeedback": "Completed tasks thoughtfully and with good attention to detail.",
+      "learningAndGrowth": "Made clear progress throughout the internship.",
+      "teamDynamics": "Positive impact on team communication and collaboration.",
+      "adaptability": "Adjusted quickly to changing requirements and tools.",
+      "feedbackForStudent": "Keep challenging yourself with larger technical tasks.",
+      "feedbackForUniversity": "Great candidate with strong practical readiness."
+    },
+    "finalRecommendation": {
+      "finalRating": "3-4",
+      "supervisorRecommendation": "recommend-future-opportunities",
+      "declarationAccepted": true,
+      "supervisorFullName": "Muhammad Ali",
+      "date": "2026-05-29T00:00:00.000Z"
+    },
+    "createdAt": "2026-05-29T11:34:31.242Z",
+    "updatedAt": "2026-05-29T11:34:31.242Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a197a8a4d513fad9358a218",
+    "studentInformation": {
+      "fullname": "Amina Rahman",
+      "studentID": "SIUT-2026-0142",
+      "degreeProgram": "Software Engineering",
+      "yearOfStudy": 3,
+      "internshipStartDate": "2026-01-12T00:00:00.000Z",
+      "internshipEndDate": "2026-05-08T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "FutureTech Labs",
+      "department": "Product Engineering",
+      "supervisorContact": "+92 300 1234567"
+    },
+    "professionalism": {
+      "comments": "Consistently punctual, professional, and well prepared.",
+      "punctualityAndAttendance": 5,
+      "dressCodeAndAppearance": 4,
+      "adherenceToCompanyPolicies": 5
+    },
+    "workEthic": {
+      "comments": "Shows strong ownership and reliably meets deadlines.",
+      "initiativeAndProactiveness": 5,
+      "timeManagement": 4,
+      "abilityToMeetDeadlines": 5
+    },
+    "technicalSkills": {
+      "comments": "Quickly adapts to new tools and produces solid work.",
+      "applicationOfAcademicKnowledge": 4,
+      "abilityToLearnNewSkillsTools": 5,
+      "qualityOfWorkOutput": 4
+    },
+    "communicationSkills": {
+      "comments": "Communicates clearly and works well with the team.",
+      "verbalCommunication": 4,
+      "writtenCommunication": 4,
+      "teamCollaboration": 5
+    },
+    "problemSolvingSkills": {
+      "comments": "Approaches blockers calmly and proposes useful solutions.",
+      "analyticalThinking": 4,
+      "creativityAndInnovation": 4,
+      "abilityToHandleChallenges": 5
+    },
+    "overallPerformance": {
+      "comments": "A strong candidate for future placement opportunities.",
+      "contributionToTheTeam": 5,
+      "alignmentWithCompanyGoals": 4,
+      "potentialForFutureEmployment": 5
+    },
+    "openEndedQuestions": {
+      "strengths": "Reliable, proactive, and eager to learn.",
+      "areasOfImprovement": "Can continue building deeper domain expertise.",
+      "projectTaskFeedback": "Completed tasks thoughtfully and with good attention to detail.",
+      "learningAndGrowth": "Made clear progress throughout the internship.",
+      "teamDynamics": "Positive impact on team communication and collaboration.",
+      "adaptability": "Adjusted quickly to changing requirements and tools.",
+      "feedbackForStudent": "Keep challenging yourself with larger technical tasks.",
+      "feedbackForUniversity": "Great candidate with strong practical readiness."
+    },
+    "finalRecommendation": {
+      "finalRating": "3-4",
+      "supervisorRecommendation": "recommend-future-opportunities",
+      "declarationAccepted": true,
+      "supervisorFullName": "Muhammad Ali",
+      "date": "2026-05-29T00:00:00.000Z"
+    },
+    "createdAt": "2026-05-29T11:37:46.825Z",
+    "updatedAt": "2026-05-29T11:37:46.825Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a1a8ed1ce7c3808500ab3cc",
+    "studentInformation": {
+      "fullname": "Axmedov Anisxon Ravshanovich",
+      "studentID": "69aa77cc3d054c06899c67d5",
+      "degreeProgram": "AI-01-25",
+      "yearOfStudy": 2025,
+      "internshipStartDate": "2026-05-12T00:00:00.000Z",
+      "internshipEndDate": "2026-05-26T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "butterfly",
+      "department": "сы",
+      "supervisorContact": "фыв"
+    },
+    "professionalism": {
+      "comments": "Consistently punctual, professional, and well prepared.",
+      "punctualityAndAttendance": 5,
+      "dressCodeAndAppearance": 4,
+      "adherenceToCompanyPolicies": 5
+    },
+    "workEthic": {
+      "comments": "Shows strong ownership and reliably meets deadlines.",
+      "initiativeAndProactiveness": 5,
+      "timeManagement": 4,
+      "abilityToMeetDeadlines": 5
+    },
+    "technicalSkills": {
+      "comments": "Quickly adapts to new tools and produces solid work.",
+      "applicationOfAcademicKnowledge": 4,
+      "abilityToLearnNewSkillsTools": 5,
+      "qualityOfWorkOutput": 4
+    },
+    "communicationSkills": {
+      "comments": "Communicates clearly and works well with the team.",
+      "verbalCommunication": 4,
+      "writtenCommunication": 4,
+      "teamCollaboration": 5
+    },
+    "problemSolvingSkills": {
+      "comments": "Approaches blockers calmly and proposes useful solutions.",
+      "analyticalThinking": 4,
+      "creativityAndInnovation": 4,
+      "abilityToHandleChallenges": 5
+    },
+    "overallPerformance": {
+      "comments": "A strong candidate for future placement opportunities.",
+      "contributionToTheTeam": 5,
+      "alignmentWithCompanyGoals": 4,
+      "potentialForFutureEmployment": 5
+    },
+    "openEndedQuestions": {
+      "strengths": "Reliable, proactive, and eager to learn.",
+      "areasOfImprovement": "Can continue building deeper domain expertise.",
+      "projectTaskFeedback": "Completed tasks thoughtfully and with good attention to detail.",
+      "learningAndGrowth": "Made clear progress throughout the internship.",
+      "teamDynamics": "Positive impact on team communication and collaboration.",
+      "adaptability": "Adjusted quickly to changing requirements and tools.",
+      "feedbackForStudent": "Keep challenging yourself with larger technical tasks.",
+      "feedbackForUniversity": "Great candidate with strong practical readiness."
+    },
+    "finalRecommendation": {
+      "finalRating": "3-4",
+      "supervisorRecommendation": "recommend-future-opportunities",
+      "declarationAccepted": true,
+      "supervisorFullName": "Muhammad Ali",
+      "date": "2026-05-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-05-30T07:16:33.564Z",
+    "updatedAt": "2026-05-30T07:16:33.564Z",
+    "__v": 0
+  }
+]

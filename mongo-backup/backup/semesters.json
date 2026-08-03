@@ -1,0 +1,42 @@
+[
+  {
+    "_id": "688f24949c1f4b5c70efe194",
+    "semester_name": "Fall 2023",
+    "semester_code": "F23",
+    "start_date": "2023-09-01T00:00:00.000Z",
+    "end_date": "2023-12-30T00:00:00.000Z",
+    "is_current": false,
+    "createdAt": "2025-08-03T08:57:56.020Z",
+    "__v": 0
+  },
+  {
+    "_id": "688f249c9c1f4b5c70efe196",
+    "semester_name": "Spring 2024",
+    "semester_code": "S24",
+    "start_date": "2024-02-01T00:00:00.000Z",
+    "end_date": "2024-05-31T00:00:00.000Z",
+    "is_current": false,
+    "createdAt": "2025-08-03T08:58:04.317Z",
+    "__v": 0
+  },
+  {
+    "_id": "688f24a59c1f4b5c70efe198",
+    "semester_name": "Fall 2024",
+    "semester_code": "F24",
+    "start_date": "2024-09-01T00:00:00.000Z",
+    "end_date": "2024-12-30T00:00:00.000Z",
+    "is_current": false,
+    "createdAt": "2025-08-03T08:58:13.384Z",
+    "__v": 0
+  },
+  {
+    "_id": "688f24ad9c1f4b5c70efe19a",
+    "semester_name": "Spring 2025",
+    "semester_code": "S25",
+    "start_date": "2025-02-01T00:00:00.000Z",
+    "end_date": "2025-05-31T00:00:00.000Z",
+    "is_current": true,
+    "createdAt": "2025-08-03T08:58:21.511Z",
+    "__v": 0
+  }
+]

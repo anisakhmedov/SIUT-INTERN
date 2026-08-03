@@ -1,0 +1,36 @@
+[
+  {
+    "_id": "68b5b933249a6b7c9032b174",
+    "email": "admin-bratfarm",
+    "password": "$2b$10$9./ey5B1uu95JWmij2XIbePK7L/G1EeqZzKLtRT9/9LVoqwQ0ebla",
+    "role": "user",
+    "favorites": [],
+    "cart": [
+      {
+        "variantId": "68caf95294d7a46e426b0cba",
+        "quantity": 3,
+        "_id": "68cfdc0283426de4cdc8f1b6"
+      }
+    ],
+    "createdAt": "2025-09-01T15:18:11.286Z",
+    "updatedAt": "2025-09-21T11:05:53.333Z",
+    "__v": 8
+  },
+  {
+    "_id": "6912439b5d72d948b43739c9",
+    "email": "qwepoasdqiwepasdoi@gmail.com",
+    "password": "$2b$10$SYm7Uoll2iNcu.hMJCnQWeOJQKs/wxgmahpOLt4ENEvHN5zkfBB9e",
+    "role": "user",
+    "favorites": [],
+    "cart": [
+      {
+        "variantId": "69122e512337af7381812c9a",
+        "quantity": 1,
+        "_id": "6912439f5d72d948b43739d3"
+      }
+    ],
+    "createdAt": "2025-11-10T19:57:15.155Z",
+    "updatedAt": "2025-11-10T19:57:19.553Z",
+    "__v": 1
+  }
+]

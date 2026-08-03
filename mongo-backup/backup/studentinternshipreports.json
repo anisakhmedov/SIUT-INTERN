@@ -1,0 +1,5182 @@
+[
+  {
+    "_id": "6a2b0a6c19f3a55c9b0eab28",
+    "studentInformation": {
+      "fullname": "Axmedov Anisxon Ravshanovich",
+      "studentID": "69aa77cc3d054c06899c67d5",
+      "degreeProgram": "AI-01-25",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-20T00:00:00.000Z",
+      "internshipEndDate": "2026-06-11T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "SIUT Campus",
+      "department": "The queen.",
+      "supervisorContact": "Zhinka"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": "100/10"
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": "100/10"
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": "100/10"
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": "100/10"
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": "100/10"
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": "100/10"
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "Professional view to each point that the student faced during Internship.",
+      "areasOfImprovement": "Every single task has been accomplished perfectly, student showed his ability to be ideal.",
+      "projectTaskFeedback": "In each project he was the leader.",
+      "learningAndGrowth": "He was a grow and role model to others, even to teachers.",
+      "teamDynamics": "Perfectly. He was not only a team member, but a true leader. The king.",
+      "adaptability": "As king should.",
+      "feedbackForStudent": "Listen to your wifey.",
+      "feedbackForUniversity": "Give them more opportunities, so that this kind of kings as Aniskhon would SHINEEE."
+    },
+    "finalRecommendation": {
+      "finalRating": "Exceeds expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Gul’ka Shpul’ka the Zhinka",
+      "date": "2026-06-12T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-11T19:20:12.587Z",
+    "updatedAt": "2026-06-11T19:20:12.587Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a2d0e9cad1854446a8fbcf3",
+    "studentInformation": {
+      "fullname": "Maxmudov Aminxon Akramovich",
+      "studentID": "69aa78393d054c06899c6b00",
+      "degreeProgram": "PE-01-25",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-06-08T00:00:00.000Z",
+      "internshipEndDate": "2026-06-12T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Eriell Prof Education, Qarshi",
+      "department": "Training Department",
+      "supervisorContact": "+998995727791"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": "Very punctual and professional"
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 4,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "Very smart students with knowledges on all technical skills.",
+      "areasOfImprovement": "The student needs to improve their communication skills with staff and should show more active interest in their profession by asking more questions. Although the student is very intelligent and quick-witted, they need to practice more and apply their theoretical knowledge in practical settings.",
+      "projectTaskFeedback": "The student did not complete an independent project. However, they were responsible in all assignments that were given to the students.",
+      "learningAndGrowth": "The student has shown themselves in a positive light and clearly wants to develop further within their specialty. However, they have not yet fully decided on their specific professional path.",
+      "teamDynamics": "No problems were observed in working with the team.",
+      "adaptability": "The student adapted quickly to the new environment.",
+      "feedbackForStudent": "The student needs to decide on their specific profession and work more on deepening their knowledge within a concrete specialization.",
+      "feedbackForUniversity": "The university should pay more attention to teaching technical subjects and provide a clear understanding of what the oil and gas industry is from the very first days of study. This is important because first-year students find it very difficult to understand the information presented during training sessions."
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend with reservations",
+      "declaration": true,
+      "supervisorFullName": "Ulugbek Bozorov",
+      "date": "2026-06-13T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-13T08:02:36.087Z",
+    "updatedAt": "2026-06-13T08:02:36.087Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3cfda0da2178801a5324bf",
+    "studentInformation": {
+      "fullname": "Alamov Shaxriyor Ashrafovich",
+      "studentID": "69aa78003d054c06899c695f",
+      "degreeProgram": "D-01-25",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-14T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "SIUT",
+      "department": "Design",
+      "supervisorContact": "Josiah Ng"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 4,
+        "dresscodeAndAppearance": 4,
+        "adherenceToCompanyPolicies": 4,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 3,
+        "timeManagement": 3,
+        "abilityToMeetDeadlines": 3,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 4,
+        "abilityToLearnNewSkillsTools": 4,
+        "qualityOfWorkOutput": 4,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 3,
+        "writtenCommunication": 3,
+        "teamCollaboration": 4,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 3,
+        "creativityAndInnovation": 3,
+        "abilityToHandleChallenges": 3,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 4,
+        "alignmentWithCompanyGoals": 4,
+        "potentialForFutureEmployment": 4,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "He is very teachable and has a keen desire to learn",
+      "areasOfImprovement": "He needs to work on punctuality, but to his credit, has improved on this in the course of the internship.",
+      "projectTaskFeedback": "There was improvement in his work. Initially, he seemed distracted, but subsequently, Shakriyor became more focused. With effort, I believe he will thrive.",
+      "learningAndGrowth": "He participated in the relevant tasks, but it was not a long enough internship to ascertain this.",
+      "teamDynamics": "Shakhriyor worked well with the male students, and seemed to be someone that others could rely on.",
+      "adaptability": "During the math class, I was aware that he isn't the most interested in the topic. However, he still made the  effort to understand, and made the leap to recognise how math can help with his design skills in an interdisciplinary way.",
+      "feedbackForStudent": "Maintain the sincere attitude, and put in the hard work, even though at the start, some tasks seem mundane or irrelevant. Everything happens for a reason and there is a lesson in every experience.",
+      "feedbackForUniversity": "-"
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend with reservations",
+      "declaration": true,
+      "supervisorFullName": "Ng Chenghan Josiah",
+      "date": "2026-06-25T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-25T10:06:24.111Z",
+    "updatedAt": "2026-06-25T10:06:24.111Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3d02a1da2178801a5324f4",
+    "studentInformation": {
+      "fullname": "Baxadirov Diyorbek Jamshid",
+      "studentID": "69aa78003d054c06899c695b",
+      "degreeProgram": "D-01-25",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-14T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "SIUT",
+      "department": "Design",
+      "supervisorContact": "Josiah Ng"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 4,
+        "dresscodeAndAppearance": 4,
+        "adherenceToCompanyPolicies": 4,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 4,
+        "timeManagement": 4,
+        "abilityToMeetDeadlines": 4,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 4,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 4,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "Diyor is an asset and brings with him an open-mindedness, willingness to learn, and a hunger to constantly see how he can improve.",
+      "areasOfImprovement": "Diyor is sometimes distracted with too many commitments and goals.",
+      "projectTaskFeedback": "He puts in much effort and strives to do his best. His is responsible and dependable.",
+      "learningAndGrowth": "Yes, he did. Diyor asked many good questions.",
+      "teamDynamics": "Diyor is generally a positive person and brings with him a good attitude that helps to build the team / environment up.",
+      "adaptability": "There were some difficult tasks set during the internship, and Diyor kept trying, looking to improve himself.",
+      "feedbackForStudent": "Good job and keep the great attitude to learning and doing your best. Employers appreciate good work, but more than that, they appreciate people who are teachable and willing to grow. Keep that growth mindset that you already have.",
+      "feedbackForUniversity": "-"
+    },
+    "finalRecommendation": {
+      "finalRating": "Exceeds expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Ng Chenghan Josiah",
+      "date": "2026-06-25T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-25T10:27:45.945Z",
+    "updatedAt": "2026-06-25T10:27:45.945Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3d0417da2178801a53250c",
+    "studentInformation": {
+      "fullname": "Goneym Yasmina Moxamed",
+      "studentID": "69aa77ff3d054c06899c6953",
+      "degreeProgram": "D-01-25",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-14T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "SIUT",
+      "department": "Design",
+      "supervisorContact": "Josiah Ng"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 4,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 4,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "Yasmina is hardworking and responsible. She is also talented and reliable.",
+      "areasOfImprovement": "She needs to speak up more and have more confidence.",
+      "projectTaskFeedback": "She was always punctual and met the relevant deadlines ahead of time. The quality of the work that she submitted is also good, and you could see that there was effort and a good thought process put in.",
+      "learningAndGrowth": "Yes, she was always on time and asked good questions.",
+      "teamDynamics": "She is likeable and makes other teammates feel comfortable. She is also a team player that contributes responsibly.",
+      "adaptability": "She was always willing to push herself and try new things.",
+      "feedbackForStudent": "You have it in you. Just be more confident and continue to ask good questions. Your positive attitude will be an asset to your future employers.",
+      "feedbackForUniversity": "-"
+    },
+    "finalRecommendation": {
+      "finalRating": "Exceeds expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Ng Chenghan Josiah",
+      "date": "2026-06-25T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-25T10:33:59.242Z",
+    "updatedAt": "2026-06-25T10:33:59.242Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3d0a0cda2178801a5326bb",
+    "studentInformation": {
+      "fullname": "Odilova Umayra Kaxramonovna",
+      "studentID": "69aa77fe3d054c06899c694d",
+      "degreeProgram": "D-01-25",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-14T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "SIUT",
+      "department": "Design",
+      "supervisorContact": "Josiah"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 4,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 4,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "Umayra's communication skills are good. She has a willingness to learn beyond her understanding and puts in tangible effort in all that she does.",
+      "areasOfImprovement": "She tends to handle pressure as well, and needs to develop better skills with stress management.",
+      "projectTaskFeedback": "She handles her tasks with a professional attitude and we could see that she puts in good effort, doing her best in what she is given.",
+      "learningAndGrowth": "Yes, she was always attentive and even when she did not understand certain things, clarified.",
+      "teamDynamics": "She is a team player and worked well with others.",
+      "adaptability": "There was a session where she was alone to do a certain tasks, which usually would be a challenge to many. Even though she initially showed some stress, she was able to overcome the pressure and grew from that experience.",
+      "feedbackForStudent": "Umayra has a great future ahead of her, with her great attitude in learning, speed in which she picks things up well, and sense of responsibility. Any organisation would be lucky to have her work for them.",
+      "feedbackForUniversity": "-"
+    },
+    "finalRecommendation": {
+      "finalRating": "Exceeds expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Ng Chenghan Josiah",
+      "date": "2026-06-25T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-25T10:59:24.278Z",
+    "updatedAt": "2026-06-25T10:59:24.278Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3d0b68da2178801a5326d2",
+    "studentInformation": {
+      "fullname": "Sadriyeva Parizoda Abduganiyevna",
+      "studentID": "69aa77fe3d054c06899c694f",
+      "degreeProgram": "D-01-25",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-14T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "SIUT",
+      "department": "Design",
+      "supervisorContact": "Josiah"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 4,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 4,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 4,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "Parizoda takes good initiative and is able to learn well and fast, picking up new skills readily.",
+      "areasOfImprovement": "She tends to be soft-spoken and may come across as not confident.",
+      "projectTaskFeedback": "Parizoda did well in general and kept to the assigned tasks and deadlines.",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "She would do well to brush up on her technical skills, but in general, has done well despite of.",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend with reservations",
+      "declaration": true,
+      "supervisorFullName": "Ng Chenghan Josiah",
+      "date": "2026-06-25T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-25T11:05:12.265Z",
+    "updatedAt": "2026-06-25T11:05:12.265Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3d0c5eda2178801a5326e6",
+    "studentInformation": {
+      "fullname": "Xakimov Xotam Dilshodovich",
+      "studentID": "69aa78003d054c06899c695d",
+      "degreeProgram": "D-01-25",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-14T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "SIUT",
+      "department": "Design",
+      "supervisorContact": "Josiah Ng"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 4,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 4,
+        "abilityToMeetDeadlines": 4,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 4,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "Xotam is a great learner and a smart person. He reacts and picks things up quickly.",
+      "areasOfImprovement": "Punctuality remains a bit of a challenge, but with proper attitude and encouragement, he can thrive.",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Exceeds expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Ng Chenghan Josiah",
+      "date": "2026-06-25T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-25T11:09:18.771Z",
+    "updatedAt": "2026-06-25T11:09:18.771Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3d0e45da2178801a532701",
+    "studentInformation": {
+      "fullname": "Zakiryayeva Aziza Azizovna",
+      "studentID": "69aa77fd3d054c06899c6949",
+      "degreeProgram": "D-01-25",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-14T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "SIUT",
+      "department": "Design",
+      "supervisorContact": "Josiah Ng"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "Aziza asks good questions, and offers good responses / feedback to discussions. Her engagement with classmates, teammates, and supervisors is something that values add to the internship process and her learning. She possesses a growth mindset as well and strives to better herself at different stages.",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "She asks critical questions that show her thought processes well and with the feedback and response, tangibly adjusts her work output.",
+      "teamDynamics": "Aziza is always looking at how to contribute to her class and team. She volunteers when no one else does and takes tasks into her stride.",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Exceeds expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Ng Chenghan Josiah",
+      "date": "2026-06-25T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-25T11:17:25.770Z",
+    "updatedAt": "2026-06-25T11:17:25.770Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3d1158da2178801a532726",
+    "studentInformation": {
+      "fullname": "Normaxmatova Kamila A’Zamovna",
+      "studentID": "69aa77ff3d054c06899c6955",
+      "degreeProgram": "D-01-25",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-14T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "SIUT",
+      "department": "Design",
+      "supervisorContact": "Josiah"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 4,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 4,
+        "abilityToMeetDeadlines": 4,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 4,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 4,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 4,
+        "creativityAndInnovation": 4,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 4,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "Kamila is very responsive to feedback and shows up whenever she can to help others. She is a great support to her peers and brings with her a positive attitude.",
+      "areasOfImprovement": "She needs to speak up more and ask more questions if she doesn't understand anything.",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "Try to communicate as much as you can about what you don't understand or know, and at the same time, keep asking questions where you can. A curious and hungry intern / employee is someone that many will be inspired by and want to work with.",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend with reservations",
+      "declaration": true,
+      "supervisorFullName": "Ng Chenghan Josiah",
+      "date": "2026-06-25T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-25T11:30:32.528Z",
+    "updatedAt": "2026-06-25T11:30:32.528Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3d11d4da2178801a532735",
+    "studentInformation": {
+      "fullname": "Nuriddinova Ruxshona Sadriddinovna",
+      "studentID": "69aa77ff3d054c06899c6957",
+      "degreeProgram": "D-01-25",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-14T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "SIUT",
+      "department": "Design",
+      "supervisorContact": "Josiah"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "Ruxshona is attentive, yet also pays attention to details. She is participative and brings with her a positive attitude.",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Exceeds expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Ng Chenghan Josiah",
+      "date": "2026-06-25T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-25T11:32:36.974Z",
+    "updatedAt": "2026-06-25T11:32:36.974Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a3d127bda2178801a532746",
+    "studentInformation": {
+      "fullname": "Xamitjanova Jasmina Rofiyevna",
+      "studentID": "69aa77fe3d054c06899c694b",
+      "degreeProgram": "D-01-25",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-14T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "SIUT",
+      "department": "Design",
+      "supervisorContact": "Josiah"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 4,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 4,
+        "timeManagement": 4,
+        "abilityToMeetDeadlines": 4,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 4,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 4,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 4,
+        "creativityAndInnovation": 4,
+        "abilityToHandleChallenges": 4,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 4,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "Jasmina tries her best, even on tough tasks, and is a delightful friend, colleague to many.",
+      "areasOfImprovement": "Jasmina sometimes shows herself to be too tired, and has on occasion slept during the internship. She needs to understand that even though she may physically be tired, that she should still try her best to show employers that she is attentive and working hard.",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "When given feedback, she takes the comments and applies them well.",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend with reservations",
+      "declaration": true,
+      "supervisorFullName": "Ng Chenghan Josiah",
+      "date": "2026-06-25T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-25T11:35:23.531Z",
+    "updatedAt": "2026-06-25T11:35:23.531Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43616f9234ed906b29ca02",
+    "studentInformation": {
+      "fullname": "Maxammadjonov Javoxir Djaxongirovich",
+      "studentID": "69aa782b3d054c06899c6aa0",
+      "degreeProgram": "PE-01-23",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-06-15T00:00:00.000Z",
+      "internshipEndDate": "2026-06-17T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Eriell Prof Education",
+      "department": "Training",
+      "supervisorContact": "Bozorov Ulugbek"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 1,
+        "dresscodeAndAppearance": 1,
+        "adherenceToCompanyPolicies": 1,
+        "comments": "Did not attend training"
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 1,
+        "timeManagement": 1,
+        "abilityToMeetDeadlines": 1,
+        "comments": "Did not attend training"
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 1,
+        "abilityToLearnNewSkillsTools": 1,
+        "qualityOfWorkOutput": 1,
+        "comments": "Did not attend training"
+      },
+      "communicationSkills": {
+        "verbalCommunication": 1,
+        "writtenCommunication": 1,
+        "teamCollaboration": 1,
+        "comments": "Did not attend training"
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 1,
+        "creativityAndInnovation": 1,
+        "abilityToHandleChallenges": 1,
+        "comments": "Did not attend training"
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 1,
+        "alignmentWithCompanyGoals": 1,
+        "potentialForFutureEmployment": 1,
+        "comments": "Did not attend training"
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "Did not attend training",
+      "areasOfImprovement": "Did not attend training",
+      "projectTaskFeedback": "Did not attend training",
+      "learningAndGrowth": "Did not attend training",
+      "teamDynamics": "Did not attend training",
+      "adaptability": "Did not attend training",
+      "feedbackForStudent": "Did not attend training",
+      "feedbackForUniversity": "Did not attend training"
+    },
+    "finalRecommendation": {
+      "finalRating": "Needs significant improvement",
+      "supervisorRecommendation": "Do not recommend",
+      "declaration": true,
+      "supervisorFullName": "Abutalipov Mars",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T06:25:51.131Z",
+    "updatedAt": "2026-06-30T06:25:51.131Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43621e9234ed906b29ca3e",
+    "studentInformation": {
+      "fullname": "Aminov Aminjon Bobirovich",
+      "studentID": "69aa782e3d054c06899c6ab0",
+      "degreeProgram": "PE-01-23",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-06-15T00:00:00.000Z",
+      "internshipEndDate": "2026-06-17T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Eriell Prof Education",
+      "department": "Training",
+      "supervisorContact": "Bozorov Ulugbek"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 1,
+        "dresscodeAndAppearance": 1,
+        "adherenceToCompanyPolicies": 1,
+        "comments": "Did not attend training"
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 1,
+        "timeManagement": 1,
+        "abilityToMeetDeadlines": 1,
+        "comments": "Did not attend training"
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 1,
+        "abilityToLearnNewSkillsTools": 1,
+        "qualityOfWorkOutput": 1,
+        "comments": "Did not attend training"
+      },
+      "communicationSkills": {
+        "verbalCommunication": 1,
+        "writtenCommunication": 1,
+        "teamCollaboration": 1,
+        "comments": "Did not attend training"
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 1,
+        "creativityAndInnovation": 1,
+        "abilityToHandleChallenges": 1,
+        "comments": "Did not attend training"
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 1,
+        "alignmentWithCompanyGoals": 1,
+        "potentialForFutureEmployment": 1,
+        "comments": "Did not attend training"
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "Did not attend training",
+      "areasOfImprovement": "Did not attend training",
+      "projectTaskFeedback": "Did not attend training",
+      "learningAndGrowth": "Did not attend training",
+      "teamDynamics": "Did not attend training",
+      "adaptability": "Did not attend training",
+      "feedbackForStudent": "Did not attend training",
+      "feedbackForUniversity": "Did not attend training"
+    },
+    "finalRecommendation": {
+      "finalRating": "Needs significant improvement",
+      "supervisorRecommendation": "Do not recommend",
+      "declaration": true,
+      "supervisorFullName": "Abutalipov Mars",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T06:28:46.927Z",
+    "updatedAt": "2026-06-30T06:28:46.927Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4362b39234ed906b29ca90",
+    "studentInformation": {
+      "fullname": "Ulmasov Abdulmalik Murodovich",
+      "studentID": "69aa782f3d054c06899c6ab6",
+      "degreeProgram": "PE-01-23",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-06-15T00:00:00.000Z",
+      "internshipEndDate": "2026-06-17T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Eriell Prof Education",
+      "department": "Training",
+      "supervisorContact": "Bozorov Ulugbek"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 1,
+        "dresscodeAndAppearance": 1,
+        "adherenceToCompanyPolicies": 1,
+        "comments": "Did not attend training"
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 1,
+        "timeManagement": 1,
+        "abilityToMeetDeadlines": 1,
+        "comments": "Did not attend training"
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 1,
+        "abilityToLearnNewSkillsTools": 1,
+        "qualityOfWorkOutput": 1,
+        "comments": "Did not attend training"
+      },
+      "communicationSkills": {
+        "verbalCommunication": 1,
+        "writtenCommunication": 1,
+        "teamCollaboration": 1,
+        "comments": "Did not attend training"
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 1,
+        "creativityAndInnovation": 1,
+        "abilityToHandleChallenges": 1,
+        "comments": "Did not attend training"
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 1,
+        "alignmentWithCompanyGoals": 1,
+        "potentialForFutureEmployment": 1,
+        "comments": "Did not attend training"
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "Did not attend training",
+      "areasOfImprovement": "Did not attend training",
+      "projectTaskFeedback": "Did not attend training",
+      "learningAndGrowth": "Did not attend training",
+      "teamDynamics": "Did not attend training",
+      "adaptability": "Did not attend training",
+      "feedbackForStudent": "Did not attend training",
+      "feedbackForUniversity": "Did not attend training"
+    },
+    "finalRecommendation": {
+      "finalRating": "Needs significant improvement",
+      "supervisorRecommendation": "Do not recommend",
+      "declaration": true,
+      "supervisorFullName": "Abutalipov Mars",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T06:31:15.596Z",
+    "updatedAt": "2026-06-30T06:31:15.596Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4364959234ed906b29cac0",
+    "studentInformation": {
+      "fullname": "Mukumov Shaxzod Komilovich",
+      "studentID": "69aa782b3d054c06899c6aa2",
+      "degreeProgram": "PE-01-23",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-06-15T00:00:00.000Z",
+      "internshipEndDate": "2026-06-17T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Eriell Prof Education",
+      "department": "Training",
+      "supervisorContact": "Bozorov Ulugbek"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "Interactive learning",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abutalipov Mars",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T06:39:17.978Z",
+    "updatedAt": "2026-06-30T06:39:17.978Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4365249234ed906b29cacf",
+    "studentInformation": {
+      "fullname": "Rahimov Dovud Sherozovich",
+      "studentID": "69aa782c3d054c06899c6aa4",
+      "degreeProgram": "PE-01-23",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-06-15T00:00:00.000Z",
+      "internshipEndDate": "2026-06-17T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Eriell Prof Education",
+      "department": "Training",
+      "supervisorContact": "Bozorov Ulugbek"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 4,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 4,
+        "abilityToLearnNewSkillsTools": 4,
+        "qualityOfWorkOutput": 4,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 4,
+        "writtenCommunication": 4,
+        "teamCollaboration": 4,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 4,
+        "creativityAndInnovation": 4,
+        "abilityToHandleChallenges": 4,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 4,
+        "alignmentWithCompanyGoals": 4,
+        "potentialForFutureEmployment": 4,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abutalipov Mars",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T06:41:40.639Z",
+    "updatedAt": "2026-06-30T06:41:40.639Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43659b9234ed906b29cadd",
+    "studentInformation": {
+      "fullname": "Mukumov Shaxzod Komilovich",
+      "studentID": "69aa782b3d054c06899c6aa2",
+      "degreeProgram": "PE-01-23",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-06-15T00:00:00.000Z",
+      "internshipEndDate": "2026-06-17T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Eriell Prof Education",
+      "department": "Training",
+      "supervisorContact": "Bozorov Ulugbek"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 4,
+        "dresscodeAndAppearance": 4,
+        "adherenceToCompanyPolicies": 4,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 4,
+        "timeManagement": 4,
+        "abilityToMeetDeadlines": 4,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 4,
+        "abilityToLearnNewSkillsTools": 4,
+        "qualityOfWorkOutput": 4,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 4,
+        "writtenCommunication": 4,
+        "teamCollaboration": 4,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 4,
+        "creativityAndInnovation": 4,
+        "abilityToHandleChallenges": 4,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 4,
+        "alignmentWithCompanyGoals": 4,
+        "potentialForFutureEmployment": 4,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "Interactive Learning",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abutalipov Mars",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T06:43:39.113Z",
+    "updatedAt": "2026-06-30T06:43:39.113Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4366279234ed906b29caed",
+    "studentInformation": {
+      "fullname": "Axmedov Jaxongir Jamilovich",
+      "studentID": "69aa782c3d054c06899c6aa6",
+      "degreeProgram": "PE-01-23",
+      "yearOfStudy": 3,
+      "internshipStartDate": "2026-06-15T00:00:00.000Z",
+      "internshipEndDate": "2026-06-17T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Eriell Prof Education",
+      "department": "Training",
+      "supervisorContact": "Bozorov Ulugbek"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 3,
+        "dresscodeAndAppearance": 4,
+        "adherenceToCompanyPolicies": 4,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 4,
+        "timeManagement": 4,
+        "abilityToMeetDeadlines": 4,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 4,
+        "abilityToLearnNewSkillsTools": 4,
+        "qualityOfWorkOutput": 4,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 4,
+        "writtenCommunication": 4,
+        "teamCollaboration": 4,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 4,
+        "creativityAndInnovation": 4,
+        "abilityToHandleChallenges": 4,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 4,
+        "alignmentWithCompanyGoals": 4,
+        "potentialForFutureEmployment": 4,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abutalipov Mars",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T06:45:59.990Z",
+    "updatedAt": "2026-06-30T06:45:59.990Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43668f9234ed906b29cb3b",
+    "studentInformation": {
+      "fullname": "Telmanov Mirfayzi Abduganiyevich",
+      "studentID": "69aa782d3d054c06899c6aa8",
+      "degreeProgram": "PE-01-23",
+      "yearOfStudy": 3,
+      "internshipStartDate": "2026-06-15T00:00:00.000Z",
+      "internshipEndDate": "2026-06-17T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Eriell Prof Education",
+      "department": "Training",
+      "supervisorContact": "Bozorov Ulugbek"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 4,
+        "dresscodeAndAppearance": 4,
+        "adherenceToCompanyPolicies": 4,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 4,
+        "timeManagement": 4,
+        "abilityToMeetDeadlines": 4,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 4,
+        "abilityToLearnNewSkillsTools": 4,
+        "qualityOfWorkOutput": 4,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 4,
+        "teamCollaboration": 4,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 4,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 4,
+        "alignmentWithCompanyGoals": 4,
+        "potentialForFutureEmployment": 4,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abutalipov Mars",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T06:47:43.642Z",
+    "updatedAt": "2026-06-30T06:47:43.642Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4366e59234ed906b29cb4b",
+    "studentInformation": {
+      "fullname": "Tolibov Asadbek Tal’Atovich",
+      "studentID": "69aa782d3d054c06899c6aaa",
+      "degreeProgram": "PE-01-23",
+      "yearOfStudy": 3,
+      "internshipStartDate": "2026-06-15T00:00:00.000Z",
+      "internshipEndDate": "2026-06-17T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Eriell Prof Education",
+      "department": "Training",
+      "supervisorContact": "Bozorov Ulugbek"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 4,
+        "dresscodeAndAppearance": 4,
+        "adherenceToCompanyPolicies": 4,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 4,
+        "timeManagement": 4,
+        "abilityToMeetDeadlines": 4,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 4,
+        "abilityToLearnNewSkillsTools": 4,
+        "qualityOfWorkOutput": 4,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 4,
+        "writtenCommunication": 4,
+        "teamCollaboration": 4,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 4,
+        "creativityAndInnovation": 4,
+        "abilityToHandleChallenges": 4,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 4,
+        "alignmentWithCompanyGoals": 4,
+        "potentialForFutureEmployment": 4,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abutalipov Mars",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T06:49:09.372Z",
+    "updatedAt": "2026-06-30T06:49:09.372Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4367659234ed906b29cb9a",
+    "studentInformation": {
+      "fullname": "Utkurov Faridun Uktamovich",
+      "studentID": "69aa782d3d054c06899c6aac",
+      "degreeProgram": "PE-01-23",
+      "yearOfStudy": 3,
+      "internshipStartDate": "2026-06-15T00:00:00.000Z",
+      "internshipEndDate": "2026-06-17T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Eriell Prof Education",
+      "department": "Training",
+      "supervisorContact": "Bozorov Ulugbek"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 4,
+        "writtenCommunication": 4,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 4,
+        "creativityAndInnovation": 4,
+        "abilityToHandleChallenges": 4,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abutalipov Mars",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T06:51:17.969Z",
+    "updatedAt": "2026-06-30T06:51:17.969Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4368059234ed906b29cbc4",
+    "studentInformation": {
+      "fullname": "Yuldashev Iskandar Alisherovich",
+      "studentID": "69aa782e3d054c06899c6aae",
+      "degreeProgram": "PE-01-23",
+      "yearOfStudy": 3,
+      "internshipStartDate": "2026-06-15T00:00:00.000Z",
+      "internshipEndDate": "2026-06-17T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Eriell Prof Education",
+      "department": "Training",
+      "supervisorContact": "Bozorov Ulugbek"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 3,
+        "dresscodeAndAppearance": 4,
+        "adherenceToCompanyPolicies": 4,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 3,
+        "timeManagement": 4,
+        "abilityToMeetDeadlines": 4,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 3,
+        "abilityToLearnNewSkillsTools": 3,
+        "qualityOfWorkOutput": 3,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 4,
+        "writtenCommunication": 4,
+        "teamCollaboration": 4,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 4,
+        "creativityAndInnovation": 4,
+        "abilityToHandleChallenges": 4,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 4,
+        "alignmentWithCompanyGoals": 4,
+        "potentialForFutureEmployment": 4,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abutalipov Mars",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T06:53:57.227Z",
+    "updatedAt": "2026-06-30T06:53:57.227Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4368ba9234ed906b29cbde",
+    "studentInformation": {
+      "fullname": "Raximov Anvarjon Komilovich",
+      "studentID": "69aa782e3d054c06899c6ab2",
+      "degreeProgram": "PE-01-23",
+      "yearOfStudy": 3,
+      "internshipStartDate": "2026-06-15T00:00:00.000Z",
+      "internshipEndDate": "2026-06-17T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Eriell Prof Education",
+      "department": "Training",
+      "supervisorContact": "Bozorov Ulugbek"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 4,
+        "dresscodeAndAppearance": 4,
+        "adherenceToCompanyPolicies": 4,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 4,
+        "timeManagement": 4,
+        "abilityToMeetDeadlines": 4,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 4,
+        "abilityToLearnNewSkillsTools": 4,
+        "qualityOfWorkOutput": 4,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 4,
+        "writtenCommunication": 4,
+        "teamCollaboration": 4,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 4,
+        "creativityAndInnovation": 4,
+        "abilityToHandleChallenges": 4,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 4,
+        "alignmentWithCompanyGoals": 4,
+        "potentialForFutureEmployment": 4,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abutalipov Mars",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T06:56:58.352Z",
+    "updatedAt": "2026-06-30T06:56:58.352Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43693c9234ed906b29cbf5",
+    "studentInformation": {
+      "fullname": "Niyazov Amir Timurovich",
+      "studentID": "69aa782e3d054c06899c6ab4",
+      "degreeProgram": "PE-01-23",
+      "yearOfStudy": 3,
+      "internshipStartDate": "2026-06-15T00:00:00.000Z",
+      "internshipEndDate": "2026-06-17T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Eriell Prof Education",
+      "department": "Training",
+      "supervisorContact": "Bozorov Ulugbek"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abutalipov Mars",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T06:59:08.711Z",
+    "updatedAt": "2026-06-30T06:59:08.711Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a436a369234ed906b29cc24",
+    "studentInformation": {
+      "fullname": "Xoshimov Saidjon Murod",
+      "studentID": "69aa782f3d054c06899c6ab8",
+      "degreeProgram": "PE-01-23",
+      "yearOfStudy": 3,
+      "internshipStartDate": "2026-06-15T00:00:00.000Z",
+      "internshipEndDate": "2026-06-17T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Eriell Prof Education",
+      "department": "Training",
+      "supervisorContact": "Bozorov Ulugbek"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 4,
+        "dresscodeAndAppearance": 4,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 4,
+        "abilityToMeetDeadlines": 4,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abutalipov Mars",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T07:03:18.612Z",
+    "updatedAt": "2026-06-30T07:03:18.612Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a436a9c9234ed906b29cc40",
+    "studentInformation": {
+      "fullname": "Ashurov Xushnud Xurshedovich",
+      "studentID": "69aa782f3d054c06899c6aba",
+      "degreeProgram": "PE-01-23",
+      "yearOfStudy": 2,
+      "internshipStartDate": "2026-06-15T00:00:00.000Z",
+      "internshipEndDate": "2026-06-17T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Eriell Prof Education",
+      "department": "Training",
+      "supervisorContact": "Bozorov Ulugbek"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 4,
+        "dresscodeAndAppearance": 4,
+        "adherenceToCompanyPolicies": 4,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 4,
+        "timeManagement": 4,
+        "abilityToMeetDeadlines": 4,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 4,
+        "abilityToLearnNewSkillsTools": 4,
+        "qualityOfWorkOutput": 4,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 4,
+        "writtenCommunication": 4,
+        "teamCollaboration": 4,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 4,
+        "creativityAndInnovation": 4,
+        "abilityToHandleChallenges": 4,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 4,
+        "alignmentWithCompanyGoals": 4,
+        "potentialForFutureEmployment": 4,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abutalipov Mars",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T07:05:00.641Z",
+    "updatedAt": "2026-06-30T07:05:00.641Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43704c9234ed906b29ccf6",
+    "studentInformation": {
+      "fullname": "Xaydarova Fotima Alisherovna",
+      "studentID": "69aa78013d054c06899c6963",
+      "degreeProgram": "DE-01-23",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-29T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "KAPITALBANK",
+      "department": "Last control",
+      "supervisorContact": "+998902713043"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "Students are hardworking during the internship.",
+      "areasOfImprovement": "Able to learn New skills very fast",
+      "projectTaskFeedback": "All tasks that were given to students completed successfully",
+      "learningAndGrowth": "All students have interest to learn smth New daily. Ford example, if they succced in New tasks they want to learn New type of tasks.",
+      "teamDynamics": "Relationship between students and team memebers are excellent",
+      "adaptability": "Students adapt really fast and have good relationship with team memebers.",
+      "feedbackForStudent": "Keep going to study, Red more, hard working and never give up in reaching New destinations.",
+      "feedbackForUniversity": "Teach students with real time Innovations, technologies, and  researches. It will help students to be on tren and abling to deal with newly improvements on daily life and future job."
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend with reservations",
+      "declaration": true,
+      "supervisorFullName": "Abdullaeva Dilfuza Rajabovna",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T07:29:16.624Z",
+    "updatedAt": "2026-06-30T07:29:16.624Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a439a0e9234ed906b29ce67",
+    "studentInformation": {
+      "fullname": "Abduhakimova Sevinch Habibulla",
+      "studentID": "69aa77f53d054c06899c6907",
+      "degreeProgram": "D-01-23",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-07T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Kanspoligraf",
+      "department": "Design",
+      "supervisorContact": "+998979214304"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": "Showed excellent attendance, punctuality, and commitment to assigned tasks."
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": "Quickly learned and effectively applied new technical skills."
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": "Demonstrated strong verbal and written communication skills."
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 4,
+        "comments": "Identified problems quickly and proposed effective solutions."
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": "The student consistently demonstrated professionalism, responsibility, and a strong work ethic."
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abrorova Nilufar Farxodovna",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T10:27:26.188Z",
+    "updatedAt": "2026-06-30T10:27:26.188Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a439a9d9234ed906b29ce76",
+    "studentInformation": {
+      "fullname": "Sobirov Umidjon Sobir",
+      "studentID": "69aa77f73d054c06899c6917",
+      "degreeProgram": "D-01-23",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-07T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Kanspoligraf",
+      "department": "Design",
+      "supervisorContact": "+998979214304"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 3,
+        "dresscodeAndAppearance": 4,
+        "adherenceToCompanyPolicies": 4,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 4,
+        "timeManagement": 4,
+        "abilityToMeetDeadlines": 4,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 4,
+        "abilityToLearnNewSkillsTools": 4,
+        "qualityOfWorkOutput": 4,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 4,
+        "writtenCommunication": 4,
+        "teamCollaboration": 4,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 4,
+        "creativityAndInnovation": 4,
+        "abilityToHandleChallenges": 4,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 4,
+        "alignmentWithCompanyGoals": 4,
+        "potentialForFutureEmployment": 4,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Needs significant improvement",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abrorova Nilufar Farxodovna",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T10:29:49.655Z",
+    "updatedAt": "2026-06-30T10:29:49.655Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a439afc9234ed906b29ce83",
+    "studentInformation": {
+      "fullname": "Gurjiyeva Liliya Nikolayevna",
+      "studentID": "69aa77f83d054c06899c6923",
+      "degreeProgram": "D-01-24",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-07T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Kanspoligraf",
+      "department": "Design",
+      "supervisorContact": "+998979214304"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Exceeds expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abrorova Nilufar Farxodovna",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T10:31:24.014Z",
+    "updatedAt": "2026-06-30T10:31:24.014Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a439c229234ed906b29ce96",
+    "studentInformation": {
+      "fullname": "Axmedjanova Jasmina Jaxongirovna",
+      "studentID": "69aa77f83d054c06899c6921",
+      "degreeProgram": "D-01-24",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-07T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Kanspoligraf",
+      "department": "Design",
+      "supervisorContact": "+998979214304"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abrorova Nilufar Farxodovna",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T10:36:18.891Z",
+    "updatedAt": "2026-06-30T10:36:18.891Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a439cd39234ed906b29ceaf",
+    "studentInformation": {
+      "fullname": "Urunbayeva Diyora Ravshanovna",
+      "studentID": "69aa77f43d054c06899c68fd",
+      "degreeProgram": "D-01-23",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-07T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Kanspoligraf",
+      "department": "Design",
+      "supervisorContact": "+998979214304"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 4,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 4,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abrorova Nilufar Farxodovna",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T10:39:15.343Z",
+    "updatedAt": "2026-06-30T10:39:15.343Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a439d2d9234ed906b29cebf",
+    "studentInformation": {
+      "fullname": "Muindjanova Latofat Farxodovna",
+      "studentID": "69aa77f93d054c06899c692b",
+      "degreeProgram": "D-01-24",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-07T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Kanspoligraf",
+      "department": "Design",
+      "supervisorContact": "+998979214304"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 4,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 4,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abrorova Nilufar Farxodovna",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T10:40:45.887Z",
+    "updatedAt": "2026-06-30T10:40:45.887Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a439d959234ed906b29ced4",
+    "studentInformation": {
+      "fullname": "Xaydarova Samira Umedovna",
+      "studentID": "69aa77fb3d054c06899c693b",
+      "degreeProgram": "D-01-24",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-07T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Kanspoligraf",
+      "department": "Design",
+      "supervisorContact": "+998979214304"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 4,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 4,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abrorova Nilufar Farxodovna",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T10:42:29.835Z",
+    "updatedAt": "2026-06-30T10:42:29.835Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a439df99234ed906b29cf16",
+    "studentInformation": {
+      "fullname": "Davronov Adhambek Davrug‘",
+      "studentID": "69aa77fc3d054c06899c693f",
+      "degreeProgram": "D-01-24",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-07T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Kanspoligraf",
+      "department": "Design",
+      "supervisorContact": "+998979214304"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 4,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abrorova Nilufar Farxodovna",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T10:44:09.723Z",
+    "updatedAt": "2026-06-30T10:44:09.723Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a439e5d9234ed906b29cf27",
+    "studentInformation": {
+      "fullname": "Shodiyeva Ruxshona Erkinovna",
+      "studentID": "69aa77fa3d054c06899c6935",
+      "degreeProgram": "D-01-24",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-07T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Kanspoligraf",
+      "department": "Design",
+      "supervisorContact": "+998979214304"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 4,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 4,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 4,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abrorova Nilufar Farxodovna",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T10:45:49.098Z",
+    "updatedAt": "2026-06-30T10:45:49.098Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a439ed09234ed906b29cf38",
+    "studentInformation": {
+      "fullname": "Nabiyeva Mohinur Voxidovna",
+      "studentID": "69aa77fa3d054c06899c6931",
+      "degreeProgram": "D-01-24",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-07T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Kanspoligraf",
+      "department": "Design",
+      "supervisorContact": "+998979214304"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abrorova Nilufar Farxodovna",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T10:47:44.191Z",
+    "updatedAt": "2026-06-30T10:47:44.191Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a439f2c9234ed906b29cf48",
+    "studentInformation": {
+      "fullname": "Kamilova Maftuna Azamovna",
+      "studentID": "69aa77f83d054c06899c6927",
+      "degreeProgram": "D-01-24",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-07T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Kanspoligraf",
+      "department": "Design",
+      "supervisorContact": "+998979214304"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 4,
+        "dresscodeAndAppearance": 4,
+        "adherenceToCompanyPolicies": 4,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 4,
+        "timeManagement": 4,
+        "abilityToMeetDeadlines": 4,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 4,
+        "abilityToLearnNewSkillsTools": 4,
+        "qualityOfWorkOutput": 4,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 4,
+        "writtenCommunication": 4,
+        "teamCollaboration": 4,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 4,
+        "creativityAndInnovation": 4,
+        "abilityToHandleChallenges": 4,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 4,
+        "alignmentWithCompanyGoals": 4,
+        "potentialForFutureEmployment": 4,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abrorova Nilufar Farxodovna",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T10:49:16.666Z",
+    "updatedAt": "2026-06-30T10:49:16.666Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a439f929234ed906b29cf5a",
+    "studentInformation": {
+      "fullname": "Akbarova Ruxshona Akramovna",
+      "studentID": "69aa77fb3d054c06899c6939",
+      "degreeProgram": "D-01-24",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-07T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Kanspoligraf",
+      "department": "Design",
+      "supervisorContact": "+998979214304"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 4,
+        "dresscodeAndAppearance": 4,
+        "adherenceToCompanyPolicies": 4,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 4,
+        "timeManagement": 4,
+        "abilityToMeetDeadlines": 4,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 4,
+        "abilityToLearnNewSkillsTools": 4,
+        "qualityOfWorkOutput": 4,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 4,
+        "writtenCommunication": 4,
+        "teamCollaboration": 4,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 4,
+        "creativityAndInnovation": 4,
+        "abilityToHandleChallenges": 4,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 4,
+        "alignmentWithCompanyGoals": 4,
+        "potentialForFutureEmployment": 4,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abrorova Nilufar Farxodovna",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T10:50:58.003Z",
+    "updatedAt": "2026-06-30T10:50:58.003Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a439fec9234ed906b29cf67",
+    "studentInformation": {
+      "fullname": "Mamadiyeva Marjona Abdurashidovna",
+      "studentID": "69aa77f83d054c06899c6925",
+      "degreeProgram": "D-01-24",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-07T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Kanspoligraf",
+      "department": "Design",
+      "supervisorContact": "+998979214304"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 4,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abrorova Nilufar Farxodovna",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T10:52:28.307Z",
+    "updatedAt": "2026-06-30T10:52:28.307Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43a0459234ed906b29cf7f",
+    "studentInformation": {
+      "fullname": "Davronova Rushana Alisherovna",
+      "studentID": "69aa77f93d054c06899c6929",
+      "degreeProgram": "D-01-24",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-07T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Kanspoligraf",
+      "department": "Design",
+      "supervisorContact": "+998979214304"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 4,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abrorova Nilufar Farxodovna",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T10:53:57.366Z",
+    "updatedAt": "2026-06-30T10:53:57.366Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43a0a49234ed906b29cf8f",
+    "studentInformation": {
+      "fullname": "Obidova Leyla Boburovna",
+      "studentID": "69aa77f93d054c06899c692d",
+      "degreeProgram": "D-01-24",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-07T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Kanspoligraf",
+      "department": "Design",
+      "supervisorContact": "+998979214304"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 3,
+        "dresscodeAndAppearance": 4,
+        "adherenceToCompanyPolicies": 4,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 4,
+        "timeManagement": 4,
+        "abilityToMeetDeadlines": 4,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 4,
+        "abilityToLearnNewSkillsTools": 4,
+        "qualityOfWorkOutput": 4,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 4,
+        "writtenCommunication": 4,
+        "teamCollaboration": 4,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 4,
+        "creativityAndInnovation": 4,
+        "abilityToHandleChallenges": 4,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 4,
+        "alignmentWithCompanyGoals": 4,
+        "potentialForFutureEmployment": 4,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend with reservations",
+      "declaration": true,
+      "supervisorFullName": "Abrorova Nilufar Farxodovna",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T10:55:32.956Z",
+    "updatedAt": "2026-06-30T10:55:32.956Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43a1079234ed906b29cf9e",
+    "studentInformation": {
+      "fullname": "Rasulova Farizabonu Azamovna",
+      "studentID": "69aa77fa3d054c06899c6933",
+      "degreeProgram": "D-01-24",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-07T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Kanspoligraf",
+      "department": "Design",
+      "supervisorContact": "+998979214304"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abrorova Nilufar Farxodovna",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T10:57:11.445Z",
+    "updatedAt": "2026-06-30T10:57:11.445Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43a15e9234ed906b29cfab",
+    "studentInformation": {
+      "fullname": "Nasrulloyev Firdavs Axrorovich",
+      "studentID": "69aa77fd3d054c06899c6947",
+      "degreeProgram": "D-01-24",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-07T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Kanspoligraf",
+      "department": "Design",
+      "supervisorContact": "+998979214304"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 4,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 4,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 4,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abrorova Nilufar Farxodovna",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T10:58:38.419Z",
+    "updatedAt": "2026-06-30T10:58:38.419Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43a1be9234ed906b29cfb8",
+    "studentInformation": {
+      "fullname": "Talibov Munis Musinovich",
+      "studentID": "69aa77fd3d054c06899c6945",
+      "degreeProgram": "D-01-24",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-07T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Kanspoligraf",
+      "department": "Design",
+      "supervisorContact": "+998979214304"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 4,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 4,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 4,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 4,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 4,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abrorova Nilufar Farxodovna",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T11:00:14.454Z",
+    "updatedAt": "2026-06-30T11:00:14.454Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43a20e9234ed906b29cfc5",
+    "studentInformation": {
+      "fullname": "Quchqarova Musharraf Nizomovna",
+      "studentID": "69aa77f63d054c06899c6913",
+      "degreeProgram": "D-01-23",
+      "yearOfStudy": 3,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-07T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Kanspoligraf",
+      "department": "Design",
+      "supervisorContact": "+998979214304"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 4,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abrorova Nilufar Farxodovna",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T11:01:34.377Z",
+    "updatedAt": "2026-06-30T11:01:34.377Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43a25b9234ed906b29cfd2",
+    "studentInformation": {
+      "fullname": "Ikramova Faiza Lazizovna",
+      "studentID": "69aa77f53d054c06899c690d",
+      "degreeProgram": "D-01-23",
+      "yearOfStudy": 3,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-07T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Kanspoligraf",
+      "department": "Design",
+      "supervisorContact": "+998979214304"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 4,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abrorova Nilufar Farxodovna",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T11:02:51.824Z",
+    "updatedAt": "2026-06-30T11:02:51.824Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43b2da9234ed906b29d0d1",
+    "studentInformation": {
+      "fullname": "Xaydarova Fotima Alisherovna",
+      "studentID": "69aa78013d054c06899c6963",
+      "degreeProgram": "DE-01-23",
+      "yearOfStudy": 3,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-29T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "KAPITALBANK",
+      "department": "Last control",
+      "supervisorContact": "+998902713043"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Exceeds expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "ABDULLAEVA DILFUZA",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T12:13:14.498Z",
+    "updatedAt": "2026-06-30T12:13:14.498Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43b3319234ed906b29d0de",
+    "studentInformation": {
+      "fullname": "Xaydarova Zuxro Alisherovna",
+      "studentID": "69aa78013d054c06899c6967",
+      "degreeProgram": "DE-01-23",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-29T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "KAPITALBANK",
+      "department": "Last control",
+      "supervisorContact": "+998902713043"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Exceeds expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abdullaeva Dilfuza",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T12:14:41.218Z",
+    "updatedAt": "2026-06-30T12:14:41.218Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43b37a9234ed906b29d0eb",
+    "studentInformation": {
+      "fullname": "Abdurashidova Ruxshona Jo‘Rabek",
+      "studentID": "69aa78023d054c06899c6969",
+      "degreeProgram": "DE-01-23",
+      "yearOfStudy": 3,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-29T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "KAPITALBANK",
+      "department": "Last control",
+      "supervisorContact": "+998902713043"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend with reservations",
+      "declaration": true,
+      "supervisorFullName": "Abdullaeva Dilfuza",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T12:15:54.626Z",
+    "updatedAt": "2026-06-30T12:15:54.626Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43c24b9234ed906b29d1cf",
+    "studentInformation": {
+      "fullname": "Baxronova Jasmina Baxtiyorovna",
+      "studentID": "69aa77fc3d054c06899c693d",
+      "degreeProgram": "D-01-24",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-07T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Kanspoligraf",
+      "department": "Design",
+      "supervisorContact": "+998979214304"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 4,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abrorova Nilufar Farxodovna",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T13:19:07.006Z",
+    "updatedAt": "2026-06-30T13:19:07.006Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a43c2b59234ed906b29d1dd",
+    "studentInformation": {
+      "fullname": "Inoyatova Madina Umedjon",
+      "studentID": "69aa77f63d054c06899c6911",
+      "degreeProgram": "D-01-23",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-05-31T00:00:00.000Z",
+      "internshipEndDate": "2026-06-07T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Kanspoligraf",
+      "department": "Design",
+      "supervisorContact": "+998979214304"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 4,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 4,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abrorova Nilufar Farxodovna",
+      "date": "2026-06-30T00:00:00.000Z"
+    },
+    "createdAt": "2026-06-30T13:20:53.707Z",
+    "updatedAt": "2026-06-30T13:20:53.707Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4495da03b0b83d608238ad",
+    "studentInformation": {
+      "fullname": "Sirojidinova Shaxlo Otabekovna",
+      "studentID": "69aa78193d054c06899c6a14",
+      "degreeProgram": "FBBA-01-25",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-06-01T00:00:00.000Z",
+      "internshipEndDate": "2026-06-05T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "CATIA Travel Agency",
+      "department": "Marketing",
+      "supervisorContact": "+998902763029"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "Strong analytical skills, attention to detail, and a responsible approach to tasks. Quick to learn new tools and able to deliver quality work within deadlines.",
+      "areasOfImprovement": "Need to work more on french, exept that i didn't notice any other drawbacks",
+      "projectTaskFeedback": "The tasks were practical and directly relevant to the industry. The workflow was well-structured, though more detailed initial briefings on complex tasks would save time.",
+      "learningAndGrowth": "Gained valuable hands-on experience, improved practical problem-solving skills, and learned how to apply university knowledge to real business tasks.",
+      "teamDynamics": "Smooth cooperation with the team, especially Yasmin who was coming at the same time as her. Communication was clear and supportive, making it easy to adapt to the corporate culture and complete group tasks efficiently.",
+      "adaptability": "Able to switch tasks quickly and stay focused when priorities or project requirements changed. Handled routine changes without losing productivity.",
+      "feedbackForStudent": "The student showed strong reliability, a quick learning curve, and successfully handled assigned tasks, proving to be a dependable team member.",
+      "feedbackForUniversity": "The academic foundation is solid. However, adding more practical case studies and modern industry tools to the curriculum would better prepare students for actual work. But once again, they need to work on their French."
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Davranov Anvar Erkinovich",
+      "date": "2026-06-07T00:00:00.000Z"
+    },
+    "createdAt": "2026-07-01T04:21:46.412Z",
+    "updatedAt": "2026-07-01T04:21:46.412Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a44972503b0b83d608238c2",
+    "studentInformation": {
+      "fullname": "Abdusamatova Yasmin Abduvaxobovna",
+      "studentID": "69aa78183d054c06899c6a06",
+      "degreeProgram": "FBBA-01-25",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-06-01T00:00:00.000Z",
+      "internshipEndDate": "2026-06-05T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "CATIA Travel Agency",
+      "department": "Marketing",
+      "supervisorContact": "+998912763029"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 4,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "Strong analytical skills, attention to detail, and a responsible approach to tasks. Quick to learn new tools and able to deliver quality work within deadlines.",
+      "areasOfImprovement": "Need to work on public speaking and presentation confidence in large groups, as well as taking more independent initiative at the start of new tasks.",
+      "projectTaskFeedback": "The tasks were practical and directly relevant to the industry. The workflow was well-structured, though more detailed initial briefings on complex tasks would save time.",
+      "learningAndGrowth": "Gained valuable hands-on experience, improved practical problem-solving skills, and learned how to apply university knowledge to real business tasks.",
+      "teamDynamics": "Smooth cooperation with the team. Communication was clear and supportive, making it easy to adapt to the corporate culture and complete group tasks efficiently.",
+      "adaptability": "Able to switch tasks quickly and stay focused when priorities or project requirements changed. Handled routine changes without losing productivity.",
+      "feedbackForStudent": "The student showed strong reliability, a quick learning curve, and successfully handled assigned tasks, proving to be a dependable team member.",
+      "feedbackForUniversity": "The academic foundation is solid. However, adding more practical case studies and modern industry tools to the curriculum would better prepare students for actual work."
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Davranof Anvar Erkinovich",
+      "date": "2026-06-06T00:00:00.000Z"
+    },
+    "createdAt": "2026-07-01T04:27:17.671Z",
+    "updatedAt": "2026-07-01T04:27:17.671Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a44980603b0b83d608238d4",
+    "studentInformation": {
+      "fullname": "Djumayeva Samira Baxodirovna",
+      "studentID": "69aa78183d054c06899c6a0a",
+      "degreeProgram": "FBBA-01-25",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-06-01T00:00:00.000Z",
+      "internshipEndDate": "2026-06-05T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "CATIA Travel Agency",
+      "department": "Marketing",
+      "supervisorContact": "+998902763029"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "Strong analytical skills, data accuracy, and a structured approach to marketing tasks.",
+      "areasOfImprovement": "Needs to develop more confidence when presenting marketing ideas or pitching concepts to the team.",
+      "projectTaskFeedback": "Excelled at market analysis and database management; tasks were well-executed and delivered on time.",
+      "learningAndGrowth": "Developed a practical understanding of B2B/B2C market research and audience segmentation.",
+      "teamDynamics": "Reliable team player who communicated clearly and completed tasks with minimal supervision.",
+      "adaptability": "Handled routine shifts in project scopes smoothly and stayed focused under tight deadlines.",
+      "feedbackForStudent": "A dependable and detail-oriented intern who handles data-driven marketing tasks with high accuracy.",
+      "feedbackForUniversity": "The university provides good foundational knowledge, but adding more practical modules on modern marketing tools would be beneficial."
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Davranov Anvar Erkinovich",
+      "date": "2026-06-06T00:00:00.000Z"
+    },
+    "createdAt": "2026-07-01T04:31:02.807Z",
+    "updatedAt": "2026-07-01T04:31:02.807Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4498ce03b0b83d608238e5",
+    "studentInformation": {
+      "fullname": "Narziyeva Sabrina Anvarovna",
+      "studentID": "69aa78183d054c06899c6a08",
+      "degreeProgram": "FBBA-01-25",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-06-01T00:00:00.000Z",
+      "internshipEndDate": "2026-06-05T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "CATIA Travel Agency",
+      "department": "Marketing",
+      "supervisorContact": "+9982763029"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "Quick learner, highly responsible, and consistently delivers solid, practical results.",
+      "areasOfImprovement": "Needs to transition from just executing tasks to thinking more strategically about long-term marketing outcomes.",
+      "projectTaskFeedback": "Handled daily operational marketing tasks efficiently, from market monitoring to report compiling.",
+      "learningAndGrowth": "Improved practical problem-solving skills and learned how a real marketing department operates day-to-day.",
+      "teamDynamics": "Fits easily into the team workflow, accepts constructive criticism well, and helps colleagues when needed.",
+      "adaptability": "Remained calm and productive even when marketing priorities shifted rapidly.",
+      "feedbackForStudent": "An efficient and hardworking intern who adapts quickly and reliably supports the department's goals.",
+      "feedbackForUniversity": "The academic base is strong; adding practical workshops on industry-standard marketing software would maximize readiness."
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Davranov Anvar Erkinovich",
+      "date": "2026-06-06T00:00:00.000Z"
+    },
+    "createdAt": "2026-07-01T04:34:22.849Z",
+    "updatedAt": "2026-07-01T04:34:22.849Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a44f36e03b0b83d608241a9",
+    "studentInformation": {
+      "fullname": "Odilov Sharifjon Baxtiyorovich",
+      "studentID": "69aa78223d054c06899c6a5c",
+      "degreeProgram": "IL-01-24",
+      "yearOfStudy": 2,
+      "internshipStartDate": "2026-06-01T00:00:00.000Z",
+      "internshipEndDate": "2026-06-12T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Stekloplastik",
+      "department": "Director",
+      "supervisorContact": "97-910-88-88"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": "Punctuality and Attendance\nThe trainee maintained excellent punctuality and attended all internship activities without any absence. He demonstrated a strong sense of responsibility and commitment throughout the internship.\n\nDress Code and Appearance\nThe trainee consistently maintained a neat, professional appearance and complied with the company's dress code requirements at all times.\n\nAdherence to Company Policies\nThe trainee fully complied with the company's rules, regulations, safety procedures, and workplace policies, demonstrating professionalism and respect for organizational standards."
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": "Initiative and Proactiveness\nThe trainee consistently demonstrated initiative by taking responsibility for assigned tasks and showing a proactive attitude toward learning and improving performance.\n\nTime Management\nThe trainee managed time effectively, prioritized tasks appropriately, and maintained productivity throughout the internship period.\n\nAbility to Meet Deadlines\nThe trainee completed all assigned tasks on time and consistently met deadlines with accuracy and attention to detail.\n\nComments on Work Ethic\nThe trainee demonstrated an excellent work ethic by being responsible, hardworking, reliable, and committed to completing all assigned duties to a high standard."
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": "Application of Academic Knowledge\nThe trainee effectively applied academic knowledge to practical workplace tasks and demonstrated a good understanding of relevant concepts.\n\nAbility to Learn New Skills/Tools\nThe trainee quickly learned new skills and adapted to workplace procedures and tools with enthusiasm and confidence.\n\nQuality of Work Output\nThe trainee consistently produced high-quality work that was accurate, well-organized, and completed to a professional standard."
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": "Verbal Communication\nThe trainee communicated clearly, confidently, and professionally with supervisors and colleagues throughout the internship.\n\nWritten Communication\nThe trainee prepared written work accurately, clearly, and in a well-organized manner, demonstrating strong written communication skills.\n\nTeam Collaboration\nThe trainee worked effectively with team members, demonstrated a cooperative attitude, and contributed positively to group activities and workplace objectives."
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 4,
+        "abilityToHandleChallenges": 5,
+        "comments": "Analytical Thinking\nThe trainee demonstrated strong analytical thinking skills by carefully evaluating tasks, identifying key issues, and applying logical reasoning to solve problems.\n\nCreativity and Innovation\nThe trainee showed creativity in approaching assigned tasks and contributed innovative ideas that improved task execution and efficiency.\n\nAbility to Handle Challenges\nThe trainee effectively handled workplace challenges, remained calm under pressure, and successfully found practical solutions to unexpected situations."
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 4,
+        "potentialForFutureEmployment": 5,
+        "comments": "Contribution to the Team\nThe trainee actively contributed to team activities and supported colleagues in completing assigned tasks, positively impacting overall team performance.\n\nAlignment with Company Goals\nThe trainee demonstrated good understanding of company objectives and aligned his work efforts with organizational goals and expectations.\n\nPotential for Future Employment\nThe trainee has strong potential for future employment due to his discipline, quick learning ability, and professional attitude during the internship period."
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "The student demonstrated strong discipline, excellent punctuality, and a high level of responsibility throughout the internship period. He actively participated in all assigned tasks and consistently showed a willingness to learn and improve his skills.\n\nHe effectively applied his academic knowledge in practical work situations and adapted quickly to the working environment. The student showed strong teamwork and communication skills, collaborating well with colleagues and contributing positively to team performance.\n\nIn addition, he maintained a high standard of work quality, followed company policies and safety procedures, and showed initiative in completing tasks efficiently. Overall, his positive attitude and strong work ethic made a valuable contribution to the organization.",
+      "areasOfImprovement": "The student has shown strong overall performance; however, there are a few areas where further development would enhance future effectiveness.\n\nThe student could focus on further strengthening advanced technical and practical skills related to industry-specific tools and processes to improve efficiency in complex tasks. Improving speed and accuracy in completing tasks under tight deadlines would also be beneficial.\n\nAdditionally, gaining more confidence in independent decision-making and taking greater initiative in unfamiliar situations would further enhance professional growth. Continued development of advanced communication skills, particularly in formal reporting and presentation, would also support future career success.\n\nOverall, these improvements will help the student transition from a good performer to an even more highly effective professional.",
+      "projectTaskFeedback": "The student generally handled assigned tasks and projects effectively, demonstrating a solid understanding of instructions and the ability to complete work within expected timeframes. They showed consistency in meeting basic requirements and were able to adapt to routine tasks with minimal supervision.\n\nIn terms of standout achievements, the student demonstrated noticeable improvement in task execution over time, particularly in organizing and structuring their work more efficiently. In several instances, they took initiative to clarify requirements and ensure accuracy before submission, which contributed to higher-quality outputs. Their willingness to learn and respond to feedback also stood out as a positive factor in their overall performance.\n\nOverall, while there is still room for further development in handling more complex or independent assignments, the student’s performance reflects reliability, steady progress, and a positive work ethic.",
+      "learningAndGrowth": "Yes, the student demonstrated a clear willingness to learn and grow throughout their tasks and projects.\n\nOne example is their response to feedback: when initial submissions contained minor errors or lacked structure, the student actively revised their work and improved the quality in subsequent tasks without needing repeated instructions. This shows openness to constructive criticism and the ability to apply guidance effectively.\n\nAnother example is their initiative in seeking clarification before starting new or unfamiliar tasks. Instead of proceeding with uncertainty, the student asked relevant questions to ensure correct understanding, which helped reduce mistakes and improved overall efficiency.\n\nAdditionally, the student showed progress over time in handling more complex responsibilities. Tasks that initially required step-by-step supervision later were completed with greater independence, indicating development of confidence and competence.\n\nOverall, these behaviors reflect a positive learning attitude and consistent professional growth.",
+      "teamDynamics": "The student interacted with team members in a respectful and cooperative manner, contributing positively to the overall team environment. They were generally approachable and willing to communicate when needed, which helped maintain smooth coordination during group tasks.\n\nIn group assignments and collaborative activities, the student participated actively by sharing ideas when prompted and supporting peers in completing shared tasks. While they were not always the most vocal contributor in discussions, they responded well when assigned responsibilities and completed their part reliably.\n\nThe student also demonstrated a supportive attitude by being open to feedback from teammates and adjusting their work accordingly. This helped reduce misunderstandings and improved alignment within the group.",
+      "adaptability": "The student adapted to new challenges, tools, and changes in the environment at a generally positive and steady pace.\n\nWhen introduced to unfamiliar tasks or updated requirements, the student initially required some guidance but was able to quickly understand expectations and apply instructions correctly. Over time, they became more confident in handling similar tasks with less supervision.\n\nIn situations involving new tools or systems, the student showed a willingness to learn and did not resist change. Instead, they took time to explore the tools, asked relevant questions when needed, and gradually improved their efficiency through practice.\n\nDuring changes in task structure or priorities, the student remained flexible and was able to adjust their workflow accordingly. While occasional delays occurred at the beginning of new transitions, these were resolved as the student became more familiar with the updated processes.",
+      "feedbackForStudent": "The student shows a solid foundation in completing assigned tasks, learning new skills, and working within a team. To further support future career success, the following feedback is recommended:\n\nOne key area for development is increasing independence in handling complex tasks. While the student performs well with guidance, building confidence in making decisions without frequent supervision will be important in a professional setting. Taking initiative earlier in the task process and anticipating potential requirements would strengthen overall performance.\n\nAnother recommendation is to further develop communication skills, particularly in structured reporting and presenting ideas more clearly and confidently. This includes summarizing work progress concisely, asking targeted questions, and proactively updating supervisors or team members.\n\nThe student would also benefit from continuing to strengthen technical or domain-specific skills relevant to their field. Consistent practice with tools, systems, or analytical methods will help improve speed and accuracy over time.\n\nFinally, maintaining the positive attitude toward learning and feedback is important. If the student continues to actively apply feedback, seek improvement opportunities, and gradually take on more responsibility, they will be well-positioned for long-term career growth and professional success.",
+      "feedbackForUniversity": "Samarqand International University of Technology can better prepare students for internships by focusing on a few key areas.\n\nFirst, students should gain more practical experience before internships through real case studies and project-based learning. This helps them understand workplace tasks in advance.\n\nSecond, the university should provide an internship preparation course covering CV writing, professional communication, workplace behavior, and reporting skills.\n\nThird, stronger partnerships with companies are needed so students can access more meaningful and hands-on internship opportunities.\n\nFourth, clear learning goals and proper supervision (both university and company mentors) should be introduced to guide students during internships.\n\nFinally, more attention should be given to soft skills such as teamwork, communication, and time management, as these are essential for workplace success.\n\nOverall, combining practical training with structured support will significantly improve students’ readiness for internships."
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend with reservations",
+      "declaration": true,
+      "supervisorFullName": "SAIDMURODOV UTKIR UKTAMOVICH",
+      "date": "2026-07-01T00:00:00.000Z"
+    },
+    "createdAt": "2026-07-01T11:01:02.302Z",
+    "updatedAt": "2026-07-01T11:01:02.302Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4b1afea61aa049862f5d86",
+    "studentInformation": {
+      "fullname": "Sultonov Jonibek Nodirjonovich",
+      "studentID": "69aa781c3d054c06899c6a2a",
+      "degreeProgram": "FBBA-01-25",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-06-08T00:00:00.000Z",
+      "internshipEndDate": "2026-06-26T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Samarkand Touristic Center",
+      "department": "Hotel Minyoun",
+      "supervisorContact": "Abduraufov Amir"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "Strong communication skills and the ability to interact politely and professionally with guests.\nResponsibility and discipline in carrying out assigned duties.\nStress resilience and the ability to work effectively under pressure and during busy periods.",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "Ability to work effectively in a team and collaborate with staff from different departments.",
+      "adaptability": "Quick learner with the willingness to adapt to new standards and procedures.",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abduraufov Amir",
+      "date": "2026-07-06T00:00:00.000Z"
+    },
+    "createdAt": "2026-07-06T03:03:26.597Z",
+    "updatedAt": "2026-07-06T03:03:26.597Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4b1e2fa61aa049862f5db6",
+    "studentInformation": {
+      "fullname": "Narziyeva Sabrina Anvarovna",
+      "studentID": "69aa78183d054c06899c6a08",
+      "degreeProgram": "FBBA-01-25",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-06-08T00:00:00.000Z",
+      "internshipEndDate": "2026-06-26T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Samarkand Touristic Center",
+      "department": "Hilton Hotel Front Office",
+      "supervisorContact": "Abduraufov Amir"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "The student demonstrated strong communication and interpersonal skills when interacting with guests and colleagues. They were responsible, punctual, and maintained a professional attitude throughout the internship. The student adapted quickly to hotel procedures, worked effectively under pressure, and showed a strong commitment to delivering excellent customer service.Proficiency in foreign languages , enabling effective communication with international guests.",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "The student completed assigned tasks accurately and on time. They assisted with guest check-in and check-out procedures, answered guest inquiries professionally, and supported the Front Office team in daily operations. They showed initiative, attention to detail, and a willingness to take on new responsibilities.",
+      "learningAndGrowth": "",
+      "teamDynamics": "The student worked well with the Front Office team and maintained positive relationships with colleagues. They communicated effectively, showed respect for team members, and willingly assisted others when needed. Their cooperative attitude contributed to a productive and friendly work environment.",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abduraufov Amir",
+      "date": "2026-07-06T00:00:00.000Z"
+    },
+    "createdAt": "2026-07-06T03:17:03.076Z",
+    "updatedAt": "2026-07-06T03:17:03.076Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4b2c7fa61aa049862f632f",
+    "studentInformation": {
+      "fullname": "Lashuk Anastasiya Vadimovna",
+      "studentID": "69aa78183d054c06899c6a04",
+      "degreeProgram": "FBBA-01-25",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-06-08T00:00:00.000Z",
+      "internshipEndDate": "2026-06-26T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Samarkand Touristic Center",
+      "department": "Wellness Park Hotel Bactria",
+      "supervisorContact": "Abduraufov Amir"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "The student demonstrated excellent customer service and communication skills while interacting with guests. They were responsible, punctual, and maintained a professional attitude throughout the internship. The student learned bar procedures quickly, worked efficiently during busy hours, and consistently followed hygiene and service standards.",
+      "areasOfImprovement": "The student could continue improving their knowledge of beverages, cocktails, and bar operations. Gaining more confidence in handling complex guest requests and developing multitasking skills would further enhance their performance.",
+      "projectTaskFeedback": "The student completed assigned tasks accurately and on time. They assisted in preparing beverages, maintaining cleanliness and organization of the bar area, replenishing supplies, and providing professional service to guests. They showed initiative and a strong willingness to learn.",
+      "learningAndGrowth": "The student demonstrated a strong willingness to learn and improve. They quickly adapted to bar operations, accepted feedback positively, and steadily improved their technical and customer service skills throughout the internship.",
+      "teamDynamics": "",
+      "adaptability": "The student adapted quickly to the fast-paced bar environment, learned new procedures efficiently, and remained calm and professional while handling multiple tasks during busy service periods.",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": "The student was offered employment and continued working at the internship organization after successfully completing her internship."
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abduraufov Amir",
+      "date": "2026-07-06T00:00:00.000Z"
+    },
+    "createdAt": "2026-07-06T04:18:07.959Z",
+    "updatedAt": "2026-07-06T04:18:07.959Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4b2e2ca61aa049862f647e",
+    "studentInformation": {
+      "fullname": "Abdusamatova Yasmin Abduvaxobovna",
+      "studentID": "69aa78183d054c06899c6a06",
+      "degreeProgram": "FBBA-01-25",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-06-08T00:00:00.000Z",
+      "internshipEndDate": "2026-06-26T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Samarkand Touristic Center",
+      "department": "Hotel Minyoun Front Office Department",
+      "supervisorContact": "Abduraufov Amir"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "The student demonstrated strong communication and interpersonal skills when interacting with guests and colleagues. They were responsible, punctual, and maintained a professional attitude throughout the internship.",
+      "areasOfImprovement": "The student could continue improving their confidence in handling complex guest requests and unexpected situations independently. Further development of problem-solving skills and gaining more experience with hotel management systems would enhance their professional performance.",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "The student demonstrated a strong willingness to learn and continuously improve. They quickly understood hotel standards and operational procedures, actively sought feedback, and applied suggestions to enhance their performance. Their confidence and efficiency increased noticeably throughout the internship.",
+      "teamDynamics": "",
+      "adaptability": "The student adapted quickly to the hotel's standards, operational procedures, and daily responsibilities. They demonstrated flexibility in handling different tasks and remained calm and professional in a fast-paced environment.",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abduraufov Amir",
+      "date": "2026-07-06T00:00:00.000Z"
+    },
+    "createdAt": "2026-07-06T04:25:16.309Z",
+    "updatedAt": "2026-07-06T04:25:16.309Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4b38dca61aa049862f6db0",
+    "studentInformation": {
+      "fullname": "Sharipov Timur Nematovich",
+      "studentID": "69aa781b3d054c06899c6a20",
+      "degreeProgram": "FBBA-01-25",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-06-08T00:00:00.000Z",
+      "internshipEndDate": "2026-06-26T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Samarkand Touristic Center",
+      "department": "Savitsky Plaza Front Office",
+      "supervisorContact": "Abduraufov Amir"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 4,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 4,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 4,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "The student demonstrated strong efficiency and reliability in performing assigned tasks. They consistently completed duties accurately and on time, showing good attention to detail. Despite limited communication, the student was focused, disciplined, and highly productive in their work.",
+      "areasOfImprovement": "The student could improve their communication skills and become more confident in interacting with colleagues and guests. Developing interpersonal skills would enhance teamwork and overall workplace effectiveness.",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "The student maintained a respectful attitude toward colleagues and worked reliably within the team. While not very communicative, they fulfilled their responsibilities consistently and supported team operations through their work performance.",
+      "adaptability": "The student adapted well to the work environment and operational requirements. They were able to follow procedures effectively and adjust to workplace expectations with minimal difficulty.",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abduraufov Amir",
+      "date": "2026-07-06T00:00:00.000Z"
+    },
+    "createdAt": "2026-07-06T05:10:52.867Z",
+    "updatedAt": "2026-07-06T05:10:52.867Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4b7708a61aa049862f8ab0",
+    "studentInformation": {
+      "fullname": "Djumayeva Samira Baxodirovna",
+      "studentID": "69aa78183d054c06899c6a0a",
+      "degreeProgram": "FBBA-01-25",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-06-08T00:00:00.000Z",
+      "internshipEndDate": "2026-06-26T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Samarkand Touristic Center",
+      "department": "Hilton Garden Inn Samarkand Afrosiyob",
+      "supervisorContact": "Abduraufov Amir"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 4,
+        "dresscodeAndAppearance": 4,
+        "adherenceToCompanyPolicies": 4,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 4,
+        "timeManagement": 4,
+        "abilityToMeetDeadlines": 4,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 4,
+        "abilityToLearnNewSkillsTools": 4,
+        "qualityOfWorkOutput": 4,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 4,
+        "writtenCommunication": 4,
+        "teamCollaboration": 4,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 4,
+        "creativityAndInnovation": 4,
+        "abilityToHandleChallenges": 4,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 4,
+        "alignmentWithCompanyGoals": 4,
+        "potentialForFutureEmployment": 4,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "The student demonstrated a positive attitude, strong work ethic, and professionalism throughout the internship. They were punctual, polite with guests, and maintained high standards of hygiene and service. The student quickly adapted to the restaurant environment and showed good teamwork by cooperating effectively with colleagues during busy service hours.",
+      "areasOfImprovement": "The student should continue developing confidence in handling challenging guest requests and improve time management during peak hours. Gaining more experience with restaurant operations and communication in English will further enhance their professional performance.",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "The student showed a strong willingness to learn and actively sought feedback from supervisors. Throughout the internship, they improved their customer service skills, became more familiar with restaurant standards, and gained confidence in performing daily operational tasks.",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abduraufov Amir",
+      "date": "2026-07-06T00:00:00.000Z"
+    },
+    "createdAt": "2026-07-06T09:36:08.929Z",
+    "updatedAt": "2026-07-06T09:36:08.929Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4b7892a61aa049862f8b20",
+    "studentInformation": {
+      "fullname": "Nigmatova Ruxangiz Furkatovna",
+      "studentID": "69aa78193d054c06899c6a10",
+      "degreeProgram": "FBBA-01-25",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-06-08T00:00:00.000Z",
+      "internshipEndDate": "2026-06-26T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Samarkand Touristic Center",
+      "department": "Hilton Garden Inn Samarkand Afrosiyob /restaurant",
+      "supervisorContact": "Abduravufov Amir"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 4,
+        "dresscodeAndAppearance": 4,
+        "adherenceToCompanyPolicies": 4,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 4,
+        "timeManagement": 4,
+        "abilityToMeetDeadlines": 4,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 4,
+        "abilityToLearnNewSkillsTools": 4,
+        "qualityOfWorkOutput": 4,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 4,
+        "writtenCommunication": 4,
+        "teamCollaboration": 4,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 4,
+        "creativityAndInnovation": 4,
+        "abilityToHandleChallenges": 4,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 4,
+        "alignmentWithCompanyGoals": 4,
+        "potentialForFutureEmployment": 4,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "The student demonstrated a positive attitude, strong work ethic, and professionalism throughout the internship. They were punctual, polite with guests, and maintained high standards of hygiene and service. The student quickly adapted to the restaurant environment and showed good teamwork by cooperating effectively with colleagues during busy service hours.",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "The student successfully completed assigned tasks, including preparing the dining area, assisting with food and beverage service, maintaining cleanliness, and supporting the restaurant team. They followed instructions carefully and consistently demonstrated responsibility and attention to detail.",
+      "learningAndGrowth": "",
+      "teamDynamics": "The student worked well with the restaurant staff, communicated respectfully, and contributed to a positive working atmosphere. They were cooperative, reliable, and always willing to assist colleagues when needed.",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abduraufov Amir",
+      "date": "2026-07-06T00:00:00.000Z"
+    },
+    "createdAt": "2026-07-06T09:42:42.016Z",
+    "updatedAt": "2026-07-06T09:42:42.016Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4b7a9ca61aa049862f8b4e",
+    "studentInformation": {
+      "fullname": "Pulatova Nozima Ortiqovna",
+      "studentID": "69aa78173d054c06899c6a02",
+      "degreeProgram": "FBBA-01-25",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-06-08T00:00:00.000Z",
+      "internshipEndDate": "2026-06-26T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Samarkand Touristic Center",
+      "department": "Hilton Garden Inn Samarkand Afrosiyob",
+      "supervisorContact": "Abduraufov Amir"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 4,
+        "dresscodeAndAppearance": 4,
+        "adherenceToCompanyPolicies": 4,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 4,
+        "timeManagement": 4,
+        "abilityToMeetDeadlines": 4,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 4,
+        "abilityToLearnNewSkillsTools": 4,
+        "qualityOfWorkOutput": 4,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 4,
+        "writtenCommunication": 4,
+        "teamCollaboration": 4,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 4,
+        "creativityAndInnovation": 4,
+        "abilityToHandleChallenges": 4,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 4,
+        "alignmentWithCompanyGoals": 4,
+        "potentialForFutureEmployment": 4,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "The student demonstrated responsibility, reliability, and a positive attitude throughout the internship. She completed assigned tasks carefully, maintained cleanliness and organization in the restaurant, and followed workplace procedures. Although she was more reserved, she remained polite, respectful, and dependable in her daily responsibilities.",
+      "areasOfImprovement": "The student could benefit from developing stronger communication skills and becoming more confident when interacting with guests and colleagues. With additional experience, she is expected to become more comfortable in customer-facing situations and take greater initiative.",
+      "projectTaskFeedback": "The student completed all assigned tasks responsibly, including preparing the dining area, assisting with food and beverage service, and maintaining cleanliness. She followed instructions carefully and consistently completed her duties with attention to detail.",
+      "learningAndGrowth": "The student showed a willingness to learn and accepted feedback positively. During the internship, she improved her understanding of restaurant operations and became more confident in performing daily tasks. She demonstrated steady progress throughout the placement.",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abduraufov Amir",
+      "date": "2026-07-06T00:00:00.000Z"
+    },
+    "createdAt": "2026-07-06T09:51:24.989Z",
+    "updatedAt": "2026-07-06T09:51:24.989Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4f374acf91b388fee39f3e",
+    "studentInformation": {
+      "fullname": "Kobilov Shaxzod Shuxratovich",
+      "studentID": "69aa781b3d054c06899c6a22",
+      "degreeProgram": "FBBA-01-25",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-06-08T00:00:00.000Z",
+      "internshipEndDate": "2026-06-26T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Samarkand Touristic Center",
+      "department": "Silk Road by Minyoun",
+      "supervisorContact": "Abduraufov Amir"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 2,
+        "dresscodeAndAppearance": 1,
+        "adherenceToCompanyPolicies": 2,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 1,
+        "timeManagement": 1,
+        "abilityToMeetDeadlines": 1,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 1,
+        "abilityToLearnNewSkillsTools": 1,
+        "qualityOfWorkOutput": 1,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 1,
+        "writtenCommunication": 1,
+        "teamCollaboration": 1,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 1,
+        "creativityAndInnovation": 1,
+        "abilityToHandleChallenges": 1,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 1,
+        "alignmentWithCompanyGoals": 1,
+        "potentialForFutureEmployment": 1,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Needs significant improvement",
+      "supervisorRecommendation": "Do not recommend",
+      "declaration": true,
+      "supervisorFullName": "Abduraufov Amir",
+      "date": "2026-07-09T00:00:00.000Z"
+    },
+    "createdAt": "2026-07-09T05:53:14.371Z",
+    "updatedAt": "2026-07-09T05:53:14.371Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a4f487ecf91b388fee3a24c",
+    "studentInformation": {
+      "fullname": "Sirojidinova Shaxlo Otabekovna",
+      "studentID": "69aa78193d054c06899c6a14",
+      "degreeProgram": "FBBA-01-25",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-06-08T00:00:00.000Z",
+      "internshipEndDate": "2026-06-26T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Samarkand Touristic Center",
+      "department": "Silk Road Waterland",
+      "supervisorContact": "Abduraufov Amir"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "The student demonstrated excellent communication and customer service skills while working at the water park reception desk. She was polite, professional, and attentive to visitors' needs. She handled guest inquiries efficiently and maintained a positive attitude in a busy environment.",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "The student successfully managed reception duties, including welcoming guests, providing information about services and attractions, assisting with ticketing procedures, and responding to customer questions. She completed her assigned responsibilities accurately and showed reliability throughout the internship.",
+      "learningAndGrowth": "",
+      "teamDynamics": "The student interacted positively with colleagues and contributed to a friendly and cooperative work environment. She worked well as part of the reception team and was always willing to assist team members when needed.",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Meets expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Abduraufov Amir",
+      "date": "2026-07-09T00:00:00.000Z"
+    },
+    "createdAt": "2026-07-09T07:06:38.944Z",
+    "updatedAt": "2026-07-09T07:06:38.944Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a507305f2b836b51f9bc3bc",
+    "studentInformation": {
+      "fullname": "Allayeva Kamolaxon Adxamjon",
+      "studentID": "69aa77ff3d054c06899c6959",
+      "degreeProgram": "D-01-25",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-06-01T00:00:00.000Z",
+      "internshipEndDate": "2026-06-12T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "SIUT",
+      "department": "Design",
+      "supervisorContact": "Josiah Ng"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 5,
+        "adherenceToCompanyPolicies": 5,
+        "comments": ""
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": ""
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": ""
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": ""
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": ""
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": ""
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "Kamola is a highly responsible individual who takes much initiative in different tasks. She is someone that supervisors and future employers can rely on. Socially, her classmates and co-workers are comfortable with her and she's served as a reliable friend and co-worker.",
+      "areasOfImprovement": "",
+      "projectTaskFeedback": "",
+      "learningAndGrowth": "Kamola demonstrates a willingness to grow by taking extensive notes and applying what she's learnt adequately, asking questions where is needed.",
+      "teamDynamics": "",
+      "adaptability": "",
+      "feedbackForStudent": "",
+      "feedbackForUniversity": ""
+    },
+    "finalRecommendation": {
+      "finalRating": "Exceeds expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Ng Chenghan Josiah",
+      "date": "2026-07-10T00:00:00.000Z"
+    },
+    "createdAt": "2026-07-10T04:20:21.353Z",
+    "updatedAt": "2026-07-10T04:20:21.353Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a50a20cf2b836b51f9bc788",
+    "studentInformation": {
+      "fullname": "Djabarov Damir Erkinovich",
+      "studentID": "69aa78033d054c06899c6977",
+      "degreeProgram": "DE-01-23",
+      "yearOfStudy": 1,
+      "internshipStartDate": "2026-06-01T00:00:00.000Z",
+      "internshipEndDate": "2026-06-02T00:00:00.000Z"
+    },
+    "companyInformation": {
+      "companyName": "Self-employed",
+      "department": "IT",
+      "supervisorContact": "+998937900012"
+    },
+    "evaluation": {
+      "professionalism": {
+        "punctualityAndAttendance": 5,
+        "dresscodeAndAppearance": 4,
+        "adherenceToCompanyPolicies": 5,
+        "comments": "Good"
+      },
+      "workEthic": {
+        "initiativeAndProactiveness": 5,
+        "timeManagement": 5,
+        "abilityToMeetDeadlines": 5,
+        "comments": "Great"
+      },
+      "technicalSkills": {
+        "applicationOfAcademicKnowledge": 5,
+        "abilityToLearnNewSkillsTools": 5,
+        "qualityOfWorkOutput": 5,
+        "comments": "Great"
+      },
+      "communicationSkills": {
+        "verbalCommunication": 5,
+        "writtenCommunication": 5,
+        "teamCollaboration": 5,
+        "comments": "Great"
+      },
+      "problemSolvingSkills": {
+        "analyticalThinking": 5,
+        "creativityAndInnovation": 5,
+        "abilityToHandleChallenges": 5,
+        "comments": "Great"
+      },
+      "overallPerformance": {
+        "contributionToTheTeam": 5,
+        "alignmentWithCompanyGoals": 5,
+        "potentialForFutureEmployment": 5,
+        "comments": "Great"
+      }
+    },
+    "openEndedQuestions": {
+      "strengths": "The student possesses strong analytical skills, exceptional attention to detail, and excellent communication abilities. They consistently showed great initiative by taking on extra tasks and successfully collaborating with various team members to hit deadlines.",
+      "areasOfImprovement": "As they transition into full-time roles, continuing to build confidence in leading presentations and mastering advanced, industry-specific software will help them maximize their potential.",
+      "projectTaskFeedback": "The student handled all assigned projects with a high level of responsibility and precision. A standout achievement was their involvement in our recent project analysis, where they independently structured data and delivered insights that the team successfully used.",
+      "learningAndGrowth": "Yes, he showed an outstanding eagerness to learn. They actively sought constructive feedback, asked insightful questions, and quickly applied new knowledge to subsequent assignments, demonstrating rapid professional growth.",
+      "teamDynamics": "The student integrated seamlessly into the team. They were highly respectful, supportive, and communicative, bringing positive energy and a collaborative spirit to all team discussions.",
+      "adaptability": "The student demonstrated remarkable adaptability. They faced new challenges with a positive mindset, quickly mastered our internal software and tools with minimal guidance, and remained highly productive even when project requirements or priorities shifted.",
+      "feedbackForStudent": "Keep doing what you are doing. Trust your instincts, continue to actively share your innovative ideas during team discussions, and don't hesitate to take on leadership roles in the future, as you have great potential for them.",
+      "feedbackForUniversity": "The university does an excellent job preparing students, as seen through their strong foundational skills. My only recommendation would be to incorporate more practical case studies and modern industry-standard tools into the curriculum to keep up with fast-paced workplace environments."
+    },
+    "finalRecommendation": {
+      "finalRating": "Exceeds expectations",
+      "supervisorRecommendation": "Recommend for future opportunities",
+      "declaration": true,
+      "supervisorFullName": "Alexander Mukhin",
+      "date": "2026-07-10T00:00:00.000Z"
+    },
+    "createdAt": "2026-07-10T07:41:00.365Z",
+    "updatedAt": "2026-07-10T07:41:00.365Z",
+    "__v": 0
+  }
+]

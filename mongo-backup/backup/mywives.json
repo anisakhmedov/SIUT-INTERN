@@ -1,0 +1,1130 @@
+[
+  {
+    "_id": "68b9b6cd545daf00da8892d1",
+    "full_name": "123123",
+    "birthday": "2025-09-12T00:00:00.000Z",
+    "sizes": {
+      "clothing_top": "фывфы",
+      "clothing_bottom": "вфывфыв",
+      "clothing_dress": "фывфыв",
+      "shoes": "12",
+      "ring": "12",
+      "bra": "12"
+    },
+    "height_cm": 12,
+    "weight_kg": 12,
+    "style": "фывфывфыв",
+    "preferences": {
+      "favorite_colors": [
+        "фывфывф"
+      ],
+      "favorite_flowers": [
+        "ывфыв"
+      ],
+      "favorite_perfumes": [
+        "фывфы"
+      ],
+      "favorite_cuisine": [
+        "вфыв"
+      ],
+      "favorite_dishes": [
+        "фывф"
+      ],
+      "favorite_sweets": [
+        "ывфыв"
+      ],
+      "favorite_drinks": [
+        "фыв"
+      ],
+      "favorite_brands": [
+        "фывфы"
+      ],
+      "favorite_music": [
+        "вфыв"
+      ],
+      "favorite_movies": [
+        "фывф"
+      ],
+      "favorite_books": [
+        "ывфы"
+      ],
+      "favorite_places": [
+        "вфыв"
+      ]
+    },
+    "features": {
+      "allergies": [
+        "фывфы"
+      ],
+      "cosmetics": [
+        "вфыв"
+      ],
+      "accessories": [
+        "фыв"
+      ]
+    },
+    "dreams": {
+      "wants_to_try": [
+        "фывфыв"
+      ],
+      "travel_destinations": [
+        "фывфы"
+      ],
+      "fears": [
+        "вфыв"
+      ],
+      "daily_happiness": [
+        "фывфы"
+      ]
+    },
+    "family": {
+      "mother": {
+        "name": "вфывфыв",
+        "birthday": "2025-09-05T00:00:00.000Z",
+        "occupation": "ыфвфывфыв"
+      },
+      "father": {
+        "name": "фывфыв",
+        "birthday": "2025-09-26T00:00:00.000Z",
+        "occupation": "вфывфывфыв"
+      },
+      "siblings": [
+        {
+          "name": "фывфывфыв",
+          "age": 4,
+          "relation": "брат",
+          "_id": "68b9b6cd545daf00da8892d2"
+        }
+      ]
+    },
+    "notes": "ывфывфыв",
+    "createdAt": "2025-09-04T15:57:01.638Z",
+    "updatedAt": "2025-09-04T15:57:01.638Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b9bf5f545daf00da8892d4",
+    "full_name": "фывфывфыв",
+    "birthday": "2025-09-03T00:00:00.000Z",
+    "sizes": {
+      "clothing_top": "фывфы",
+      "clothing_bottom": "в",
+      "shoes": "оп",
+      "ring": "ор",
+      "bra": "п"
+    },
+    "height_cm": 123,
+    "weight_kg": 123,
+    "style": "фывфывф",
+    "preferences": {
+      "favorite_colors": [
+        "орп"
+      ],
+      "favorite_flowers": [
+        "орп"
+      ],
+      "favorite_perfumes": [
+        "ор"
+      ],
+      "favorite_cuisine": [
+        "по"
+      ],
+      "favorite_dishes": [
+        "рп"
+      ],
+      "favorite_sweets": [
+        "орп"
+      ],
+      "favorite_drinks": [
+        "орп"
+      ],
+      "favorite_brands": [
+        "орп"
+      ],
+      "favorite_music": [
+        "орп"
+      ],
+      "favorite_movies": [
+        "орп"
+      ],
+      "favorite_books": [
+        "ор"
+      ],
+      "favorite_places": [
+        "пор"
+      ]
+    },
+    "features": {
+      "allergies": [
+        "пор"
+      ],
+      "cosmetics": [
+        "п"
+      ],
+      "accessories": [
+        "орп"
+      ]
+    },
+    "dreams": {
+      "wants_to_try": [
+        "орп"
+      ],
+      "travel_destinations": [
+        "орп"
+      ],
+      "fears": [
+        "ор"
+      ],
+      "daily_happiness": [
+        "пор"
+      ]
+    },
+    "family": {
+      "mother": {
+        "name": "пропро",
+        "birthday": "2025-09-25T00:00:00.000Z",
+        "occupation": "фывфы"
+      },
+      "father": {
+        "name": "фывфыв",
+        "birthday": "2025-10-11T00:00:00.000Z",
+        "occupation": "вфыв"
+      },
+      "siblings": [
+        {
+          "name": "фывфывфыв",
+          "age": 123,
+          "relation": "сестра",
+          "_id": "68b9bf5f545daf00da8892d5"
+        },
+        {
+          "name": "фывфыв",
+          "age": 12,
+          "relation": "брат",
+          "_id": "68b9bf5f545daf00da8892d6"
+        }
+      ]
+    },
+    "notes": "фвывфывфыв",
+    "createdAt": "2025-09-04T16:33:35.162Z",
+    "updatedAt": "2025-09-04T16:33:35.162Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b9db9d545daf00da8892d8",
+    "full_name": "Ахматжонова Гулнигор",
+    "birthday": "2007-08-19T00:00:00.000Z",
+    "sizes": {
+      "clothing_top": "S/M",
+      "clothing_bottom": "S/M",
+      "clothing_dress": "S/M",
+      "shoes": "38-39"
+    },
+    "height_cm": 166,
+    "weight_kg": 54,
+    "style": "casual/classic/domestic",
+    "preferences": {
+      "favorite_colors": [
+        "сиреневый",
+        "лиловый",
+        "dark red",
+        "baby pink"
+      ],
+      "favorite_flowers": [
+        "орхидеи",
+        "гортензии",
+        "тюльпаны",
+        "розы",
+        "пионы",
+        "сирень"
+      ],
+      "favorite_perfumes": [
+        "Yves Saint Laurent - Libre",
+        "Black opium; Miss Dior",
+        "Jean Paul Gautier - Divine; Armani - Stronger with you (men's perfume)"
+      ],
+      "favorite_cuisine": [
+        "итальянская",
+        "корейская",
+        "узбекская (да все по разному хороши)"
+      ],
+      "favorite_dishes": [
+        "стейки",
+        "плов",
+        "паста",
+        "таджикский курутоб  (готовится с курутами)",
+        "роллы",
+        "рамён",
+        "ун оши (Да Много Их"
+      ],
+      "favorite_sweets": [],
+      "favorite_drinks": [],
+      "favorite_brands": [],
+      "favorite_music": [],
+      "favorite_movies": [],
+      "favorite_books": [],
+      "favorite_places": []
+    },
+    "features": {
+      "allergies": [],
+      "cosmetics": [],
+      "accessories": []
+    },
+    "dreams": {
+      "wants_to_try": [],
+      "travel_destinations": [],
+      "fears": [],
+      "daily_happiness": []
+    },
+    "family": {
+      "mother": {
+        "name": "Аблакулова Гулмира Чориевна",
+        "birthday": "1987-07-02T00:00:00.000Z"
+      },
+      "siblings": []
+    },
+    "notes": "Люблю своего медвежонка",
+    "createdAt": "2025-09-04T18:34:05.855Z",
+    "updatedAt": "2025-09-04T18:34:05.855Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b9ded2545daf00da8892da",
+    "full_name": "Ахматжонова Гулнигор",
+    "birthday": "2007-08-19T00:00:00.000Z",
+    "sizes": {
+      "clothing_top": "S/M",
+      "clothing_bottom": "S/M",
+      "clothing_dress": "S/M",
+      "shoes": "38-39"
+    },
+    "height_cm": 166,
+    "weight_kg": 54,
+    "style": "casual/classic/domestic/WILD",
+    "preferences": {
+      "favorite_colors": [
+        "сиреневый",
+        "лиловый",
+        "dark red",
+        "baby pink"
+      ],
+      "favorite_flowers": [
+        "орхидеи",
+        "гортензии",
+        "тюльпаны",
+        "розы",
+        "пионы",
+        "сирень"
+      ],
+      "favorite_perfumes": [
+        "Yves Saint Laurent - Libre",
+        "Black opium; Miss Dior",
+        "Jean Paul Gautier - Divine; Armani - Stronger with you (men's perfume)"
+      ],
+      "favorite_cuisine": [
+        "итальянская",
+        "корейская",
+        "узбекская (да все по разному хороши)"
+      ],
+      "favorite_dishes": [
+        "стейки",
+        "плов",
+        "паста",
+        "таджикский курутоб  (готовится с курутами)",
+        "роллы",
+        "рамён",
+        "ун оши (Да Много Их)"
+      ],
+      "favorite_sweets": [
+        "МОЙ ЛЮБИМЫЙ"
+      ],
+      "favorite_drinks": [
+        "Сок \"Лесные ягоды\"",
+        "кола",
+        "зеленный чай с лимоном и медом",
+        "ВОДА"
+      ],
+      "favorite_brands": [
+        "Zara",
+        "Selfie",
+        "osobo ne fanateyu i potomu chto nravitsa nadevayu ne smotrya na BRAND"
+      ],
+      "favorite_music": [
+        "Поп",
+        "R&B",
+        "Джаз",
+        "классика"
+      ],
+      "favorite_movies": [
+        "ромкомы",
+        "мелодрама",
+        "детективы",
+        "боевик",
+        "приключения",
+        "фэнтези",
+        "драма"
+      ],
+      "favorite_books": [
+        "\"Джейн Эйр\"",
+        "Али Хейзелвуд",
+        "\"Цветы для Элджернона\"",
+        "\"Серебряная бухта\"",
+        "\"Скорпион из алтаря\"",
+        "Абдулла Кадыри",
+        "Шарлотта Бронте"
+      ],
+      "favorite_places": [
+        "В объятиях любимого"
+      ]
+    },
+    "features": {
+      "allergies": [
+        "на долгую дистанцию и холод от важных для меня людей"
+      ],
+      "cosmetics": [
+        "Divage",
+        "Luxvisage",
+        "Influence",
+        "Maybelline New-York"
+      ],
+      "accessories": [
+        "кольца",
+        "цепочки",
+        "кулончики",
+        "браслетики",
+        "часики",
+        "серьги ну короче"
+      ]
+    },
+    "dreams": {
+      "wants_to_try": [
+        "всё хорошее и полезное"
+      ],
+      "travel_destinations": [
+        "Все красивые страны с любимым"
+      ],
+      "fears": [
+        "не быть с милым моим"
+      ],
+      "daily_happiness": [
+        "Быть любимой любимого медвежонка"
+      ]
+    },
+    "family": {
+      "mother": {
+        "name": "Аблакулова Гулмира Чориевна",
+        "birthday": "1987-07-02T00:00:00.000Z"
+      },
+      "father": {
+        "name": "Джалолов Адхам Ахматжонович",
+        "birthday": "1978-01-29T00:00:00.000Z",
+        "occupation": "Юрист, адвокат"
+      },
+      "siblings": []
+    },
+    "notes": "Люблю своего медвежонка MORE THAN HE LOVES HIMSELF AND ME",
+    "createdAt": "2025-09-04T18:47:46.440Z",
+    "updatedAt": "2025-09-04T18:47:46.440Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b9ded8545daf00da8892dc",
+    "full_name": "Ахматжонова Гулнигор",
+    "birthday": "2007-08-19T00:00:00.000Z",
+    "sizes": {
+      "clothing_top": "S/M",
+      "clothing_bottom": "S/M",
+      "clothing_dress": "S/M",
+      "shoes": "38-39"
+    },
+    "height_cm": 166,
+    "weight_kg": 54,
+    "style": "casual/classic/domestic/WILD",
+    "preferences": {
+      "favorite_colors": [
+        "сиреневый",
+        "лиловый",
+        "dark red",
+        "baby pink"
+      ],
+      "favorite_flowers": [
+        "орхидеи",
+        "гортензии",
+        "тюльпаны",
+        "розы",
+        "пионы",
+        "сирень"
+      ],
+      "favorite_perfumes": [
+        "Yves Saint Laurent - Libre",
+        "Black opium; Miss Dior",
+        "Jean Paul Gautier - Divine; Armani - Stronger with you (men's perfume)"
+      ],
+      "favorite_cuisine": [
+        "итальянская",
+        "корейская",
+        "узбекская (да все по разному хороши)"
+      ],
+      "favorite_dishes": [
+        "стейки",
+        "плов",
+        "паста",
+        "таджикский курутоб  (готовится с курутами)",
+        "роллы",
+        "рамён",
+        "ун оши (Да Много Их)"
+      ],
+      "favorite_sweets": [
+        "МОЙ ЛЮБИМЫЙ"
+      ],
+      "favorite_drinks": [
+        "Сок \"Лесные ягоды\"",
+        "кола",
+        "зеленный чай с лимоном и медом",
+        "ВОДА"
+      ],
+      "favorite_brands": [
+        "Zara",
+        "Selfie",
+        "osobo ne fanateyu i potomu chto nravitsa nadevayu ne smotrya na BRAND"
+      ],
+      "favorite_music": [
+        "Поп",
+        "R&B",
+        "Джаз",
+        "классика"
+      ],
+      "favorite_movies": [
+        "ромкомы",
+        "мелодрама",
+        "детективы",
+        "боевик",
+        "приключения",
+        "фэнтези",
+        "драма"
+      ],
+      "favorite_books": [
+        "\"Джейн Эйр\"",
+        "Али Хейзелвуд",
+        "\"Цветы для Элджернона\"",
+        "\"Серебряная бухта\"",
+        "\"Скорпион из алтаря\"",
+        "Абдулла Кадыри",
+        "Шарлотта Бронте"
+      ],
+      "favorite_places": [
+        "В объятиях любимого"
+      ]
+    },
+    "features": {
+      "allergies": [
+        "на долгую дистанцию и холод от важных для меня людей"
+      ],
+      "cosmetics": [
+        "Divage",
+        "Luxvisage",
+        "Influence",
+        "Maybelline New-York"
+      ],
+      "accessories": [
+        "кольца",
+        "цепочки",
+        "кулончики",
+        "браслетики",
+        "часики",
+        "серьги ну короче"
+      ]
+    },
+    "dreams": {
+      "wants_to_try": [
+        "всё хорошее и полезное"
+      ],
+      "travel_destinations": [
+        "Все красивые страны с любимым"
+      ],
+      "fears": [
+        "не быть с милым моим"
+      ],
+      "daily_happiness": [
+        "Быть любимой любимого медвежонка"
+      ]
+    },
+    "family": {
+      "mother": {
+        "name": "Аблакулова Гулмира Чориевна",
+        "birthday": "1987-07-02T00:00:00.000Z"
+      },
+      "father": {
+        "name": "Джалолов Адхам Ахматжонович",
+        "birthday": "1978-01-29T00:00:00.000Z",
+        "occupation": "Юрист, адвокат"
+      },
+      "siblings": []
+    },
+    "notes": "Люблю своего медвежонка MORE THAN HE LOVES HIMSELF AND ME",
+    "createdAt": "2025-09-04T18:47:52.671Z",
+    "updatedAt": "2025-09-04T18:47:52.671Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b9df77545daf00da8892de",
+    "full_name": "Соловьев",
+    "birthday": "1962-05-06T00:00:00.000Z",
+    "sizes": {
+      "clothing_top": "UAE Dirham",
+      "clothing_bottom": "Avon",
+      "clothing_dress": "JSON",
+      "shoes": "Investor",
+      "ring": "Tugrik",
+      "bra": "Home Loan Account"
+    },
+    "weight_kg": 610811030986,
+    "style": "bandwidth",
+    "preferences": {
+      "favorite_colors": [
+        "Administrator"
+      ],
+      "favorite_flowers": [
+        "navigating"
+      ],
+      "favorite_perfumes": [
+        "FTP"
+      ],
+      "favorite_cuisine": [
+        "Phased"
+      ],
+      "favorite_dishes": [
+        "3rd generation"
+      ],
+      "favorite_sweets": [
+        "networks"
+      ],
+      "favorite_drinks": [
+        "parsing"
+      ],
+      "favorite_brands": [
+        "full-range"
+      ],
+      "favorite_music": [
+        "port"
+      ],
+      "favorite_movies": [
+        "reciprocal"
+      ],
+      "favorite_books": [
+        "didactic"
+      ],
+      "favorite_places": [
+        "Texas"
+      ]
+    },
+    "features": {
+      "allergies": [
+        "deposit"
+      ],
+      "cosmetics": [
+        "payment"
+      ],
+      "accessories": [
+        "Berkshire"
+      ]
+    },
+    "dreams": {
+      "wants_to_try": [
+        "Fields"
+      ],
+      "travel_destinations": [
+        "Coordinator"
+      ],
+      "fears": [
+        "Vista"
+      ],
+      "daily_happiness": [
+        "demand-driven"
+      ]
+    },
+    "family": {
+      "mother": {
+        "name": "Howe",
+        "occupation": "Koss"
+      },
+      "father": {
+        "name": "Евгений",
+        "birthday": "1962-05-06T00:00:00.000Z",
+        "occupation": "Human"
+      },
+      "siblings": []
+    },
+    "createdAt": "2025-09-04T18:50:31.477Z",
+    "updatedAt": "2025-09-04T18:50:31.477Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b9df7f545daf00da8892e0",
+    "full_name": "back-end",
+    "birthday": "1962-05-06T00:00:00.000Z",
+    "sizes": {
+      "clothing_top": "UAE Dirham",
+      "clothing_bottom": "Avon",
+      "clothing_dress": "JSON",
+      "shoes": "Investor",
+      "ring": "Tugrik",
+      "bra": "Home Loan Account"
+    },
+    "weight_kg": 610811030986,
+    "style": "bandwidth",
+    "preferences": {
+      "favorite_colors": [
+        "Administrator"
+      ],
+      "favorite_flowers": [
+        "navigating"
+      ],
+      "favorite_perfumes": [
+        "FTP"
+      ],
+      "favorite_cuisine": [
+        "Phased"
+      ],
+      "favorite_dishes": [
+        "3rd generation"
+      ],
+      "favorite_sweets": [
+        "networks"
+      ],
+      "favorite_drinks": [
+        "parsing"
+      ],
+      "favorite_brands": [
+        "full-range"
+      ],
+      "favorite_music": [
+        "port"
+      ],
+      "favorite_movies": [
+        "reciprocal"
+      ],
+      "favorite_books": [
+        "didactic"
+      ],
+      "favorite_places": [
+        "Texas"
+      ]
+    },
+    "features": {
+      "allergies": [
+        "deposit"
+      ],
+      "cosmetics": [
+        "payment"
+      ],
+      "accessories": [
+        "Berkshire"
+      ]
+    },
+    "dreams": {
+      "wants_to_try": [
+        "Fields"
+      ],
+      "travel_destinations": [
+        "Coordinator"
+      ],
+      "fears": [
+        "Vista"
+      ],
+      "daily_happiness": [
+        "demand-driven"
+      ]
+    },
+    "family": {
+      "mother": {
+        "name": "Dare",
+        "birthday": "1962-05-06T00:00:00.000Z",
+        "occupation": "Koss"
+      },
+      "father": {
+        "name": "Schaefer",
+        "birthday": "1962-05-06T00:00:00.000Z",
+        "occupation": "Human"
+      },
+      "siblings": []
+    },
+    "createdAt": "2025-09-04T18:50:39.016Z",
+    "updatedAt": "2025-09-04T18:50:39.016Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b9df86545daf00da8892e2",
+    "full_name": "Соловьев",
+    "sizes": {
+      "clothing_top": "UAE Dirham",
+      "clothing_bottom": "Avon",
+      "clothing_dress": "JSON",
+      "shoes": "Investor",
+      "ring": "Tugrik",
+      "bra": "Home Loan Account"
+    },
+    "weight_kg": 610811030986,
+    "style": "bandwidth",
+    "preferences": {
+      "favorite_colors": [
+        "Administrator"
+      ],
+      "favorite_flowers": [
+        "navigating"
+      ],
+      "favorite_perfumes": [
+        "FTP"
+      ],
+      "favorite_cuisine": [
+        "Phased"
+      ],
+      "favorite_dishes": [
+        "3rd generation"
+      ],
+      "favorite_sweets": [
+        "networks"
+      ],
+      "favorite_drinks": [
+        "parsing"
+      ],
+      "favorite_brands": [
+        "full-range"
+      ],
+      "favorite_music": [
+        "port"
+      ],
+      "favorite_movies": [
+        "reciprocal"
+      ],
+      "favorite_books": [
+        "didactic"
+      ],
+      "favorite_places": [
+        "Texas"
+      ]
+    },
+    "features": {
+      "allergies": [
+        "deposit"
+      ],
+      "cosmetics": [
+        "payment"
+      ],
+      "accessories": [
+        "Berkshire"
+      ]
+    },
+    "dreams": {
+      "wants_to_try": [
+        "Fields"
+      ],
+      "travel_destinations": [
+        "Coordinator"
+      ],
+      "fears": [
+        "Vista"
+      ],
+      "daily_happiness": [
+        "demand-driven"
+      ]
+    },
+    "family": {
+      "mother": {
+        "name": "Аркадий",
+        "birthday": "1962-05-06T00:00:00.000Z",
+        "occupation": "Koss"
+      },
+      "father": {
+        "name": "Schaefer",
+        "birthday": "+090603-02-01T16:00:00.000Z",
+        "occupation": "Human"
+      },
+      "siblings": []
+    },
+    "createdAt": "2025-09-04T18:50:46.248Z",
+    "updatedAt": "2025-09-04T18:50:46.248Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b9df8d545daf00da8892e4",
+    "full_name": "Соловьев",
+    "birthday": "2009-04-11T00:00:00.000Z",
+    "sizes": {
+      "clothing_top": "UAE Dirham",
+      "clothing_bottom": "Avon",
+      "clothing_dress": "JSON",
+      "shoes": "Investor",
+      "ring": "Tugrik",
+      "bra": "Home Loan Account"
+    },
+    "weight_kg": 610811030986,
+    "style": "back-end",
+    "preferences": {
+      "favorite_colors": [
+        "Administrator"
+      ],
+      "favorite_flowers": [
+        "navigating"
+      ],
+      "favorite_perfumes": [
+        "FTP"
+      ],
+      "favorite_cuisine": [
+        "Phased"
+      ],
+      "favorite_dishes": [
+        "3rd generation"
+      ],
+      "favorite_sweets": [
+        "networks"
+      ],
+      "favorite_drinks": [
+        "parsing"
+      ],
+      "favorite_brands": [
+        "full-range"
+      ],
+      "favorite_music": [
+        "port"
+      ],
+      "favorite_movies": [
+        "reciprocal"
+      ],
+      "favorite_books": [
+        "didactic"
+      ],
+      "favorite_places": [
+        "Texas"
+      ]
+    },
+    "features": {
+      "allergies": [
+        "deposit"
+      ],
+      "cosmetics": [
+        "payment"
+      ],
+      "accessories": [
+        "Berkshire"
+      ]
+    },
+    "dreams": {
+      "wants_to_try": [
+        "Fields"
+      ],
+      "travel_destinations": [
+        "Coordinator"
+      ],
+      "fears": [
+        "Vista"
+      ],
+      "daily_happiness": [
+        "demand-driven"
+      ]
+    },
+    "family": {
+      "mother": {
+        "name": "Аркадий",
+        "birthday": "1962-05-06T00:00:00.000Z",
+        "occupation": "District"
+      },
+      "father": {
+        "name": "Schaefer",
+        "birthday": "2027-06-11T00:00:00.000Z",
+        "occupation": "Human"
+      },
+      "siblings": []
+    },
+    "createdAt": "2025-09-04T18:50:53.014Z",
+    "updatedAt": "2025-09-04T18:50:53.014Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b9df93545daf00da8892e6",
+    "full_name": "Анна",
+    "birthday": "2030-07-03T00:00:00.000Z",
+    "sizes": {
+      "clothing_top": "UAE Dirham",
+      "clothing_bottom": "Avon",
+      "clothing_dress": "JSON",
+      "shoes": "Investor",
+      "ring": "Tugrik",
+      "bra": "Home Loan Account"
+    },
+    "weight_kg": 610811030986,
+    "style": "bandwidth",
+    "preferences": {
+      "favorite_colors": [
+        "Administrator"
+      ],
+      "favorite_flowers": [
+        "navigating"
+      ],
+      "favorite_perfumes": [
+        "FTP"
+      ],
+      "favorite_cuisine": [
+        "Phased"
+      ],
+      "favorite_dishes": [
+        "3rd generation"
+      ],
+      "favorite_sweets": [
+        "networks"
+      ],
+      "favorite_drinks": [
+        "parsing"
+      ],
+      "favorite_brands": [
+        "full-range"
+      ],
+      "favorite_music": [
+        "port"
+      ],
+      "favorite_movies": [
+        "reciprocal"
+      ],
+      "favorite_books": [
+        "didactic"
+      ],
+      "favorite_places": [
+        "Texas"
+      ]
+    },
+    "features": {
+      "allergies": [
+        "deposit"
+      ],
+      "cosmetics": [
+        "payment"
+      ],
+      "accessories": [
+        "Berkshire"
+      ]
+    },
+    "dreams": {
+      "wants_to_try": [
+        "Fields"
+      ],
+      "travel_destinations": [
+        "Coordinator"
+      ],
+      "fears": [
+        "Vista"
+      ],
+      "daily_happiness": [
+        "demand-driven"
+      ]
+    },
+    "family": {
+      "mother": {
+        "name": "Аркадий",
+        "birthday": "1962-05-06T00:00:00.000Z",
+        "occupation": "District"
+      },
+      "father": {
+        "name": "Schaefer",
+        "birthday": "1962-05-06T00:00:00.000Z",
+        "occupation": "Human"
+      },
+      "siblings": []
+    },
+    "createdAt": "2025-09-04T18:50:59.763Z",
+    "updatedAt": "2025-09-04T18:50:59.763Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b9df9b545daf00da8892e8",
+    "full_name": "Соловьев",
+    "birthday": "+070903-02-01T16:00:00.000Z",
+    "sizes": {
+      "clothing_top": "UAE Dirham",
+      "clothing_bottom": "Avon",
+      "clothing_dress": "JSON",
+      "shoes": "Investor",
+      "ring": "Tugrik",
+      "bra": "Home Loan Account"
+    },
+    "style": "bandwidth",
+    "preferences": {
+      "favorite_colors": [
+        "Administrator"
+      ],
+      "favorite_flowers": [
+        "navigating"
+      ],
+      "favorite_perfumes": [
+        "FTP"
+      ],
+      "favorite_cuisine": [
+        "Phased"
+      ],
+      "favorite_dishes": [
+        "3rd generation"
+      ],
+      "favorite_sweets": [
+        "networks"
+      ],
+      "favorite_drinks": [
+        "parsing"
+      ],
+      "favorite_brands": [
+        "full-range"
+      ],
+      "favorite_music": [
+        "port"
+      ],
+      "favorite_movies": [
+        "reciprocal"
+      ],
+      "favorite_books": [
+        "didactic"
+      ],
+      "favorite_places": [
+        "Texas"
+      ]
+    },
+    "features": {
+      "allergies": [
+        "deposit"
+      ],
+      "cosmetics": [
+        "payment"
+      ],
+      "accessories": [
+        "Berkshire"
+      ]
+    },
+    "dreams": {
+      "wants_to_try": [
+        "Fields"
+      ],
+      "travel_destinations": [
+        "Coordinator"
+      ],
+      "fears": [
+        "Vista"
+      ],
+      "daily_happiness": [
+        "demand-driven"
+      ]
+    },
+    "family": {
+      "mother": {
+        "name": "Аркадий",
+        "birthday": "1962-05-06T00:00:00.000Z",
+        "occupation": "Koss"
+      },
+      "father": {
+        "name": "Schaefer",
+        "birthday": "+030706-02-01T16:00:00.000Z",
+        "occupation": "Human"
+      },
+      "siblings": []
+    },
+    "createdAt": "2025-09-04T18:51:07.101Z",
+    "updatedAt": "2025-09-04T18:51:07.101Z",
+    "__v": 0
+  }
+]
